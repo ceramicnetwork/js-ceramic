@@ -107,6 +107,6 @@ export class IpfsConnectionFactory {
 
     const appliedConfig = mergeOptions(defaultConfig, overrideConfig)
 
-    return ipfs.createIPFS(appliedConfig, false)
+    return ipfs.createIPFS({ go: appliedConfig }, false)
   }
 }

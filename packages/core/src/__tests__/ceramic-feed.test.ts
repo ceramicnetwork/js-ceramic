@@ -19,13 +19,17 @@ describe('Ceramic feed', () => {
   let ceramic1: Ceramic
   let ceramic2: Ceramic
   beforeAll(async () => {
-    ipfs1 = await createIPFS(undefined, undefined, {
-      type: 'binary',
-      network: Networks.INMEMORY,
+    ipfs1 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
     })
-    ipfs2 = await createIPFS(undefined, undefined, {
-      type: 'binary',
-      network: Networks.INMEMORY,
+    ipfs2 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
     })
     ceramic1 = await createCeramic(ipfs1)
     ceramic2 = await createCeramic(ipfs2)

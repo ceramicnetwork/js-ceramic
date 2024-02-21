@@ -213,13 +213,17 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeEach(async () => {
-    ipfs0 = await createIPFS(undefined, undefined, {
-      type: 'binary',
-      network: Networks.INMEMORY,
+    ipfs0 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
     })
-    ipfs1 = await createIPFS(undefined, undefined, {
-      type: 'binary',
-      network: Networks.INMEMORY,
+    ipfs1 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
     })
     await swarmConnect(ipfs0, ipfs1)
 

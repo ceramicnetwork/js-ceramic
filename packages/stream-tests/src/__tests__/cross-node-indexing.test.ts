@@ -97,13 +97,17 @@ describe.each(envs)(
     beforeAll(async () => {
       await pgSetup()
 
-      ipfs1 = await createIPFS(undefined, undefined, {
-        type: 'binary',
-        network: Networks.INMEMORY,
+      ipfs1 = await createIPFS({
+        rust: {
+          type: 'binary',
+          network: Networks.INMEMORY,
+        },
       })
-      ipfs2 = await createIPFS(undefined, undefined, {
-        type: 'binary',
-        network: Networks.INMEMORY,
+      ipfs2 = await createIPFS({
+        rust: {
+          type: 'binary',
+          network: Networks.INMEMORY,
+        },
       })
       await swarmConnect(ipfs1, ipfs2)
 

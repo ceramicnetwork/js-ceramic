@@ -5,8 +5,8 @@ import getPort from 'get-port'
 import mergeOpts from 'merge-options'
 import type { IpfsApi } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
-import { RustIpfsOptions, RustIpfs, RustIpfsRemoteOptions } from './rust-ipfs.js'
-import { IPFSOptions } from 'ipfsd-ctl'
+import { RustIpfsOptions, RustIpfs } from './rust-ipfs.js'
+import { IPFSOptions as GoIpfsOptions } from 'ipfsd-ctl'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
@@ -115,7 +115,7 @@ async function createIpfsOptions(
 
 export type GoIpfsFlavor = {
   name: 'go'
-  options: IPFSOptions
+  options: GoIpfsOptions
 }
 
 export type RustIpfsFlavor = {
@@ -125,10 +125,14 @@ export type RustIpfsFlavor = {
 
 type IpfsFlavor = GoIpfsFlavor | RustIpfsFlavor
 
+type createIpfsOptions = {
+  rust?: RustIpfsOptions
+  go?: GoIpfsOptions
+}
+
 export async function createIPFS(
-  goOptions: IPFSOptions = {},
-  disposable = true,
-  rustOptions: RustIpfsOptions = { type: 'binary' } as RustIpfsOptions
+  options: createIpfsOptions = {},
+  disposable = true
 ): Promise<IpfsApi> {
   const env_flavor = process.env.IPFS_FLAVOR || 'go'
   if (env_flavor == 'go') {
@@ -136,7 +140,7 @@ export async function createIPFS(
       await createIPFSFlavor(
         {
           name: 'go',
-          options: goOptions,
+          options: options.go || {},
         } as GoIpfsFlavor,
         disposable
       )
@@ -146,7 +150,7 @@ export async function createIPFS(
       await createIPFSFlavor(
         {
           name: 'rust',
-          options: rustOptions,
+          options: options.rust || { type: 'binary' },
         } as RustIpfsFlavor,
         disposable
       )

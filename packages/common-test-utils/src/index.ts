@@ -140,7 +140,7 @@ export class CommonTestUtils {
         filter(predicate),
         timeout({
           each: timeoutMs,
-          with: () => throwError(() => new Error(`Timeout waiting to receive cid ${cid}`)),
+          with: () => throwError(() => new Error(`Timeout after ${timeoutMs}ms`)),
         })
       )
     )
@@ -154,7 +154,9 @@ export class CommonTestUtils {
     const hasEventForCID = ({ events }: Events) => {
       return events.some((event) => event.id.event.toString() === cid.toString())
     }
-    await this.waitFor(reconFeed, hasEventForCID, timeoutMs)
+    await this.waitFor(reconFeed, hasEventForCID, timeoutMs).catch((err) => {
+      throw new Error(`Error while waiting for event for CID ${cid}: ${err}`)
+    })
   }
 }
 

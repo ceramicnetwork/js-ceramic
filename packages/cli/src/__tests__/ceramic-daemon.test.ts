@@ -401,7 +401,7 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(json).toEqual(content3)
   })
 
-  it('Aborts fetch if it is taking too long', async () => {
+  testIfV3('Aborts fetch if it is taking too long', async () => {
     const content1 = { test: 123 }
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
