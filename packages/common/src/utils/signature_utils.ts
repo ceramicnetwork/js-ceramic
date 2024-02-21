@@ -1,13 +1,14 @@
 import type { Cacao } from '@didtools/cacao'
-import type { CommitData } from '../index.js'
+import type { CommitData, StreamState } from '../stream.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
 import { getTezosVerifier } from '@didtools/pkh-tezos'
 import { CeramicSigner } from '../ceramic-signer.js'
+import { StreamUtils } from './stream-utils.js'
 
-const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
+const DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS = 24 * 60 * 60
 
 // Register supported CACAO Verifiers
 const verifiersCACAO = {
@@ -46,7 +47,7 @@ export class SignatureUtils {
         atTime: atTime,
         issuer: controller,
         capability: cacao,
-        revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
+        revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS,
         verifiers: verifiersCACAO,
       })
     } catch (e: any) {
@@ -86,5 +87,28 @@ export class SignatureUtils {
     }
 
     return cacao
+  }
+
+  /**
+   * Takes a StreamState and validates that none of the commits in its log are based on expired CACAOs.
+   */
+  static checkForCacaoExpiration(state: StreamState): void {
+    const now = Math.floor(Date.now() / 1000) // convert millis to seconds
+    for (const logEntry of state.log) {
+      const timestamp = logEntry.timestamp ?? now
+      if (!logEntry.expirationTime) {
+        continue
+      }
+      const expirationTime = logEntry.expirationTime + DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS
+      if (expirationTime < timestamp) {
+        throw new Error(
+          `CACAO expired: Commit ${logEntry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
+            state
+          ).toString()} has a CACAO that expired at ${
+            logEntry.expirationTime
+          }. Loading the stream with 'sync: SyncOptions.ALWAYS_SYNC' will restore the stream to a usable state, by discarding the invalid commits (this means losing the data from those invalid writes!)`
+        )
+      }
+    }
   }
 }

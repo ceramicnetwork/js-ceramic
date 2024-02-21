@@ -355,25 +355,6 @@ export class StreamUtils {
   }
 
   /**
-   * Takes a StreamState and validates that none of the commits in its log are based on expired CACAOs.
-   */
-  static checkForCacaoExpiration(state: StreamState): void {
-    const now = Math.floor(Date.now() / 1000) // convert millis to seconds
-    for (const logEntry of state.log) {
-      const timestamp = logEntry.timestamp ?? now
-      if (logEntry.expirationTime && logEntry.expirationTime < timestamp) {
-        throw new Error(
-          `CACAO expired: Commit ${logEntry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
-            state
-          ).toString()} has a CACAO that expired at ${
-            logEntry.expirationTime
-          }. Loading the stream with 'sync: SyncOptions.ALWAYS_SYNC' will restore the stream to a usable state, by discarding the invalid commits (this means losing the data from those invalid writes!)`
-        )
-      }
-    }
-  }
-
-  /**
    * Given a StreamState returns the timestamp when it was last anchored, or null if the state
    * hasn't been anchored yet.
    * @param state
