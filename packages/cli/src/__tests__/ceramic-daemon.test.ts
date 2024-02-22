@@ -32,8 +32,9 @@ const seed = 'SEED'
 
 // Should  pass on v4 if updated from TileDocument
 const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
-describeIfV3('Ceramic interop: core <> http-client', () => {
+describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
   let ipfs: IpfsApi
   let tmpFolder: tmp.DirectoryResult
@@ -91,14 +92,14 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     await changeHandle
   }
 
-  it('healthcheck passes', async () => {
+  test('healthcheck passes', async () => {
     const res = await fetch(`http://localhost:${daemon.port}/api/v0/node/healthcheck`)
     expect(res.ok).toBeTruthy()
     const text = await res.text()
     expect(text).toEqual('Alive!')
   })
 
-  it('healthcheck fails if ipfs unreachable', async () => {
+  test('healthcheck fails if ipfs unreachable', async () => {
     const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
     isOnlineSpy.mockRejectedValue(new Error('ipfs is sad now') as never)
     const res = await fetch(`http://localhost:${daemon.port}/api/v0/node/healthcheck`)
@@ -108,7 +109,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     isOnlineSpy.mockReset()
   })
 
-  it('healthcheck can skip ipfs check', async () => {
+  test('healthcheck can skip ipfs check', async () => {
     const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
     isOnlineSpy.mockRejectedValue(new Error('ipfs is sad now') as never)
     const res = await fetch(
@@ -120,18 +121,18 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     isOnlineSpy.mockReset()
   })
 
-  it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
+  testIfV3('can store commit if the size is lesser than the maximum size ~256KB', async () => {
     const streamtype = await TileDocument.create(client, { test: randomString(200000) })
     expect(streamtype).not.toBeNull()
   })
 
-  it('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
+  testIfV3('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
     await expect(TileDocument.create(client, { test: randomString(300000) })).rejects.toThrow(
       /exceeds the maximum block size of/
     )
   })
 
-  it('properly creates document', async () => {
+  testIfV3('properly creates document', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 }, null, {
       anchor: false,
       publish: false,
@@ -157,7 +158,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(state1).toEqual(state2)
   })
 
-  it('gets anchor commit updates', async () => {
+  testIfV3('gets anchor commit updates', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 })
     await anchorDoc(doc1)
     expect(doc1.state.log.length).toEqual(2)
@@ -168,7 +169,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
-  it('loads documents correctly', async () => {
+  testIfV3('loads documents correctly', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 })
     await anchorDoc(doc1)
     const doc2 = await client.loadStream(doc1.id)
@@ -182,7 +183,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(StreamUtils.serializeState(doc3.state)).toEqual(StreamUtils.serializeState(doc4.state))
   })
 
-  it('loads document commits correctly', async () => {
+  testIfV3('loads document commits correctly', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 })
     await anchorDoc(doc1)
     const doc2 = await TileDocument.load(client, doc1.id)
@@ -205,7 +206,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(serializeCommits(commits1)).toEqual(serializeCommits(commits2))
   })
 
-  it('makes and gets updates correctly with subscription', async () => {
+  testIfV3('makes and gets updates correctly with subscription', async () => {
     const initialContent = { a: 'initial' }
     const middleContent = { ...initialContent, b: 'middle' }
     const finalContent = { ...middleContent, c: 'final' }
@@ -242,7 +243,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     subscription2.unsubscribe()
   })
 
-  it('makes and gets updates correctly with manual sync', async () => {
+  testIfV3('makes and gets updates correctly with manual sync', async () => {
     const initialContent = { a: 'initial' }
     const middleContent = { ...initialContent, b: 'middle' }
     const finalContent = { ...middleContent, c: 'final' }
@@ -269,7 +270,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
   })
 
-  it('Throw on rejected update', async () => {
+  testIfV3('Throw on rejected update', async () => {
     const contentOg = { test: 123 }
     const contentRejected = { test: 'rejected' }
 
@@ -292,7 +293,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(streamOg.state.log.length).toEqual(2)
   })
 
-  it('loads commits correctly', async () => {
+  testIfV3('loads commits correctly', async () => {
     // Create multiple commits of the same document
     const content1 = { test: 123 }
     const content2 = { test: 456 }
@@ -386,7 +387,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(docV5Client.state.log.length).toEqual(6)
   })
 
-  it('can get stream contents from /streams/contents', async () => {
+  testIfV3('can get stream contents from /streams/contents', async () => {
     const content1 = { test: 123 }
     const content2 = { test: 456, test2: 'abc' }
     const content3 = { test2: 'def' }
@@ -400,7 +401,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(json).toEqual(content3)
   })
 
-  it('Aborts fetch if it is taking too long', async () => {
+  testIfV3('Aborts fetch if it is taking too long', async () => {
     const content1 = { test: 123 }
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
@@ -423,7 +424,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     clearTimeout(id)
   })
 
-  it('Aborts fetch through passed in AbortSignal', async () => {
+  testIfV3('Aborts fetch through passed in AbortSignal', async () => {
     const content1 = { test: 123 }
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
@@ -449,33 +450,36 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     clearTimeout(id)
   })
 
-  it('Aborts fetch if taking too long even if given an AbortSignal that did not get aborted', async () => {
-    const content1 = { test: 123 }
-    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+  testIfV3(
+    'Aborts fetch if taking too long even if given an AbortSignal that did not get aborted',
+    async () => {
+      const content1 = { test: 123 }
+      const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
-    const loadStreamMock = jest.spyOn(core, 'loadStream')
-    let id = null
-    loadStreamMock.mockImplementation(() => {
-      return new Promise((resolve) => {
-        id = setTimeout(() => {
-          resolve(doc)
-        }, 4000)
+      const loadStreamMock = jest.spyOn(core, 'loadStream')
+      let id = null
+      loadStreamMock.mockImplementation(() => {
+        return new Promise((resolve) => {
+          id = setTimeout(() => {
+            resolve(doc)
+          }, 4000)
+        })
       })
-    })
 
-    const controller = new AbortController()
+      const controller = new AbortController()
 
-    await expect(
-      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
-        signal: controller.signal,
-        timeout: 1000,
-      })
-    ).rejects.toThrow(/aborted/)
+      await expect(
+        fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+          signal: controller.signal,
+          timeout: 1000,
+        })
+      ).rejects.toThrow(/aborted/)
 
-    clearTimeout(id)
-  })
+      clearTimeout(id)
+    }
+  )
 
-  it('Aborts fetch if the AbortSignal given has already been aborted', async () => {
+  testIfV3('Aborts fetch if the AbortSignal given has already been aborted', async () => {
     const content1 = { test: 123 }
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
@@ -489,7 +493,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     ).rejects.toThrow(/aborted/)
   })
 
-  it('requestAnchor works via http api', async () => {
+  testIfV3('requestAnchor works via http api', async () => {
     const content1 = { test: 123 }
 
     const doc = await TileDocument.create(client, content1, null, { anchor: false })
@@ -500,7 +504,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
-  it.only('feed works via http api', async () => {
+  test('feed works via http api', async () => {
     let messageEvent: any
     const Codec = JsonAsString.pipe(AggregationDocument)
     const source = new EventSource(
@@ -526,7 +530,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     expect(messageEvent.metadata.model instanceof StreamID).toBeTruthy()
   }, 30000)
 
-  describe('multiqueries', () => {
+  describeIfV3('multiqueries', () => {
     let docA, docB, docC, docD
     beforeEach(async () => {
       docD = await TileDocument.create(core, { test: '321d' })
@@ -605,7 +609,7 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     })
   })
 
-  describe('pin api', () => {
+  describeIfV3('pin api', () => {
     let docA, docB
     let adminClient: CeramicClient
 

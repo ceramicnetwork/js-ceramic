@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi, Networks, StreamState } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
@@ -202,10 +202,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 })
 
-// should pass on v4 as soon as recon is integrated and cross-node syncing works.
-const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
+describe('ModelInstanceDocument API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs0: IpfsApi
@@ -215,26 +212,37 @@ describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
-  beforeAll(async () => {
-    ipfs0 = await createIPFS()
-    ipfs1 = await createIPFS()
-    await swarmConnect(ipfs0, ipfs1)
-  }, 12000)
-
   beforeEach(async () => {
-    ceramic0 = await createCeramic(ipfs0)
-    ceramic1 = await createCeramic(ipfs1)
+    ipfs0 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
+    })
+    ipfs1 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
+    })
+    await swarmConnect(ipfs0, ipfs1)
+
+    ceramic0 = await createCeramic(ipfs0, { networkName: Networks.INMEMORY })
+    ceramic1 = await createCeramic(ipfs1, { networkName: Networks.INMEMORY })
 
     model = await Model.create(ceramic0, MODEL_DEFINITION_SINGLE)
     midMetadata = { model: model.id }
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
   }, 12000)
 
   afterEach(async () => {
     await ceramic0.close()
     await ceramic1.close()
-  })
-
-  afterAll(async () => {
     await ipfs0.stop()
     await ipfs1.stop()
   })
@@ -243,11 +251,19 @@ describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
     const doc = await ModelInstanceDocument.single(ceramic0, midMetadata)
     await doc.replace(CONTENT1)
 
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+    const hasBothUpdates = (state: StreamState) => state.log.length === 2
+    await TestUtils.waitFor(loaded, hasBothUpdates)
 
     const docState = doc.state
     const loadedState = loaded.state
-    expect(docState.anchorStatus).toEqual(AnchorStatus.PENDING)
+    // TODO(WS1-1471): Enable anchoring when in Recon (Prime) mode.
+    expect(docState.anchorStatus).toEqual(
+      process.env.CERAMIC_RECON_MODE ? AnchorStatus.NOT_REQUESTED : AnchorStatus.PENDING
+    )
     expect(loadedState.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     delete docState.anchorStatus
     delete loadedState.anchorStatus
@@ -260,10 +276,15 @@ describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
     await doc.replace(CONTENT1)
 
     const loaded = await ModelInstanceDocument.single(ceramic1, midMetadata)
+    const hasBothUpdates = (state: StreamState) => state.log.length === 2
+    await TestUtils.waitFor(loaded, hasBothUpdates)
 
     const docState = doc.state
     const loadedState = loaded.state
-    expect(docState.anchorStatus).toEqual(AnchorStatus.PENDING)
+    // TODO(WS1-1471): Enable anchoring when in Recon (Prime) mode.
+    expect(docState.anchorStatus).toEqual(
+      process.env.CERAMIC_RECON_MODE ? AnchorStatus.NOT_REQUESTED : AnchorStatus.PENDING
+    )
     expect(loadedState.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     delete docState.anchorStatus
     delete loadedState.anchorStatus

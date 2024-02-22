@@ -1,6 +1,6 @@
 import { jest, expect, describe, test, afterEach, beforeEach } from '@jest/globals'
 import { type IpfsApi } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -41,9 +41,7 @@ function getQueryPublishedPromise(
   })
 }
 
-// These tests will likely pass in a way on v4, but there is no pubsub
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// Will not pass in V' as there is no pubsub or syncing
 describeIfV3('Response to pubsub queries handling', () => {
   jest.setTimeout(30 * 1000)
 

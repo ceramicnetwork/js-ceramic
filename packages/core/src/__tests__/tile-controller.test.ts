@@ -8,6 +8,7 @@ import { Resolver } from 'did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { DID } from 'dids'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
@@ -45,9 +46,7 @@ afterEach(async () => {
   await ceramic.close()
 })
 
-// These tests are never expected to be run in v4 mode
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// These tests are never expected to be run in V' mode as tile document will not be supported
 describeIfV3('TileDocument controllers', () => {
   describe('throw if controller is different from signer', () => {
     test('create', async () => {

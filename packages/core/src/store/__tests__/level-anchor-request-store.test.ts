@@ -78,9 +78,7 @@ const MODEL_CONTENT_3: ModelDefinition = {
   },
 }
 
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
+describe('LevelDB-backed AnchorRequestStore state store', () => {
   jest.setTimeout(1000 * 30)
 
   let tmpFolder: any

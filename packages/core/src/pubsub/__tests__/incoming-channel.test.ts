@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { from, firstValueFrom, lastValueFrom } from 'rxjs'
 import { delay } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -21,9 +21,7 @@ const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 const PEER_ID = 'PEER_ID'
 const LATE_MESSAGE_AFTER = 1000
 
-// v4 doesn't support the full ipfs api
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// These tests are never expected to be run in V' mode as we will not be using pubsub. Recon will be used instead
 describeIfV3('connection', () => {
   let ipfs: IpfsApi
 

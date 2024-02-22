@@ -546,27 +546,32 @@ export class Repository {
 
     for (const event of events) {
       const { id: eventId } = event
-      const commitData = await Utils.getCommitData(this.dispatcher, eventId.event)
 
-      const genesisCid = commitData.commit.id ? commitData.commit.id : eventId.event
-      const genesisCommitData = commitData.commit.header
-        ? commitData
-        : await Utils.getCommitData(this.dispatcher, genesisCid)
+      try {
+        const commitData = await Utils.getCommitData(this.dispatcher, eventId.event)
 
-      if (!genesisCommitData.commit.header.model) {
-        this.logger.err(
-          `Model not found in genesis commit header ${genesisCid.toString()} for eventId ${eventId.toString()} for cid ${eventId.event.toString()}`
-        )
-        return
+        const genesisCid = commitData.commit.id ? commitData.commit.id : eventId.event
+        const genesisCommitData = commitData.commit.header
+          ? commitData
+          : await Utils.getCommitData(this.dispatcher, genesisCid)
+
+        if (!genesisCommitData.commit.header.model) {
+          throw new Error(
+            `Model not found in genesis commit header ${genesisCid.toString()} for eventId ${eventId.toString()} for cid ${eventId.event.toString()}`
+          )
+        }
+
+        const model = StreamID.fromBytes(genesisCommitData.commit.header.model)
+        const type =
+          model.toString() === Model.MODEL.toString()
+            ? Model.STREAM_TYPE_ID
+            : ModelInstanceDocument.STREAM_TYPE_ID
+
+        await this.handleUpdateFromNetwork(new StreamID(type, genesisCid), eventId.event, model)
+      } catch (e) {
+        this.logger.err(`Error handling recon event with eventID ${eventId}: ${e}`)
+        continue
       }
-
-      const model = StreamID.fromBytes(genesisCommitData.commit.header.model)
-      const type =
-        model.toString() === Model.MODEL.toString()
-          ? Model.STREAM_TYPE_ID
-          : ModelInstanceDocument.STREAM_TYPE_ID
-
-      await this.handleUpdateFromNetwork(new StreamID(type, genesisCid), eventId.event, model)
     }
 
     await this.#deps.keyValueStore.put(
