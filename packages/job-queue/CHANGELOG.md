@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@4.0.1-rc.1...@ceramicnetwork/job-queue@4.1.0) (2024-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/job-queue
+
+
+
+
+
+## [4.0.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@4.0.1-rc.0...@ceramicnetwork/job-queue@4.0.1-rc.1) (2024-02-21)
+
+**Note:** Version bump only for package @ceramicnetwork/job-queue
+
+
+
+
+
 ## [4.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@4.0.0...@ceramicnetwork/job-queue@4.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/job-queue

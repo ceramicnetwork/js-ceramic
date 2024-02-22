@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.1.0-rc.0...@ceramicnetwork/common@5.1.0) (2024-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [5.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.0.1-rc.0...@ceramicnetwork/common@5.1.0-rc.0) (2024-02-21)
+
+
+### Bug Fixes
+
+* unique metadata is not properly typed as a Uint8Array ([#3166](https://github.com/ceramicnetwork/js-ceramic/issues/3166)) ([63c7afc](https://github.com/ceramicnetwork/js-ceramic/commit/63c7afcebba8f7b79faaf0d73e04abc5d3951da4))
+
+
+### Features
+
+* recon put events ([#3143](https://github.com/ceramicnetwork/js-ceramic/issues/3143)) ([7cd8dea](https://github.com/ceramicnetwork/js-ceramic/commit/7cd8deab4d4426a28a8b20504ac7709865e1be3b))
+
+
+
+
+
 ## [5.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.0.0...@ceramicnetwork/common@5.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/common

@@ -90,6 +90,14 @@ export class TaskQueue implements TaskQueueLike {
   }
 
   /**
+   * Returns a Promise that resolves when the underlying PQueue is empty. This means it has no more
+   * tasks waiting to start, though there may still be up to `concurrency` tasks still running.
+   */
+  onEmpty(): Promise<void> {
+    return this.#pq.onEmpty()
+  }
+
+  /**
    * Clear the queue.
    */
   clear() {

@@ -151,6 +151,8 @@ test('Dont process the same entry multiple times concurrently', async () => {
   // Will regenerate the same entries until they get processed.
   async function* overEntries(): AsyncGenerator<number> {
     do {
+      // Need this sleep or else the Node runtime might never switch back to the "process" function.
+      await CommonTestUtils.delay(1)
       for (const e of entries) yield e
     } while (true)
   }

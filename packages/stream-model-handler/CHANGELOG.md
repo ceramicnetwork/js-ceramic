@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@4.1.0-rc.0...@ceramicnetwork/stream-model-handler@4.1.0) (2024-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [4.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@4.0.1-rc.0...@ceramicnetwork/stream-model-handler@4.1.0-rc.0) (2024-02-21)
+
+
+### Features
+
+* enforce immutability constraints when working with interfaces ([#3156](https://github.com/ceramicnetwork/js-ceramic/issues/3156)) ([4ef22a7](https://github.com/ceramicnetwork/js-ceramic/commit/4ef22a726cc0e2920175ded85ac6f41c37f3539a))
+
+
+
+
+
 ## [4.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@4.0.0...@ceramicnetwork/stream-model-handler@4.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler

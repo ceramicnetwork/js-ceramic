@@ -223,6 +223,10 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         .delete()
       return
     }
+    if (indexingArgs.streamContent == null) {
+      // Don't index streams with no content (deterministic streams created from genesis)
+      return
+    }
     const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
     const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
     for (const relation of relations) {

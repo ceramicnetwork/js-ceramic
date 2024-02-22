@@ -145,7 +145,7 @@ export class ProcessingLoop<T> {
           }
         })
         if (this.#taskQueue.size >= this.#taskQueue.concurrency) {
-          await this.#taskQueue.onIdle() // Wait till we process the batch
+          await this.#taskQueue.onEmpty() // Wait for the queue to have room to take on more tasks
         }
       } while (!isDone)
       await this.#taskQueue.onIdle()

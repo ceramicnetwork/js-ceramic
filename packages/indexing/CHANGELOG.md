@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.0.1-rc.1...@ceramicnetwork/indexing@4.1.0) (2024-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/indexing
+
+
+
+
+
+## [4.0.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.0.1-rc.0...@ceramicnetwork/indexing@4.0.1-rc.1) (2024-02-21)
+
+
+### Bug Fixes
+
+* **indexing:** don't index empty deterministic streams ([#3168](https://github.com/ceramicnetwork/js-ceramic/issues/3168)) ([e86b745](https://github.com/ceramicnetwork/js-ceramic/commit/e86b7451dd11db7e4347ee0c02a53ccd303b35a3))
+
+
+
+
+
 ## [4.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.0.0...@ceramicnetwork/indexing@4.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing
