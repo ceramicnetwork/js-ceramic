@@ -125,7 +125,7 @@ let ipfs: IpfsApi
 let defaultSigner: CeramicSigner
 let context: StreamReaderWriter
 
-// These tests are never expected to be run in v4 mode
+// These tests are never expected to be run in v' mode because caip10 link is not supported
 describeIfV3('TileDocument with 3ID', () => {
   beforeEach(async () => {
     jest.resetAllMocks()

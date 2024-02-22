@@ -56,7 +56,7 @@ jest.unstable_mockModule('did-jwt', () => {
     },
   }
 })
-// These tests are never expected to be run in v4 mode
+// These tests are never expected to be run in v' mode because Tile Documents are not supported
 describeIfV3('TileDocumentHandler', () => {
   let tileDocumentHandler: TileDocumentHandler
   let context: StreamReaderWriter

@@ -68,7 +68,7 @@ const COMMITS = {
   },
 }
 
-// These tests are never expected to be run in v4 mode
+// These tests are never expected to be run in v' mode because caip10 link are not supported
 describeIfV3('Caip10LinkHandler', () => {
   let context: Context
   let handler: Caip10LinkHandler
