@@ -177,7 +177,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const signer: CeramicSigner = opts.asDID
       ? CeramicSigner.fromDID(opts.asDID)
       : opts.signer || ceramic.signer
-    const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
+    const commit = await ModelInstanceDocument.makeGenesis(signer, content, metadata)
 
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
@@ -203,7 +203,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       : opts.signer || ceramic.signer
     metadata = { ...metadata, deterministic: true }
 
-    const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata)
+    const commit = await ModelInstanceDocument.makeGenesis(signer, null, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
@@ -230,7 +230,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       : opts.signer || ceramic.signer
     metadata = { ...metadata, deterministic: true }
 
-    const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata, unique)
+    const commit = await ModelInstanceDocument.makeGenesis(signer, null, metadata, unique)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
@@ -415,7 +415,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param metadata - genesis metadata
    * @param unique - optional array of strings to set the unique header value
    */
-  private static async _makeGenesis<T>(
+  static async makeGenesis<T>(
     context: IntoSigner,
     content: T | null,
     metadata: ModelInstanceDocumentMetadataArgs,

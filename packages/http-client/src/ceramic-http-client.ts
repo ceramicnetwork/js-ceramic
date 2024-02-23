@@ -161,6 +161,7 @@ export class CeramicClient implements StreamReaderWriter {
     const queriesJSON = queries.map((q) => {
       return {
         ...q,
+        genesis: q.genesis ? StreamUtils.serializeCommit(q.genesis) : undefined,
         streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
       }
     })

@@ -26,6 +26,7 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
 import { AggregationDocument, JsonAsString } from '@ceramicnetwork/codecs'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { decode } from 'codeco'
 
 const seed = 'SEED'
@@ -606,6 +607,35 @@ describe('Ceramic interop: core <> http-client', () => {
 
       expect(resCore[streamId.toString()].metadata).toEqual(metadata)
       expect(resClient[streamId.toString()].metadata).toEqual(metadata)
+    })
+
+    it('handles genesis commit encoding', async () => {
+      const model = await Model.create(client, {
+        name: 'TestModel',
+        version: '2.0',
+        accountRelation: { type: 'set', fields: ['unique'] },
+        interface: false,
+        implements: [],
+        schema: {
+          type: 'object',
+          properties: {
+            unique: { type: 'string' },
+          },
+          required: ['unique'],
+          additionalProperties: false,
+        },
+      })
+
+      const meta = { controller: core.did?.id.toString(), deterministic: true, model: model.id }
+      const genesis = await ModelInstanceDocument.makeGenesis(client, null, meta, ['test'])
+      const streamId = await StreamID.fromGenesis(ModelInstanceDocument.STREAM_TYPE_ID, genesis)
+      const id = streamId.toString()
+
+      const resCore = await core.multiQuery([{ genesis, streamId }])
+      expect(resCore[id]).toBeInstanceOf(ModelInstanceDocument)
+
+      const resClient = await client.multiQuery([{ genesis, streamId }])
+      expect(resClient[id]).toBeInstanceOf(ModelInstanceDocument)
     })
   })
 
