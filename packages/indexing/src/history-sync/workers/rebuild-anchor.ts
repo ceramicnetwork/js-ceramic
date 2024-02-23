@@ -14,6 +14,8 @@ import { CID } from 'multiformats/cid'
 import { pathString } from '@ceramicnetwork/anchor-utils'
 import PQueue from 'p-queue'
 
+// NOTE: In V' history sync will need to be reworked (ex. use CAR files, use recon)
+
 // Up to 1024 streams could be present in an anchor
 const IPFS_LOAD_CONCURRENCY = 16
 

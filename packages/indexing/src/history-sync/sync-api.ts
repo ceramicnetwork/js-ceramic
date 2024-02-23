@@ -32,9 +32,10 @@ import {
   SyncWorker,
 } from './workers/sync.js'
 
+// NOTE: In V' history sync will need to be reworked (ex. use CAR files, use recon)
+
 const SYNC_STATUS_LOG_INTERVAL = 60000
 export const BLOCK_CONFIRMATIONS = 20
-// TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
   'eip155:1': 16695723,
   'eip155:5': 8503000,

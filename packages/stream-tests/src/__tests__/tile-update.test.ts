@@ -7,12 +7,12 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 import { createCeramic } from '../create-ceramic.js'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 let ipfs: IpfsApi
 let ceramic: CeramicApi
 
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
+// These tests are never expected to be run in V' mode as tile documents will not be supported
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)

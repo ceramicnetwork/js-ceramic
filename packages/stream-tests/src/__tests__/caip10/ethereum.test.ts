@@ -8,6 +8,7 @@ import type { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { happyPath, clearDid, wrongProof } from './caip-flows.js'
 import { AccountId } from 'caip'
+import { describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -74,8 +75,7 @@ let contractAddress: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// These tests are never expected to be run in V' mode as caip10 will not be supported
 beforeEach(async () => {
   addresses = await send(provider, encodeRpcMessage('eth_accounts'))
   // ganache-core doesn't support personal_sign -.-

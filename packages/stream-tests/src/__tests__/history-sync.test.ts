@@ -259,7 +259,8 @@ const mockProvidersCache = {
   },
 }
 
-// should pass when blocks are stored (one needs update from tile document)
+// NOTE: In V' history sync will need to be reworked (ex. use CAR files, use recon)
+// should pass when history sync is reworked and we update one test from tile document)
 // config issue with sync disabled and HDS enabled
 const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
