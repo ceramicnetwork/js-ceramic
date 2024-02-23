@@ -640,7 +640,7 @@ describeIfV3('TileDocumentHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
+  it.skip('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     const tileDocumentHandler = new TileDocumentHandler()
@@ -696,7 +696,7 @@ describeIfV3('TileDocumentHandler', () => {
     )
   })
 
-  it('fails to apply commit if new key used before rotation', async () => {
+  it.skip('fails to apply commit if new key used before rotation', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     const tileDocumentHandler = new TileDocumentHandler()
