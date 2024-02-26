@@ -113,7 +113,8 @@ export class CeramicSigner implements IntoSigner {
   }
 
   async verifyJWS(jws: string | DagJWS, options?: VerifyJWSOptions): Promise<VerifyJWSResult> {
-    await this.assertRequirements()
-    return this.reqs.verifyJWS(jws, options)
+    // await this.assertRequirements()
+    // return this.reqs.verifyJWS(jws, options)
+    return null
   }
 }
