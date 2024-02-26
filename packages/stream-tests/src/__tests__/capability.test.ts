@@ -502,15 +502,15 @@ describe('CACAO Integration test', () => {
     let didKeyWithCapability
     let opts
     const CACAO_EXPIRATION_WINDOW = 1000 * 60 * 10 // 10 minutes
+    const expirationTime = new Date(new Date().valueOf() + CACAO_EXPIRATION_WINDOW)
 
-    // Set curren time forward far enough into the future that the CACAO being used has expired
+    // Set current time forward far enough into the future that the CACAO being used has expired
     function expireCacao() {
       const twoDays = 48 * 3600 * 1000 // in ms
       MockDate.set(new Date(new Date().valueOf() + twoDays).toISOString()) // Plus 2 days
     }
 
     beforeEach(async () => {
-      const expirationTime = new Date(new Date().valueOf() + CACAO_EXPIRATION_WINDOW)
       didKeyWithCapability = await addCapToDid(
         wallet,
         didKey,
@@ -561,6 +561,32 @@ describe('CACAO Integration test', () => {
         await expect(doc.update(CONTENT1, null, opts)).rejects.toThrow(
           /Capability is expired, cannot create a valid signature/
         )
+      },
+      1000 * 60
+    )
+
+    test(
+      'Can update with expired capability within 24 hour grace period',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [PARENT_WALLET_ADDRESS],
+          },
+          opts
+        )
+
+        // Ceramic uses a 24 hour grace period during which it continues to accept expired CACAOs.
+        // So we set the current time to 12 hours past the CACAO expiration time, which should still
+        // be considered within the grace period.
+        const twelveHours = 1000 * 60 * 60 * 12 // in ms
+        const withinGracePeriod = new Date(expirationTime.valueOf() + twelveHours)
+        MockDate.set(withinGracePeriod.toISOString())
+
+        await doc.update(CONTENT1, null, opts)
+
+        expect(doc.content).toEqual(CONTENT1)
       },
       1000 * 60
     )
