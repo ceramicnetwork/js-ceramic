@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "5.1.0",
+  "version": "5.2.0-rc.0",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -48,7 +48,7 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
-    "@ceramicnetwork/http-client": "^5.1.0",
+    "@ceramicnetwork/http-client": "^5.2.0-rc.0",
     "did-resolver": "^4.0.1",
     "http-request-mock": "^1.8.17"
   },

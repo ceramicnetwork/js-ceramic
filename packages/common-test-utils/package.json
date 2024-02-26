@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common-test-utils",
-  "version": "3.1.0",
+  "version": "3.2.0-rc.0",
   "description": "Ceramic Common Module Test Utils",
   "keywords": [
     "ceramic"
