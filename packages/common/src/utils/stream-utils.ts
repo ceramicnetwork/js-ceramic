@@ -1,6 +1,7 @@
 import cloneDeep from 'lodash.clonedeep'
 import * as uint8arrays from 'uint8arrays'
 import { toCID } from './cid-utils.js'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import * as dagCBOR from '@ipld/dag-cbor'
 import {
   AnchorCommit,
@@ -357,7 +358,7 @@ export class StreamUtils {
   /**
    * Takes a StreamState and validates that none of the commits in its log are based on expired CACAOs.
    */
-  static checkForCacaoExpiration(state: StreamState): void {
+  static checkForCacaoExpiration(state: StreamState, logger: DiagnosticsLogger): void {
     const now = Math.floor(Date.now() / 1000) // convert millis to seconds
     for (const logEntry of state.log) {
       const timestamp = logEntry.timestamp ?? now
@@ -368,6 +369,12 @@ export class StreamUtils {
           ).toString()} has a CACAO that expired at ${
             logEntry.expirationTime
           }. Loading the stream with 'sync: SyncOptions.ALWAYS_SYNC' will restore the stream to a usable state, by discarding the invalid commits (this means losing the data from those invalid writes!)`
+        )
+      } else if (logEntry.expirationTime && logEntry.expirationTime - timestamp < 12 * 60 * 60) {
+        logger.warn(
+          `CACAO anchored with less then 12 hours left. ${logEntry.cid.toString()} of ${StreamUtils.streamIdFromState(
+            state
+          ).toString()}: anchorTime=${logEntry.timestamp} expirationTime=${logEntry.expirationTime}`
         )
       }
     }
