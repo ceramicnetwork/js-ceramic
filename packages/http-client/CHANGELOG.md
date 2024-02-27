@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@5.2.0-rc.0...@ceramicnetwork/http-client@5.2.0) (2024-02-27)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [5.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@5.1.0...@ceramicnetwork/http-client@5.2.0-rc.0) (2024-02-26)
+
+
+### Bug Fixes
+
+* **cli,http-client,stream-model-instance:** encode genesis commit in multiquery ([#3172](https://github.com/ceramicnetwork/js-ceramic/issues/3172)) ([cb5c2fc](https://github.com/ceramicnetwork/js-ceramic/commit/cb5c2fcf7bfd4df8c419bcd5535c215aab562cf0))
+
+
+
+
+
 # [5.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@5.0.1-rc.1...@ceramicnetwork/http-client@5.1.0) (2024-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

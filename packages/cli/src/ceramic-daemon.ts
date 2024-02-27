@@ -911,12 +911,13 @@ export class CeramicDaemon {
    * Load multiple streams and paths using an array of multiqueries
    */
   async multiQuery(req: Request, res: Response): Promise<void> {
-    const { queries } = <MultiQueries>req.body
-    const { timeout } = <MultiQueries>req.body
-
-    const results = await this.ceramic.multiQuery(queries, timeout)
-    const response = Object.entries(results).reduce((acc, e) => {
-      const [k, v] = e
+    const body = req.body as MultiQueries
+    const queries = body.queries.map((q) => ({
+      ...q,
+      genesis: q.genesis ? StreamUtils.deserializeCommit(q.genesis) : undefined,
+    }))
+    const results = await this.ceramic.multiQuery(queries, body.timeout)
+    const response = Object.entries(results).reduce((acc, [k, v]) => {
       acc[k] = StreamUtils.serializeState(v.state)
       return acc
     }, {})

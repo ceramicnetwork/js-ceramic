@@ -19,7 +19,7 @@ import {
   FAKE_CID_3,
   FAKE_CID_4,
 } from '@ceramicnetwork/did-test-utils'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { VerificationMethod } from 'did-resolver'
 
 // because we're doing mocking weirdly, by mocking a function two libraries deep, to test a function
@@ -123,9 +123,7 @@ let ipfs: IpfsApi
 let defaultSigner: CeramicSigner
 let context: StreamReaderWriter
 
-// These tests are never expected to be run in v4 mode
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// These tests are never expected to be run in v' mode because caip10 link is not supported
 describeIfV3('TileDocument with 3ID', () => {
   beforeEach(async () => {
     jest.resetAllMocks()

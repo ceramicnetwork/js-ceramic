@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.2.0-rc.0...@ceramicnetwork/core@5.2.0) (2024-02-27)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.1.0...@ceramicnetwork/core@5.2.0-rc.0) (2024-02-26)
+
+
+### Features
+
+* turn syncing tests on in recon mode  ([#3169](https://github.com/ceramicnetwork/js-ceramic/issues/3169)) ([394eebe](https://github.com/ceramicnetwork/js-ceramic/commit/394eebe5e5ebf6c9e866fe93bd9c6e12f44a6175))
+
+
+
+
+
 # [5.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.1.0-rc.1...@ceramicnetwork/core@5.1.0) (2024-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/core

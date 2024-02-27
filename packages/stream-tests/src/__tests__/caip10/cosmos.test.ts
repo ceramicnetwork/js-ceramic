@@ -6,14 +6,13 @@ import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import tendermint from '@tendermint/sig'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { clearDid, happyPath, wrongProof } from './caip-flows.js'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'
 const localProvider = tendermint.createWalletFromMnemonic(mnemonic)
 const chainRef = 'cosmoshub-3'
 
-// no caip10 support in v4
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
+// These tests are never expected to be run in V' mode as caip10 will not be supported
 class CosmosMockSigner {
   constructor(readonly provider: tendermint.Wallet) {}
 

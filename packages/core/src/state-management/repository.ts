@@ -14,6 +14,7 @@ import {
   SyncOptions,
   UnreachableCaseError,
   UpdateOpts,
+  SignatureUtils,
 } from '@ceramicnetwork/common'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { PinStore } from '../store/pin-store.js'
@@ -301,7 +302,7 @@ export class Repository {
     })
 
     if (checkCacaoExpiration) {
-      StreamUtils.checkForCacaoExpiration(state$.state)
+      SignatureUtils.checkForCacaoExpiration(state$.state)
     }
 
     if (syncStatus != SyncStatus.ALREADY_SYNCED) {
@@ -485,7 +486,7 @@ export class Repository {
       const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
 
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
-      StreamUtils.checkForCacaoExpiration(stateAtCommit)
+      SignatureUtils.checkForCacaoExpiration(stateAtCommit)
 
       // If the provided CommitID is ahead of what we have in the cache and state store, then we
       // should update them to include it.

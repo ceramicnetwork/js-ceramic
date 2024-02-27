@@ -25,7 +25,7 @@ import {
   JWS_VERSION_1,
   RotatingSigner,
 } from '@ceramicnetwork/did-test-utils'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { VerificationMethod } from 'did-resolver'
 
 // because we're doing mocking weirdly, by mocking a function two libraries deep, to test a function
@@ -55,9 +55,7 @@ jest.unstable_mockModule('did-jwt', () => {
     },
   }
 })
-// These tests are never expected to be run in v4 mode
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// These tests are never expected to be run in v' mode because Tile Documents are not supported
 describeIfV3('TileDocumentHandler', () => {
   let tileDocumentHandler: TileDocumentHandler
   let context: StreamReaderWriter

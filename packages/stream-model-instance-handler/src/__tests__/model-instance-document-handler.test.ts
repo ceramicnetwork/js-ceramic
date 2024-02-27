@@ -475,7 +475,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, METADATA)
+    const commit = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, METADATA)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -487,7 +487,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly with context', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context, CONTENT0, METADATA_WITH_CTX)
+    const commit = await ModelInstanceDocument.makeGenesis(context, CONTENT0, METADATA_WITH_CTX)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -504,7 +504,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
+    const commit = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, {
       model: FAKE_MODEL_ID,
     })
     expect(commit).toBeDefined()
@@ -518,25 +518,25 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('model is required', async () => {
-    await expect(ModelInstanceDocument._makeGenesis(context.signer, null, {})).rejects.toThrow(
+    await expect(ModelInstanceDocument.makeGenesis(context.signer, null, {})).rejects.toThrow(
       /Must specify a 'model' when creating a ModelInstanceDocument/
     )
   })
 
   it('creates genesis commits uniquely', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, METADATA)
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, METADATA)
+    const commit1 = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, METADATA)
+    const commit2 = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, METADATA)
 
     expect(commit1).not.toEqual(commit2)
     expect(StreamUtils.isSignedCommitContainer(commit1)).toBeTruthy()
   })
 
   it('Can create deterministic genesis commit', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.signer, null, {
+    const commit1 = await ModelInstanceDocument.makeGenesis(context.signer, null, {
       ...METADATA,
       deterministic: true,
     })
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.signer, null, {
+    const commit2 = await ModelInstanceDocument.makeGenesis(context.signer, null, {
       ...METADATA,
       deterministic: true,
     })
@@ -545,12 +545,12 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Can create deterministic genesis commits with a provided unique value', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(
+    const commit1 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       DETERMINISTIC_METADATA
     )
-    const commit2 = await ModelInstanceDocument._makeGenesis(
+    const commit2 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       DETERMINISTIC_METADATA,
@@ -558,7 +558,7 @@ describe('ModelInstanceDocumentHandler', () => {
     )
     expect(commit2).not.toEqual(commit1)
 
-    const commit3 = await ModelInstanceDocument._makeGenesis(
+    const commit3 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       DETERMINISTIC_METADATA,
@@ -566,7 +566,7 @@ describe('ModelInstanceDocumentHandler', () => {
     )
     expect(commit3).toEqual(commit2)
 
-    const commit4 = await ModelInstanceDocument._makeGenesis(
+    const commit4 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       DETERMINISTIC_METADATA,
@@ -576,7 +576,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -598,7 +598,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly with small allowable content length', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       { myData: 'abcdefghijk' },
       METADATA_BLOB
@@ -620,7 +620,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('genesis commit with content must be signed', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       DETERMINISTIC_METADATA
@@ -638,7 +638,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies deterministic genesis commit correctly', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       DETERMINISTIC_METADATA
@@ -657,7 +657,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('deterministic genesis commit cannot have content', async () => {
-    const rawCommit = await ModelInstanceDocument._makeGenesis(
+    const rawCommit = await ModelInstanceDocument.makeGenesis(
       context,
       CONTENT0,
       DETERMINISTIC_METADATA
@@ -680,7 +680,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly with context', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context,
       CONTENT0,
       METADATA_WITH_CTX
@@ -703,7 +703,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models with SINGLE accountRelations must be created deterministically', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.signer, null, {
+    const commit = await ModelInstanceDocument.makeGenesis(context.signer, null, {
       ...DETERMINISTIC_METADATA,
       deterministic: false,
     })
@@ -724,7 +724,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models without SINGLE accountRelations must be created uniquely', async () => {
-    const rawCommit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
+    const rawCommit = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, {
       ...METADATA,
       deterministic: true,
     })
@@ -750,7 +750,7 @@ describe('ModelInstanceDocumentHandler', () => {
       'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
     )
 
-    const commit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
+    const commit = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, {
       model: nonModelStreamId,
     })
 
@@ -771,7 +771,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes signed commit correctly', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -812,7 +812,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -858,7 +858,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs with SET account relation validate signed commit fields', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       { ...DETERMINISTIC_METADATA, model: FAKE_MODEL_SET_ID },
@@ -920,7 +920,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs with SET account relation validate content schema on update', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
       { ...DETERMINISTIC_METADATA, model: FAKE_MODEL_SET_ID },
@@ -966,7 +966,7 @@ describe('ModelInstanceDocumentHandler', () => {
   it('multiple consecutive updates', async () => {
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
 
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -1040,7 +1040,7 @@ describe('ModelInstanceDocumentHandler', () => {
         myArray: [1, 2],
         myMultipleType: 1,
       }
-      const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      const genesisCommit = (await ModelInstanceDocument.makeGenesis(
         context.signer,
         customContent,
         {
@@ -1190,7 +1190,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       {},
       METADATA
@@ -1215,12 +1215,12 @@ describe('ModelInstanceDocumentHandler', () => {
   test('throws error when applying genesis commit with invalid length', async () => {
     ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
     await expect(
-      ModelInstanceDocument._makeGenesis(context.signer, { myData: 'abcdefghijk' }, METADATA)
+      ModelInstanceDocument.makeGenesis(context.signer, { myData: 'abcdefghijk' }, METADATA)
     ).rejects.toThrow(/which exceeds maximum size/)
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -1266,8 +1266,8 @@ describe('ModelInstanceDocumentHandler', () => {
     )
   })
 
-  it.skip('throws error if commit signed by wrong DID', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
+  it('throws error if commit signed by wrong DID', async () => {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, {
       controller: 'did:3:fake',
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
@@ -1290,7 +1290,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('throws error if changes metadata', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -1334,7 +1334,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid prev link', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -1377,7 +1377,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid id property', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -1420,7 +1420,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
       METADATA
@@ -1483,7 +1483,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make and apply genesis with old key
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(signerUsingOldKey, CONTENT0, {
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -1537,7 +1537,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make genesis with new key
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(signerUsingNewKey, CONTENT0, {
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -1565,7 +1565,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make genesis commit using old key
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(signerUsingOldKey, CONTENT0, {
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -1590,7 +1590,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws when trying to create a MID with an interface model', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(defaultSigner, CONTENT0, {
+    const commit = (await ModelInstanceDocument.makeGenesis(defaultSigner, CONTENT0, {
       controller: METADATA.controller,
       model: FAKE_MODEL_INTERFACE_ID,
     })) as SignedCommitContainer
@@ -1611,7 +1611,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with required model - throws if invalid', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID2.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_REQUIRED_RELATION_ID }
@@ -1634,7 +1634,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with required model - model match', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_REQUIRED_RELATION_ID }
@@ -1655,7 +1655,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with optional model - linked MID not provided', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       defaultSigner,
       { myData: 3 },
       { controller: METADATA.controller, model: FAKE_MODEL_OPTIONAL_RELATION_ID }
@@ -1676,7 +1676,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with optional model - linked MID provided', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID2.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_OPTIONAL_RELATION_ID }
@@ -1697,7 +1697,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with interface model', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID3.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_INTERFACE_RELATION_ID }

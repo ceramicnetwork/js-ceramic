@@ -6,10 +6,9 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic, MsgType, deserialize, serialize } from '@ceramicnetwork/core'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
+// Will not pass in V' as there is no pubsub
 describeIfV3('Test loading a stream when pubsub replies with an invalid tip', () => {
   jest.setTimeout(1000 * 30)
 
@@ -29,6 +28,7 @@ describeIfV3('Test loading a stream when pubsub replies with an invalid tip', ()
     await ceramic.close()
   })
 
+  // will not work we have to receive it via recon
   test('No pubsub response', async () => {
     const content = { test: 123 }
     const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
@@ -116,7 +116,6 @@ describeIfV3('Test loading a stream when pubsub replies with an invalid tip', ()
 
     await ipfs2.stop()
   })
-
   test('Pubsub responds with tip from a different stream', async () => {
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.

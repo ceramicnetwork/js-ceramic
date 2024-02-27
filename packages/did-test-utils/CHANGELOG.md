@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/did-test-utils@3.2.0-rc.0...@ceramicnetwork/did-test-utils@3.2.0) (2024-02-27)
+
+**Note:** Version bump only for package @ceramicnetwork/did-test-utils
+
+
+
+
+
+# [3.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/did-test-utils@3.1.0...@ceramicnetwork/did-test-utils@3.2.0-rc.0) (2024-02-26)
+
+**Note:** Version bump only for package @ceramicnetwork/did-test-utils
+
+
+
+
+
 # [3.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/did-test-utils@3.0.1-rc.1...@ceramicnetwork/did-test-utils@3.1.0) (2024-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/did-test-utils

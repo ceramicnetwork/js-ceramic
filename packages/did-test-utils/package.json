@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/did-test-utils",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Ceramic DID Test Utils",
   "keywords": [
     "ceramic"
@@ -29,7 +29,7 @@
   "author": "3Box Labs <support@3box.io>",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^5.1.0",
+    "@ceramicnetwork/3id-did-resolver": "^5.2.0",
     "@ceramicnetwork/common": "^5.1.0",
     "@ceramicnetwork/streamid": "^5.0.0",
     "did-jwt": "^7.4.7",

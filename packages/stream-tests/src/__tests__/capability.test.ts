@@ -1,5 +1,5 @@
-import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
-import { Utils as CoreUtils } from '@ceramicnetwork/core'
+import { AnchorStatus, CeramicSigner, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { Ceramic, Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -77,7 +77,7 @@ const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('CACAO Integration test', () => {
   let ipfs: IpfsApi
-  let ceramic: CeramicApi
+  let ceramic: Ceramic
   let wallet: Wallet
   let didKey: DID
   let didKeyWithParent: DID
@@ -502,15 +502,15 @@ describe('CACAO Integration test', () => {
     let didKeyWithCapability
     let opts
     const CACAO_EXPIRATION_WINDOW = 1000 * 60 * 10 // 10 minutes
+    const expirationTime = new Date(new Date().valueOf() + CACAO_EXPIRATION_WINDOW)
 
-    // Set curren time forward far enough into the future that the CACAO being used has expired
+    // Set current time forward far enough into the future that the CACAO being used has expired
     function expireCacao() {
       const twoDays = 48 * 3600 * 1000 // in ms
       MockDate.set(new Date(new Date().valueOf() + twoDays).toISOString()) // Plus 2 days
     }
 
     beforeEach(async () => {
-      const expirationTime = new Date(new Date().valueOf() + CACAO_EXPIRATION_WINDOW)
       didKeyWithCapability = await addCapToDid(
         wallet,
         didKey,
@@ -545,7 +545,29 @@ describe('CACAO Integration test', () => {
     )
 
     test(
-      'Cannot update with expired capability',
+      'Cannot apply genesis commit with expired capability',
+      async () => {
+        // Create genesis commit before capability is expired
+        const genesis = await TileDocument.makeGenesis(
+          CeramicSigner.fromDID(didKeyWithCapability),
+          CONTENT0,
+          {
+            controllers: [PARENT_WALLET_ADDRESS],
+          }
+        )
+
+        expireCacao()
+
+        // Now attempt to apply genesis commit after capability has expired.
+        await expect(
+          ceramic.createStreamFromGenesis(TileDocument.STREAM_TYPE_ID, genesis, opts)
+        ).rejects.toThrow(/Can not verify signature for commit .* CACAO has expired/)
+      },
+      1000 * 60
+    )
+
+    test(
+      'Cannot create update with expired capability',
       async () => {
         const doc = await TileDocument.create(
           ceramic,
@@ -561,6 +583,61 @@ describe('CACAO Integration test', () => {
         await expect(doc.update(CONTENT1, null, opts)).rejects.toThrow(
           /Capability is expired, cannot create a valid signature/
         )
+      },
+      1000 * 60
+    )
+
+    test(
+      'Cannot apply update with expired capability',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [PARENT_WALLET_ADDRESS],
+          },
+          opts
+        )
+
+        // Make the commit before the CACAO has expired
+        const commit = await doc.makeCommit(CeramicSigner.fromDID(didKeyWithCapability), CONTENT1)
+
+        expireCacao()
+
+        // Now attempt to apply the commit after the CACAO has expired
+        await expect(ceramic.applyCommit(doc.id, commit, opts)).rejects.toThrow(/CACAO expired/)
+      },
+      1000 * 60
+    )
+
+    test(
+      'Can update with expired capability within 24 hour grace period',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [PARENT_WALLET_ADDRESS],
+          },
+          opts
+        )
+
+        // Make the commit before the CACAO has expired
+        const commit = await doc.makeCommit(CeramicSigner.fromDID(didKeyWithCapability), CONTENT1)
+
+        // Ceramic uses a 24 hour grace period during which it continues to accept expired CACAOs.
+        // So we set the current time to 12 hours past the CACAO expiration time, which should still
+        // be considered within the grace period.
+        const twelveHours = 1000 * 60 * 60 * 12 // in ms
+        const withinGracePeriod = new Date(expirationTime.valueOf() + twelveHours)
+        MockDate.set(withinGracePeriod.toISOString())
+
+        // Now attempt to apply the commit after the CACAO has expired
+        // (but still inside the grace period)
+        await ceramic.applyCommit(doc.id, commit, opts)
+        await doc.sync()
+
+        expect(doc.content).toEqual(CONTENT1)
       },
       1000 * 60
     )
