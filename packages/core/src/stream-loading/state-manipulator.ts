@@ -9,6 +9,7 @@ import {
   StreamUtils,
   UnappliableStreamLog,
   StreamReaderWriter,
+  SignatureUtils,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { HandlersMap } from '../handlers-map.js'
@@ -324,7 +325,7 @@ export class StateManipulator {
     // The initial state may have included commits that were valid previously but have since had
     // their CACAOs expire.  Before returning the state back to the caller we should double-check
     // that it is based all on valid commits without expired CACAOs.
-    StreamUtils.checkForCacaoExpiration(state)
+    SignatureUtils.checkForCacaoExpiration(state)
 
     return state
   }
