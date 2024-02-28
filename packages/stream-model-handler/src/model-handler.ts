@@ -12,7 +12,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
+import { SchemaValidation } from '@ceramicnetwork/stream-handler-common'
 import { ViewsValidation } from './views-utils.js'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { validateInterface, validateImplementedInterfaces } from './interfaces-utils.js'
@@ -144,7 +144,7 @@ export class ModelHandler implements StreamHandler<Model> {
       log: [StreamUtils.commitDataToLogEntry(commitData, EventType.INIT)],
     }
 
-    await this._schemaValidator.validateSchema(state.content.schema)
+    await this._schemaValidator.assertSchemaIsValid(state.content.schema)
     if (state.content.accountRelation.type === 'set') {
       validateSetFields(state.content.accountRelation.fields, state.content.schema)
     }

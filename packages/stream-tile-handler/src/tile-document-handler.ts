@@ -15,7 +15,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
+import { SchemaValidation } from '@ceramicnetwork/stream-handler-common'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
@@ -120,7 +120,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     }
 
     if (state.metadata.schema) {
-      await this._schemaValidator.validateSchema(context, state.content, state.metadata.schema)
+      const schemaStream = await context.loadStream(state.metadata.schema)
+      await this._schemaValidator.validateSchema(
+        state.content,
+        schemaStream.content,
+        state.metadata.schema
+      )
     }
 
     return state
@@ -196,10 +201,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const newMetadata = { ...oldMetadata, ...payload.header }
 
     if (newMetadata.schema) {
-      // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load
-      // the schema into the CommitData so that commit application can be a simple state
-      // transformation with no i/o.
-      await this._schemaValidator.validateSchema(context, newContent, newMetadata.schema)
+      const schemaStream = await context.loadStream(newMetadata.schema)
+      await this._schemaValidator.validateSchema(
+        newContent,
+        schemaStream.content,
+        newMetadata.schema
+      )
     }
 
     state.next = {

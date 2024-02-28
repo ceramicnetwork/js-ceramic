@@ -20,7 +20,7 @@ import {
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
+import { SchemaValidation } from '@ceramicnetwork/stream-handler-common'
 import { Model, ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { toString } from 'uint8arrays'

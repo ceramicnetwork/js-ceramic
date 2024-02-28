@@ -1,4 +1,20 @@
-import ajv, { SchemaObject } from 'ajv/dist/2020.js'
+import Ajv, { SchemaObject } from 'ajv/dist/2020.js'
+import addFormats from 'ajv-formats'
+import { LRUCache } from 'least-recent'
+
+const AJV_CACHE_SIZE = 500
+
+function buildAjv(): Ajv {
+  const validator = new Ajv({
+    strict: true,
+    allErrors: true,
+    allowMatchingProperties: false,
+    ownProperties: false,
+    unevaluated: false,
+  })
+  addFormats(validator)
+  return validator
+}
 
 /**
  * A type that we use to check if object properties within JSON Schema schemas
@@ -57,27 +73,46 @@ function validateAdditionalProperties(schema: SchemaObject): void {
 }
 
 export class SchemaValidation {
-  STANDARD_VERSION = '2020-12'
+  readonly validators: LRUCache<string, Ajv>
 
-  private readonly _validator = new ajv({
-    strict: true,
-    allErrors: true,
-    allowMatchingProperties: false,
-    ownProperties: false,
-    unevaluated: false,
-  })
+  constructor() {
+    this.validators = new LRUCache(AJV_CACHE_SIZE)
+  }
 
-  public async validateSchema(schema: SchemaObject): Promise<void> {
+  private _getValidator(schemaId: string): Ajv {
+    let validator = this.validators.get(schemaId)
+    if (!validator) {
+      validator = buildAjv()
+      this.validators.set(schemaId, validator)
+    }
+    return validator
+  }
+
+  /**
+   * Asserts that the given schema object contains a valid jsonSchema.
+   */
+  public async assertSchemaIsValid(schema: SchemaObject): Promise<void> {
     if (!schema) throw new Error(`Validation Error: schema must be defined`)
-    const isValid = await this._validator.validateSchema(schema)
+    const validator = this._getValidator('default')
+    const isValid = await validator.validateSchema(schema)
 
     // Remove schema from the Ajv instance's cache, otherwise the ajv cache grows unbounded
-    this._validator.removeSchema(schema)
+    validator.removeSchema(schema)
 
     if (!isValid) {
-      const errorMessages = this._validator.errorsText()
+      const errorMessages = validator.errorsText()
       throw new Error(`Validation Error: ${errorMessages}`)
     }
     recursiveMap(schema, validateAdditionalProperties)
+  }
+
+  public validateSchema(content: Record<string, any>, schema: SchemaObject, schemaId: string) {
+    const validator = this._getValidator(schemaId)
+    const isValid = validator.validate(schema, content)
+
+    if (!isValid) {
+      const errorMessages = validator.errorsText()
+      throw new Error(`Validation Error: ${errorMessages}`)
+    }
   }
 }
