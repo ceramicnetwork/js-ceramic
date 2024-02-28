@@ -2,7 +2,8 @@
  * Testing utilities for did, did resolvers, and signing functionality
  */
 import { CID } from 'multiformats/cid'
-import type { DagJWS, DID, DIDResolutionResult, VerifyJWSResult } from 'dids'
+import type { DagJWS, DID, DIDResolutionResult } from 'dids'
+import { encodePayload } from 'dag-jose-utils'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as sha256 from '@stablelib/sha256'
@@ -141,24 +142,6 @@ export const COMMITS = {
   },
 }
 
-export const NO_DID_SIGNER = new CeramicSigner({
-  createDagJWS: () => {
-    throw new Error('No DID')
-  },
-  createJWS: () => {
-    throw new Error('No DID')
-  },
-  verifyJWS: () => {
-    throw new Error('No DID')
-  },
-  async ensureAuthenticated(): Promise<void> {
-    throw new Error('No DID')
-  },
-  async asController(): Promise<string> {
-    throw new Error('No DID')
-  },
-})
-
 export class RotatingSigner implements IntoSigner {
   readonly _did: DID
   readonly _signer: CeramicSigner
@@ -177,11 +160,16 @@ export class RotatingSigner implements IntoSigner {
 export interface GenerateDidOpts {
   id?: string
   jws?: DagJWS
+  verify?: boolean
 }
 
 export class DidTestUtils {
   static readonly verifyJWS = jest.fn(() => {
-    return Promise.resolve({} as any as VerifyJWSResult)
+    return Promise.resolve({
+      id: '',
+      controller: '',
+      type: '',
+    })
   })
   static readonly threeIdResolver = {
     '3': async (did: string) => {
@@ -237,8 +225,13 @@ export class DidTestUtils {
       ...DidTestUtils.threeIdResolver,
     })
 
-    const createJWS = jest.fn(async () => opts.jws || JWS_VERSION_0)
-    did.createJWS = createJWS.bind(did)
+    const createDagJWS = jest.fn(async (payload: Record<string, any>) => {
+      const { linkedBlock } = await encodePayload(payload)
+      const jws = opts.jws || JWS_VERSION_0
+      return { jws, linkedBlock }
+    })
+    did.createDagJWS = createDagJWS.bind(did)
+    did.verifyJWS = this.verifyJWS.bind(did)
     return did
   }
 
@@ -302,6 +295,10 @@ export class DidTestUtils {
 
 export class TestReaderWriter implements StreamReaderWriter {
   constructor(private readonly _signer: IntoSigner) {}
+
+  signerFromDID(did: DID): CeramicSigner {
+    return CeramicSigner.fromDID(did)
+  }
 
   multiQuery(_queries: Array<MultiQuery>, _timeout?: number): Promise<Record<string, Stream>> {
     return Promise.reject(`Can't multiquery`)

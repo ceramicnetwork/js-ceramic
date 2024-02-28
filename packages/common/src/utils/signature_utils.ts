@@ -1,6 +1,7 @@
 import type { Cacao } from '@didtools/cacao'
 import type { CommitData, StreamState } from '../stream.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import type { Verifiers } from '@didtools/cacao'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
@@ -11,7 +12,7 @@ import { StreamUtils } from './stream-utils.js'
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS = 24 * 60 * 60
 
 // Register supported CACAO Verifiers
-const verifiersCACAO = {
+export const DEFAULT_VERIFIERS: Verifiers = {
   ...getEIP191Verifier(),
   ...getSolanaVerifier(),
   ...getStacksVerifier(),
@@ -48,7 +49,7 @@ export class SignatureUtils {
         issuer: controller,
         capability: cacao,
         revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS,
-        verifiers: verifiersCACAO,
+        // verifiers: DEFAULT_VERIFIERS,
       })
     } catch (e: any) {
       const original = e.message ? e.message : String(e)

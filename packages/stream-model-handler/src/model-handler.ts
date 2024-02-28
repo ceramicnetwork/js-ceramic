@@ -51,6 +51,14 @@ export class ModelHandler implements StreamHandler<Model> {
   private readonly _schemaValidator: SchemaValidation
   private readonly _viewsValidator: ViewsValidation
 
+  init(): Promise<void> {
+    return Promise.resolve()
+  }
+
+  shutdown(): Promise<void> {
+    return Promise.resolve()
+  }
+
   get type(): number {
     return Model.STREAM_TYPE_ID
   }

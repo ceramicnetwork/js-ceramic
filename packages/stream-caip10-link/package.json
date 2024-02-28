@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^5.0.0",
-    "dids": "^5.0.0"
+    "dids": "5.1.0-next.0"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

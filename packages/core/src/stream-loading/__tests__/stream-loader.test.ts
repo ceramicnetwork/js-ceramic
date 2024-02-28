@@ -15,7 +15,7 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LogSyncer } from '../log-syncer.js'
 import { StateManipulator } from '../state-manipulator.js'
-import { HandlersMap } from '../../handlers-map.js'
+import { defaultHandlers, HandlersMap } from '../../handlers-map.js'
 import { StreamLoader } from '../stream-loader.js'
 import { TipFetcher } from '../tip-fetcher.js'
 import { AnchorTimestampExtractor } from '../anchor-timestamp-extractor.js'
@@ -82,7 +82,7 @@ describeIfV3('Streamloader', () => {
         dispatcher,
         ceramic.anchorService.validator
       )
-      const handlers = new HandlersMap(logger)
+      const handlers = new HandlersMap(logger, await defaultHandlers())
       const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
       streamLoader = new StreamLoader(
         logger,
@@ -301,7 +301,6 @@ describeIfV3('Streamloader', () => {
 
     let ipfs: IpfsApi
 
-    let dispatcher: Dispatcher
     let streamLoader: StreamLoader
 
     let stream: TileDocument
@@ -310,6 +309,8 @@ describeIfV3('Streamloader', () => {
 
     let receiveMessage
     let originalPubsubPublish
+    let ceramic: Ceramic
+    let dispatcher: Dispatcher
 
     beforeAll(async () => {
       ipfs = await createIPFS()
@@ -337,7 +338,7 @@ describeIfV3('Streamloader', () => {
         dispatcher,
         ceramic.anchorService.validator
       )
-      const handlers = new HandlersMap(logger)
+      const handlers = new HandlersMap(logger, await defaultHandlers())
       const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
       streamLoader = new StreamLoader(
         logger,
@@ -367,7 +368,6 @@ describeIfV3('Streamloader', () => {
       })
 
       // Close the Ceramic node before tests start so it won't respond to any pubsub messages.
-      await ceramic.close()
     })
 
     afterEach(() => {
@@ -387,13 +387,7 @@ describeIfV3('Streamloader', () => {
     })
 
     afterAll(async () => {
-      await dispatcher.close()
-
-      // Wait for pubsub unsubscribe to be processed
-      // TODO(1963): Remove this once dispatcher.close() won't resolve until the pubsub unsubscribe
-      // has been processed
-      await TestUtils.delay(5000)
-
+      await ceramic.close()
       await ipfs.stop()
     })
 

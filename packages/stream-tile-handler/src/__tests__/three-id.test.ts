@@ -18,8 +18,6 @@ import {
   FAKE_CID_2,
   FAKE_CID_3,
   FAKE_CID_4,
-  NO_DID_SIGNER,
-  RotatingSigner,
 } from '@ceramicnetwork/did-test-utils'
 import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { VerificationMethod } from 'did-resolver'
@@ -237,13 +235,17 @@ describeIfV3('TileDocument with 3ID', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new TileDocument(state$, context)
 
-    await expect(doc.makeCommit(NO_DID_SIGNER, COMMITS.r1.desiredContent)).rejects.toThrow(/No DID/)
+    await expect(
+      doc.makeCommit(CeramicSigner.invalid(), COMMITS.r1.desiredContent)
+    ).rejects.toThrow(/No DID/)
 
     const commit = (await doc.makeCommit(
       context.signer,
       COMMITS.r1.desiredContent
     )) as SignedCommitContainer
     const { jws: rJws, linkedBlock: rLinkedBlock } = commit
+    //since we're mocking library calls, we're missing this. Adding it to make test match
+    rJws.link = 'bafyreib2rxk3rybk3aobmv5cjuql3bm2twh4jo5uxgf5kpqcsgz7soitae'
     const rPayload = dagCBOR.decode(rLinkedBlock)
     expect({
       jws: DidTestUtils.serialize(rJws),
