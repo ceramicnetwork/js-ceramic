@@ -106,6 +106,13 @@ export class SchemaValidation {
     recursiveMap(schema, validateAdditionalProperties)
   }
 
+  /**
+   * Validates that the given piece of content conforms to the given jsonSchema
+   * @param content - content to validate against the schema
+   * @param schema - schema to use to validate the content
+   * @param schemaId - unique identifier to identify the schema being used. We use this to use a
+   * different Ajv instance for each schema, as we've seen memory leaks inside of Ajv otherwise.
+   */
   public validateSchema(content: Record<string, any>, schema: SchemaObject, schemaId: string) {
     const validator = this._getValidator(schemaId)
     const isValid = validator.validate(schema, content)
