@@ -37,7 +37,7 @@ describe('SchemaValidation', () => {
 
   it('validates correct 2020-12 schema', async () => {
     await expect(
-      schemaValidator.validateSchema(VALID_JSON_SCHEMA_2020_12_NO_ADDITIONAL_PROPS)
+      schemaValidator.assertSchemaIsValid(VALID_JSON_SCHEMA_2020_12_NO_ADDITIONAL_PROPS)
     ).resolves.not.toThrow()
   })
 
@@ -47,7 +47,7 @@ describe('SchemaValidation', () => {
       additionalProperties: true,
     }
     await expect(
-      schemaValidator.validateSchema(validSchemaAllowingAdditionalProps)
+      schemaValidator.assertSchemaIsValid(validSchemaAllowingAdditionalProps)
     ).rejects.toThrow('All objects in schema need to have additional properties disabled')
   })
 
@@ -58,7 +58,7 @@ describe('SchemaValidation', () => {
     }
 
     await expect(
-      schemaValidator.validateSchema(validSchemaAllowingAdditionalStringProps)
+      schemaValidator.assertSchemaIsValid(validSchemaAllowingAdditionalStringProps)
     ).rejects.toThrow('All objects in schema need to have additional properties disabled')
   })
 
@@ -74,13 +74,13 @@ describe('SchemaValidation', () => {
     }
 
     await expect(
-      schemaValidator.validateSchema(validSchemaAllowingAdditionalPropsInEmbeddedObj)
+      schemaValidator.assertSchemaIsValid(validSchemaAllowingAdditionalPropsInEmbeddedObj)
     ).rejects.toThrow('All objects in schema need to have additional properties disabled')
   })
 
   it('throws for an incorrect 2020-12 schema', async () => {
     await expect(
-      schemaValidator.validateSchema({
+      schemaValidator.assertSchemaIsValid({
         $schema: 'https://json-schema.org/draft/2020-12/schema',
         type: 'object',
         properties: {
