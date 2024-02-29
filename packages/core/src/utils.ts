@@ -1,10 +1,4 @@
-import Ajv from 'ajv'
-import addFormats from 'ajv-formats'
-import { Memoize } from 'mapmoize'
-
 import { AnchorStatus, CommitData, EventType, Stream, StreamUtils } from '@ceramicnetwork/common'
-
-import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
@@ -17,40 +11,6 @@ import { filter, firstValueFrom } from 'rxjs'
  * Various utility functions
  */
 export class Utils {
-  @Memoize()
-  static get validator() {
-    const ajv = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
-    addFormats(ajv)
-    return ajv
-  }
-
-  /**
-   * Validates model against JSON-Schema
-   * @param content - Stream content
-   * @param schema - Stream schema
-   */
-  static validate(content: any, schema: any): void {
-    const isValid = Utils.validator.validate(schema, content)
-    if (!isValid) {
-      const errorMessages = Utils.validator.errorsText()
-      throw new Error(`Validation Error: ${errorMessages}`)
-    }
-  }
-
-  /**
-   * Validate TileDocument against schema
-   */
-  static async validateSchema(doc: TileDocument): Promise<void> {
-    const schemaStreamId = doc.state?.metadata?.schema
-    if (schemaStreamId) {
-      const schemaDoc = await doc.api.loadStream<TileDocument>(schemaStreamId)
-      if (!schemaDoc) {
-        throw new Error(`Schema not found for ${schemaStreamId}`)
-      }
-      Utils.validate(doc.content, schemaDoc.content)
-    }
-  }
-
   /**
    * Return `CommitData` (with commit, JWS envelope, and/or anchor proof/timestamp, as applicable) for the specified CID
    */
