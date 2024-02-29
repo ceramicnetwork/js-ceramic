@@ -5,14 +5,15 @@ import { ModelInstanceDocumentHandler } from '@ceramicnetwork/stream-model-insta
 import { Stream, StreamHandler } from '@ceramicnetwork/common'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamType } from '@ceramicnetwork/streamid'
+import type { SchemaValidation } from 'ajv-threads'
 
 type Registry = Map<number, StreamHandler<Stream>>
 
-function defaultHandlers(): Registry {
+function defaultHandlers(schemaValidator: SchemaValidation): Registry {
   const tile = new TileDocumentHandler()
   const caip10Link = new Caip10LinkHandler()
   const model = new ModelHandler()
-  const instance = new ModelInstanceDocumentHandler()
+  const instance = new ModelInstanceDocumentHandler(schemaValidator)
   const handlers = new Map<number, StreamHandler<Stream>>()
   handlers.set(tile.type, tile)
   handlers.set(caip10Link.type, caip10Link)
@@ -27,8 +28,20 @@ function defaultHandlers(): Registry {
 export class HandlersMap {
   private readonly handlers: Registry
 
-  constructor(private readonly logger: DiagnosticsLogger, handlers?: Registry) {
-    this.handlers = handlers || defaultHandlers()
+  private constructor(private readonly logger: DiagnosticsLogger, handlers: Registry) {
+    this.handlers = handlers
+  }
+
+  static makeWithHandlers(logger: DiagnosticsLogger, handlers: Registry) {
+    return new HandlersMap(logger, handlers)
+  }
+
+  static makeWithDefaultHandlers(logger: DiagnosticsLogger, schemaValidator: SchemaValidation) {
+    return new HandlersMap(logger, defaultHandlers(schemaValidator))
+  }
+
+  static makeEmpty(logger: DiagnosticsLogger) {
+    return new HandlersMap(logger, new Map())
   }
 
   /**

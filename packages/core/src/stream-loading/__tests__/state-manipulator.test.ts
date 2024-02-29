@@ -21,6 +21,7 @@ import { HandlersMap } from '../../handlers-map.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { SchemaValidation } from 'ajv-threads'
 
 const TOPIC = '/ceramic/test12345'
 const CONTENT0 = { step: 0 }
@@ -41,6 +42,7 @@ describeIfV3('StateManipulator test', () => {
   let dispatcherIpfs: IpfsApi
   let logSyncer: LogSyncer
   let stateManipulator: StateManipulator
+  let schemaValidator: SchemaValidation
 
   let doc: TileDocument
   let commits: Array<CommitData>
@@ -59,7 +61,9 @@ describeIfV3('StateManipulator test', () => {
 
     const logger = new LoggerProvider().getDiagnosticsLogger()
     logSyncer = new LogSyncer(dispatcher)
-    const handlers = new HandlersMap(logger)
+
+    schemaValidator = new SchemaValidation()
+    const handlers = HandlersMap.makeWithDefaultHandlers(logger, schemaValidator)
     stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
 
     await swarmConnect(dispatcherIpfs, ceramicIpfs)
@@ -77,6 +81,7 @@ describeIfV3('StateManipulator test', () => {
   afterAll(async () => {
     await dispatcher.close()
     await ceramic.close()
+    await schemaValidator.shutdown()
 
     // Wait for pubsub unsubscribe to be processed
     // TODO(1963): Remove this once dispatcher.close() won't resolve until the pubsub unsubscribe

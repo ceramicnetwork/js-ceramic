@@ -20,7 +20,7 @@ import {
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
+import { SchemaValidation } from 'ajv-threads'
 import { Model, ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { toString } from 'uint8arrays'
@@ -49,8 +49,8 @@ interface ModelInstanceDocumentHeader extends ModelInstanceDocumentMetadata {
 export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstanceDocument> {
   private readonly _schemaValidator: SchemaValidation
 
-  constructor() {
-    this._schemaValidator = new SchemaValidation()
+  constructor(schemaValidator: SchemaValidation) {
+    this._schemaValidator = schemaValidator
   }
 
   get type(): number {
@@ -264,7 +264,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     validateContentLength(content)
 
-    this._schemaValidator.validateSchema(content, model.content.schema, model.commitId.toString())
+    await this._schemaValidator.validateSchema(content, model.content.schema)
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)

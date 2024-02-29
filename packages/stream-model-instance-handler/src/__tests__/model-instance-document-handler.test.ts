@@ -31,6 +31,7 @@ import {
 } from '@ceramicnetwork/did-test-utils'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { VerificationMethod } from 'did-resolver'
+import { SchemaValidation } from 'ajv-threads'
 
 // because we're doing mocking weirdly, by mocking a function two libraries deep, to test a function
 // one library deep that is unrelated to TileDocumentHandler, we need to specifically duplicate
@@ -414,6 +415,7 @@ const STREAMS = {
 
 describe('ModelInstanceDocumentHandler', () => {
   let handler: ModelInstanceDocumentHandler
+  let schemaValidator: SchemaValidation
   let context: StreamReaderWriter
   let defaultSigner: RotatingSigner
   let signerUsingNewKey: CeramicSigner
@@ -421,6 +423,7 @@ describe('ModelInstanceDocumentHandler', () => {
   let ipfs: IpfsApi
 
   beforeAll(async () => {
+    schemaValidator = new SchemaValidation()
     const recs: Record<string, any> = {}
     ipfs = {
       dag: {
@@ -442,10 +445,14 @@ describe('ModelInstanceDocumentHandler', () => {
     } as IpfsApi
   })
 
+  afterAll(async () => {
+    await schemaValidator.shutdown()
+  })
+
   beforeEach(async () => {
     ModelInstanceDocument.MAX_DOCUMENT_SIZE = 16_000_000
 
-    handler = new ModelInstanceDocumentHandler()
+    handler = new ModelInstanceDocumentHandler(schemaValidator)
 
     defaultSigner = await DidTestUtils.rotatingSigner({})
     context = DidTestUtils.api(defaultSigner)
