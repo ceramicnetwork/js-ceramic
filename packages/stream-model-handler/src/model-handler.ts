@@ -144,7 +144,7 @@ export class ModelHandler implements StreamHandler<Model> {
       log: [StreamUtils.commitDataToLogEntry(commitData, EventType.INIT)],
     }
 
-    await this._schemaValidator.validateSchema(state.content.schema)
+    await this._schemaValidator.assertSchemaIsValid(state.content.schema)
     if (state.content.accountRelation.type === 'set') {
       validateSetFields(state.content.accountRelation.fields, state.content.schema)
     }
