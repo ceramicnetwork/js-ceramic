@@ -196,6 +196,9 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const newMetadata = { ...oldMetadata, ...payload.header }
 
     if (newMetadata.schema) {
+      // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load
+      // the schema into the CommitData so that commit application can be a simple state
+      // transformation with no i/o.
       await this._schemaValidator.validateSchema(context, newContent, newMetadata.schema)
     }
 
