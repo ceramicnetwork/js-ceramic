@@ -71,7 +71,7 @@
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "@stablelib/uuid": "^1.0.1",
-    "ajv-threads": "^1.0.3",
+    "ajv-threads": "^1.0.4",
     "await-semaphore": "^0.1.3",
     "cartonne": "^3.0.1",
     "codeco": "^1.1.0",

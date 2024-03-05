@@ -244,7 +244,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
     this._ipfs = modules.ipfs
 
-    this._schemaValidator = new SchemaValidation()
+    const numCores = os.cpus().length
+    // Use number of threads equal to half the available cores for schema validation. Leave the
+    // other half for signature validation.
+    this._schemaValidator = new SchemaValidation(Math.floor(numCores / 2))
     this._streamHandlers = HandlersMap.makeWithDefaultHandlers(this._logger, this._schemaValidator)
 
     // This initialization block below has to be redone.
