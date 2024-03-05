@@ -188,7 +188,7 @@ export class Repository {
       RECON_STORE_USECASE_NAME
     ))
       ? await this.#deps.keyValueStore.get(RECON_STORE_CURSOR_KEY, RECON_STORE_USECASE_NAME)
-      : 0
+      : '0'
     await this.recon.init(cursor)
     this.reconEventFeedSubscription = this.recon
       .pipe(concatMap(this.handleReconEvents.bind(this)))
