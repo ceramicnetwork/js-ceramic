@@ -22,6 +22,7 @@ import { EventID, StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 
 const DEFAULT_POLL_INTERVAL = 1_000 // 1 seconds
+// Note this limit is arbitrary. This limit represents the upper bound on being able to recover after being down
 const FEED_LIMIT = 1000
 
 /**
