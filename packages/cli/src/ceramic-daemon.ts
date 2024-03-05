@@ -5,6 +5,7 @@ import {
   DEFAULT_TRACE_SAMPLE_RATIO,
   ServiceMetrics as Metrics,
 } from '@ceramicnetwork/observability'
+import { ModelMetrics } from '@ceramicnetwork/model-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -78,8 +79,10 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   const metricsExporterEnabled = opts.metrics?.metricsExporterEnabled && opts.metrics?.collectorHost
   const prometheusExporterEnabled =
     opts.metrics?.prometheusExporterEnabled && opts.metrics?.prometheusExporterPort
+  const metricsPublisherEnabled = opts.metrics?.metricsPublisherEnabled
 
-  // If desired, enable metrics
+
+  // If desired, enable OTLP metrics
   if (metricsExporterEnabled && prometheusExporterEnabled) {
     Metrics.start(
       opts.metrics.collectorHost,
@@ -100,7 +103,14 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
       true,
       opts.metrics.prometheusExporterPort
     )
-  } // else do nothing, no metrics are configured.
+  }
+
+  // If desired, publish metrics to ceramic network
+  if (metricsPublisherEnabled) {
+    ModelMetrics.start(
+
+    )
+  } 
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
@@ -333,6 +343,19 @@ export class CeramicDaemon {
     }
 
     await ceramic._init(true)
+
+    // here we can start publishing
+    ModelMetrics.start(ceramic,
+                       interval= // configured interval or default
+                       ceramic_version= // get from daemon
+                       ipfs_version= // from ipfs object here
+                       node_id = // ??? is there such a thing - remove this?
+                       node_name = // arbitrary can name ourselves
+                       node_auth_did = // did to string
+                       node_ip_address = // ?? do we know this ??
+                       node_peer_id = // can get from ipfs (ipfs peer id OR rust ceramic peer id?)
+                       logger = // this.logger
+                     )                     
 
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
