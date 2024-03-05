@@ -62,7 +62,8 @@ describeIfV3('StateManipulator test', () => {
     const logger = new LoggerProvider().getDiagnosticsLogger()
     logSyncer = new LogSyncer(dispatcher)
 
-    schemaValidator = new SchemaValidation()
+    schemaValidator = new SchemaValidation(1)
+    await schemaValidator.init()
     const handlers = HandlersMap.makeWithDefaultHandlers(logger, schemaValidator)
     stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
 
