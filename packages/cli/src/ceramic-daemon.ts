@@ -5,7 +5,10 @@ import {
   DEFAULT_TRACE_SAMPLE_RATIO,
   ServiceMetrics as Metrics,
 } from '@ceramicnetwork/observability'
-import { ModelMetrics } from '@ceramicnetwork/model-metrics'
+import {
+  DEFAULT_PUBLISH_INTERVAL_MS,
+  ModelMetrics,
+} from '@ceramicnetwork/model-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -79,8 +82,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   const metricsExporterEnabled = opts.metrics?.metricsExporterEnabled && opts.metrics?.collectorHost
   const prometheusExporterEnabled =
     opts.metrics?.prometheusExporterEnabled && opts.metrics?.prometheusExporterPort
-  const metricsPublisherEnabled = opts.metrics?.metricsPublisherEnabled
-
 
   // If desired, enable OTLP metrics
   if (metricsExporterEnabled && prometheusExporterEnabled) {
@@ -105,13 +106,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     )
   }
 
-  // If desired, publish metrics to ceramic network
-  if (metricsPublisherEnabled) {
-    ModelMetrics.start(
-
-    )
-  } 
-
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     readOnly: opts.node.readOnly || false,
@@ -124,7 +118,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
-    disablePeerDataSync: opts.ipfs.disablePeerDataSync,
+    disablePeerDataSync: opts.ipfs.disablePeerDataSync
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
@@ -344,21 +338,24 @@ export class CeramicDaemon {
 
     await ceramic._init(true)
 
-    // here we can start publishing
-    ModelMetrics.start(ceramic,
-                       interval= // configured interval or default
-                       ceramic_version= // get from daemon
+    const daemon = new CeramicDaemon(ceramic, opts)
+    await daemon.listen()
+
+    // Now that ceramic node is set up we can start publishing metrics
+    if (opts.metrics?.metricsPublisherEnabled) {
+      ModelMetrics.start(ceramic,
+                       interval = opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+                       ceramic_version = version,
                        ipfs_version= // from ipfs object here
                        node_id = // ??? is there such a thing - remove this?
-                       node_name = // arbitrary can name ourselves
+                       node_name = daemon.hostname,
                        node_auth_did = // did to string
                        node_ip_address = // ?? do we know this ??
                        node_peer_id = // can get from ipfs (ipfs peer id OR rust ceramic peer id?)
                        logger = // this.logger
-                     )                     
+                     )
+    }
 
-    const daemon = new CeramicDaemon(ceramic, opts)
-    await daemon.listen()
     return daemon
   }
 
