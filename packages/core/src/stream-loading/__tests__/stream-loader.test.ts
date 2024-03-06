@@ -85,7 +85,8 @@ describeIfV3('Streamloader', () => {
         ceramic.anchorService.validator
       )
 
-      schemaValidator = new SchemaValidation()
+      schemaValidator = new SchemaValidation(1)
+      await schemaValidator.init()
       const handlers = HandlersMap.makeWithDefaultHandlers(logger, schemaValidator)
       const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
       streamLoader = new StreamLoader(

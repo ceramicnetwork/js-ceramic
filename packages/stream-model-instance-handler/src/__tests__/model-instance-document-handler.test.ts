@@ -423,7 +423,8 @@ describe('ModelInstanceDocumentHandler', () => {
   let ipfs: IpfsApi
 
   beforeAll(async () => {
-    schemaValidator = new SchemaValidation()
+    schemaValidator = new SchemaValidation(1)
+    await schemaValidator.init()
     const recs: Record<string, any> = {}
     ipfs = {
       dag: {
