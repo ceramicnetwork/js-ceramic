@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.1.0...@ceramicnetwork/common@5.2.0-rc.0) (2024-03-07)
+
+
+### Bug Fixes
+
+* Include revocation phase out when checking for CACAO expirations ([#3174](https://github.com/ceramicnetwork/js-ceramic/issues/3174)) ([0ab5baf](https://github.com/ceramicnetwork/js-ceramic/commit/0ab5bafec84098d703df9c05f154ca5b280c80c0))
+
+
+
+
+
 # [5.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.1.0-rc.0...@ceramicnetwork/common@5.1.0) (2024-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/common
