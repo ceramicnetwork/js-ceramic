@@ -1,21 +1,10 @@
-import levelTs from 'level-ts'
-import type Level from 'level-ts'
+import { Level } from 'level'
 import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import path from 'path'
 import * as fs from 'fs'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
-
-// When Node.js imports a CJS module from ESM, it considers whole contents of `module.exports` as ESM default export.
-// 'level-ts' is a CommomJS module, which exports Level constructor as `exports.default`.
-// This `default` name has no special meaning from ESM perspective. It is just yet another name.
-// Types provided by level-ts though make it appear as ESM default.
-//
-// So, here we untangle this mess, even if ugly.
-// We import type information separately from code information, and then make sure we can access
-// a properly typed constructor of `Level` (thus `LevelC`) exported from level-ts package.
-//
-// See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
-const LevelC = (levelTs as any).default as unknown as typeof Level
+import all from 'it-all'
+import map from 'it-map'
 
 const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
 // When ELP existed ELP and Mainnet both utilized the elp location because they shared data.
@@ -24,6 +13,10 @@ export const OLD_ELP_DEFAULT_LOCATION = 'elp'
 
 class NotFoundError extends Error {
   readonly notFound = true
+
+  constructor(key: string) {
+    super(`Error fetching key ${key} from leveldb state store: Key not found in database`)
+  }
 }
 
 class LevelDBStoreMap {
@@ -46,13 +39,11 @@ class LevelDBStoreMap {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
 
-    const levelDb = new LevelC(storePath)
+    const levelDb = new Level(storePath, { valueEncoding: 'json' })
     // level-ts does not have an error handling exposed for opening errors. I access the private DB variable to add callbacks for logging.
     // @ts-ignore private field
-    levelDb.DB.on('error', (err) => {
-      this.logger.warn(
-        `Received error when starting up leveldb at ${storePath} using level-ts: ${err}`
-      )
+    levelDb.on('error', (err) => {
+      this.logger.warn(`Received error when starting up leveldb at ${storePath}: ${err}`)
     })
 
     this.#map.set(fullLocation, levelDb)
@@ -145,11 +136,11 @@ export class LevelDbStore implements IKVStore {
     const store = await this.#storeMap.get(useCaseName)
     try {
       return await store.get(key)
-    } catch (err) {
+    } catch (err: any) {
       const msg = `Error fetching key ${key} from leveldb state store: ${err}`
       if (err.notFound) {
         // Key not found errors are common and expected, it's too verbose to log them every time.
-        throw new NotFoundError(msg)
+        throw new NotFoundError(key)
       } else {
         this.logger.warn(msg)
         throw new Error(msg)
@@ -183,7 +174,14 @@ export class LevelDbStore implements IKVStore {
     }
     if (params?.gt) searchParams.gt = params.gt
     const store = await this.#storeMap.get(params?.useCaseName)
-    return await store.stream(searchParams)
+    return all(
+      map(store.iterator(searchParams), (r) => {
+        return {
+          key: r[0],
+          value: r[1],
+        }
+      })
+    )
   }
 
   async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
@@ -194,8 +192,11 @@ export class LevelDbStore implements IKVStore {
     }
 
     const store = await this.#storeMap.get(params?.useCaseName)
-    // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return (await store.stream(searchParams)) as unknown as Promise<Array<string>>
+    return all(
+      map(store.iterator(searchParams), (r) => {
+        return r[0]
+      })
+    )
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
