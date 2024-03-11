@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.3.0-rc.0...@ceramicnetwork/stream-model-instance-handler@4.3.0-rc.1) (2024-03-11)
+
+
+### Bug Fixes
+
+* **stream-model-instance-handler:** move stream-model to dependencies ([#3180](https://github.com/ceramicnetwork/js-ceramic/issues/3180)) ([c464b32](https://github.com/ceramicnetwork/js-ceramic/commit/c464b32ed00e6312cbb047b6b19940383c55ed64))
+
+
+
+
+
 # [4.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.2.0...@ceramicnetwork/stream-model-instance-handler@4.3.0-rc.0) (2024-03-07)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

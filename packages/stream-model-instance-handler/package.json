@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance-handler",
-  "version": "4.3.0-rc.0",
+  "version": "4.3.0-rc.1",
   "description": "Ceramic Model Instance Document stream handler",
   "keywords": [
     "ceramic",
