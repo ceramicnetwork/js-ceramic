@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.2.0...@ceramicnetwork/common@5.3.0-rc.0) (2024-03-12)
+
+
+### Bug Fixes
+
+* make convertCommitToSignedCommitContainer use offline mode ([#3181](https://github.com/ceramicnetwork/js-ceramic/issues/3181)) ([a4dd8b9](https://github.com/ceramicnetwork/js-ceramic/commit/a4dd8b943bcf3342b3da036717e15cc66a530aac))
+
+
+
+
+
 # [5.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.2.0-rc.0...@ceramicnetwork/common@5.2.0) (2024-03-12)
 
 **Note:** Version bump only for package @ceramicnetwork/common

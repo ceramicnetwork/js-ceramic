@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.3.0...@ceramicnetwork/indexing@4.4.0-rc.0) (2024-03-12)
+
+**Note:** Version bump only for package @ceramicnetwork/indexing
+
+
+
+
+
 # [4.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.3.0-rc.0...@ceramicnetwork/indexing@4.3.0) (2024-03-12)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing
