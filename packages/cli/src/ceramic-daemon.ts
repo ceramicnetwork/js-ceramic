@@ -344,18 +344,19 @@ export class CeramicDaemon {
     // Now that ceramic node is set up we can start publishing metrics
     if (opts.metrics?.metricsPublisherEnabled) {
 
-      const ipfsVerson = await ipfs.version();
-      ModelMetrics.start(ceramic,
-                       interval = opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-                       ceramic_version = version,
-                       ipfs_version = ipfsVersion,
-                       node_id = '',
-                       node_name = daemon.hostname,
-                       node_auth_did = did, //tostring
-                       node_ip_address = daemon.hostname,
-                       node_peer_id = ipfsId,
-                       logger = diagnosticsLogger
-                     )
+      const ipfsVersion = await ipfs.version();
+      ModelMetrics.start({ ceramic: ceramic,
+                       network: params.networkOptions.name,
+                       ceramicVersion: version,
+                       ipfsVersion: ipfsVersion.toString(),
+                       intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+                       nodeId: ipfsId.toString(), // what makes the best ID for the node?
+                       nodeName: daemon.hostname,
+                       nodeAuthDID: did.toString(),
+                       nodeIPAddr: daemon.hostname,
+                       nodePeerId: ipfsId.toString(),
+                       logger: diagnosticsLogger
+                     })
     }
 
     return daemon
