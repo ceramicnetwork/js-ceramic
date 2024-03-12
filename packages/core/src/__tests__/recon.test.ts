@@ -3,7 +3,7 @@ import { EventID, StreamID } from '@ceramicnetwork/streamid'
 import { FetchRequest, LoggerProvider } from '@ceramicnetwork/common'
 import { jest } from '@jest/globals'
 import { type CAR } from 'cartonne'
-import { toArray, take, lastValueFrom } from 'rxjs'
+import { toArray, take, lastValueFrom, firstValueFrom, race, timer } from 'rxjs'
 
 const RECON_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
@@ -45,6 +45,7 @@ describe('ReconApi', () => {
 
   describe('init', () => {
     test('should not init if recon is disabled', async () => {
+      const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
         { enabled: false, url: RECON_URL, feedEnabled: true },
         LOGGER,
@@ -62,12 +63,14 @@ describe('ReconApi', () => {
     })
 
     test('should not start polling if feed is disabled', async () => {
+      const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
         { enabled: true, url: RECON_URL, feedEnabled: false },
         LOGGER,
         mockSendRequest
       )
       await reconApi.init()
+      await firstValueFrom(race(reconApi, timer(1000)))
       expect(mockSendRequest).toHaveBeenCalledTimes(1)
     })
   })
@@ -95,6 +98,7 @@ describe('ReconApi', () => {
 
   describe('put', () => {
     test('should do nothing if recon is disabled', async () => {
+      const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
         { enabled: false, url: RECON_URL, feedEnabled: true },
         LOGGER,
