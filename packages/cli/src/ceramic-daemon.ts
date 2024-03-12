@@ -343,16 +343,18 @@ export class CeramicDaemon {
 
     // Now that ceramic node is set up we can start publishing metrics
     if (opts.metrics?.metricsPublisherEnabled) {
+
+      const ipfsVerson = await ipfs.version();
       ModelMetrics.start(ceramic,
                        interval = opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
                        ceramic_version = version,
-                       ipfs_version= // from ipfs object here
-                       node_id = // ??? is there such a thing - remove this?
+                       ipfs_version = ipfsVersion,
+                       node_id = '',
                        node_name = daemon.hostname,
-                       node_auth_did = // did to string
-                       node_ip_address = // ?? do we know this ??
-                       node_peer_id = // can get from ipfs (ipfs peer id OR rust ceramic peer id?)
-                       logger = // this.logger
+                       node_auth_did = did, //tostring
+                       node_ip_address = daemon.hostname,
+                       node_peer_id = ipfsId,
+                       logger = diagnosticsLogger
                      )
     }
 
