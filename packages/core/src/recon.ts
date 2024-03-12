@@ -22,6 +22,8 @@ import { EventID, StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 
 const DEFAULT_POLL_INTERVAL = 1_000 // 1 seconds
+// Note this limit is arbitrary. This limit represents the upper bound on being able to recover after being down
+const FEED_LIMIT = 1000
 
 /**
  * Configuration for the Recon API
@@ -48,14 +50,14 @@ export interface ReconEvent {
  */
 export interface ReconEventFeedResponse {
   events: Array<ReconEvent>
-  cursor: number
+  cursor: string
 }
 
 /**
  * Recon API Interface
  */
 export interface IReconApi extends Observable<ReconEventFeedResponse> {
-  init(initialCursor?: number): Promise<void>
+  init(initialCursor?: string): Promise<void>
   registerInterest(model: StreamID): Promise<void>
   put(event: ReconEvent, opts?: AbortOptions): Promise<void>
   enabled: boolean
@@ -71,8 +73,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
 
   readonly #pollInterval: number
   #eventsSubscription: Subscription
-  private readonly feed$: Subject<ReconEventFeedResponse> =
-    new ReplaySubject<ReconEventFeedResponse>(5)
+  readonly #feed$: Subject<ReconEventFeedResponse> = new Subject()
   readonly #stopSignal: Subject<void> = new Subject<void>()
 
   constructor(
@@ -82,7 +83,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     pollInterval: number = DEFAULT_POLL_INTERVAL
   ) {
     super((subscriber: Subscriber<ReconEventFeedResponse>): TeardownLogic => {
-      return this.feed$.subscribe(subscriber)
+      return this.#feed$.subscribe(subscriber)
     })
 
     this.#config = config
@@ -96,7 +97,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
    * @param initialCursor
    * @returns
    */
-  async init(initialCursor = 0): Promise<void> {
+  async init(initialCursor = '0'): Promise<void> {
     if (this.#initialized) {
       return
     }
@@ -111,7 +112,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     await this.registerInterest(Model.MODEL)
 
     if (this.#config.feedEnabled) {
-      this.#eventsSubscription = this.createSubscription(initialCursor).subscribe(this.feed$)
+      this.#eventsSubscription = this.createSubscription(initialCursor).subscribe(this.#feed$)
     }
   }
 
@@ -143,7 +144,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
    * @param opts Abort options
    * @returns
    */
-  async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
+  async put(event: ReconEvent, opts: AbortOptions = {}): Promise<void> {
     if (!this.enabled) {
       this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
       return
@@ -181,7 +182,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     if (this.#eventsSubscription) {
       this.#eventsSubscription.unsubscribe()
     }
-    this.feed$.complete()
+    this.#feed$.complete()
   }
 
   /**
@@ -189,7 +190,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
    * @param initialCursor The cursor to start polling from
    * @returns An observable that emits the events and cursor so it can be stored and used to resume polling during restart
    */
-  private createSubscription(initialCursor: number): Observable<ReconEventFeedResponse> {
+  private createSubscription(initialCursor: string): Observable<ReconEventFeedResponse> {
     // start event
     return of({ events: [], cursor: initialCursor, first: true }).pipe(
       // projects the starting event to an Observable that emits the next events. Then it recursively projects each event to an Observable that emits the next event
@@ -201,19 +202,19 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
             // defer allows lazy creation of the observable
             defer(async () => {
               const response = await this.#sendRequest(
-                this.#url + `/ceramic/feed/events?resumeAt=${prev.cursor}`,
+                this.#url + `/ceramic/feed/events?resumeAt=${prev.cursor}&limit=${FEED_LIMIT}`,
                 {
                   method: 'GET',
                 }
               )
               return {
-                events: response.events.map(({ id, data }) => {
+                events: response.events.map(({ id, _data }) => {
                   return {
                     id: EventID.fromString(id),
                     data: undefined,
                   }
                 }),
-                cursor: Math.max(parseInt(response.resumeToken, 10), prev.cursor),
+                cursor: response.resumeToken,
                 first: false,
               }
             }).pipe(
@@ -221,7 +222,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
               retry({
                 delay: (err) => {
                   this.#logger.warn(
-                    `Recon: event feed failed, due to connection error ${err}; attempting to retry in ${
+                    `Recon: event feed failed, due to error ${err}; attempting to retry in ${
                       this.#pollInterval
                     }ms`
                   )
