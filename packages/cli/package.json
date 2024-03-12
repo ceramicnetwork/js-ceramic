@@ -52,6 +52,7 @@
     "@ceramicnetwork/indexing": "^4.4.0-rc.0",
     "@ceramicnetwork/ipfs-daemon": "^5.4.0-rc.0",
     "@ceramicnetwork/logger": "^5.0.0",
+    "@ceramicnetwork/model-metrics": "^1.2.0",
     "@ceramicnetwork/observability": "^1.4.4",
     "@ceramicnetwork/stream-tile": "^5.3.0-rc.0",
     "@ceramicnetwork/streamid": "^5.0.0",
