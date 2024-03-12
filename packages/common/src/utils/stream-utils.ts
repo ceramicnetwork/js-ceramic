@@ -280,7 +280,10 @@ export class StreamUtils {
     ipfs: IpfsApi
   ): Promise<CeramicCommit> {
     if (StreamUtils.isSignedCommit(commit)) {
-      const block = await ipfs.block.get(toCID((commit as DagJWS).link))
+      const block = await ipfs.block.get(toCID((commit as DagJWS).link), {
+        // @ts-ignore
+        offline: process.env.CERAMIC_RECON_MODE == 'true',
+      })
       return {
         jws: commit as DagJWS,
         linkedBlock: block,
