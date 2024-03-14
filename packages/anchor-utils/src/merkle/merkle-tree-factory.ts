@@ -71,7 +71,22 @@ export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata>
     const metadata = this.metadataFn ? await this.metadataFn.generateMetadata(nodes) : null
 
     const root = await this.buildLevel(nodes, 0, metadata)
+
+    const depth = this.getTreeDepth(root)
+    console.log(`Merkle tree generated with depth: ${depth}`)
+
     return new MerkleTree<TData, TLeaf, TMetadata>(this.mergeFn, root, nodes, metadata)
+  }
+
+  private getTreeDepth(node: Node<TData>): number {
+    if (node.left === null && node.right === null) {
+      return 1
+    }
+
+    const leftDepth = node.left ? this.getTreeDepth(node.left) : 0
+    const rightDepth = node.right ? this.getTreeDepth(node.right) : 0
+
+    return Math.max(leftDepth, rightDepth) + 1
   }
 
   private async buildLevel(
