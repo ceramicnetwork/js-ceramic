@@ -647,11 +647,6 @@ export class Repository {
       return
     }
 
-    if (process.env.CERAMIC_RECON_MODE) {
-      // TODO(WS1-1471): Enable anchoring when in Recon (Prime) mode.
-      return
-    }
-
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
     // Don't wait on handling the anchor event, let that happen in the background.

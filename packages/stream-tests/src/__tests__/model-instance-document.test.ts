@@ -81,9 +81,6 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   },
 }
 
-// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
-const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -166,10 +163,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
-    if (!process.env.CERAMIC_RECON_MODE) {
-      // TODO (WS1-1471): Re-enable this check even in Recon mode
-      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    }
+    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
@@ -187,10 +182,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(docWithRelation.state.log.length).toEqual(1)
     expect(docWithRelation.state.log[0].type).toEqual(EventType.INIT)
-    if (!process.env.CERAMIC_RECON_MODE) {
-      // TODO (WS1-1471): Re-enable this check even in Recon mode
-      expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    }
+    expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
     expect(docWithRelation.metadata.model.toString()).toEqual(modelWithRelation.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, docWithRelation.id)).resolves.toBeTruthy()
     await expect(
@@ -272,7 +265,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
   })
 
-  testIfV3ShouldPassWithAnchoring('Anchor genesis', async () => {
+  test('Anchor genesis', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -286,7 +279,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.content).toEqual(CONTENT0)
   })
 
-  testIfV3ShouldPassWithAnchoring('Anchor after updating', async () => {
+  test('Anchor after updating', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     await doc.replace(CONTENT1)
@@ -303,7 +296,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.content).toEqual(CONTENT1)
   })
 
-  testIfV3ShouldPassWithAnchoring('multiple updates', async () => {
+  test('multiple updates', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
@@ -350,7 +343,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).rejects.toThrow(/Attempting to create a ModelInstanceDocument with an invalid DID string/)
   })
 
-  testIfV3ShouldPassWithAnchoring('Can load a stream', async () => {
+  test('Can load a stream', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(core, doc)
@@ -428,10 +421,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 })
 
-// should pass on v4 as soon as recon is integrated and cross-node syncing works.
-const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
+describe('ModelInstanceDocument API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs0: IpfsApi
