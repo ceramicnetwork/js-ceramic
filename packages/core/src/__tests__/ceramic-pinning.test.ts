@@ -1,8 +1,8 @@
-import { jest } from '@jest/globals'
+import { describe, jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { IpfsApi, CeramicApi, SyncOptions } from '@ceramicnetwork/common'
+import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import * as u8a from 'uint8arrays'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -65,7 +65,7 @@ const createCeramic = async (
 }
 
 async function createDeterministicStream(
-  ceramic: CeramicApi,
+  ceramic: Ceramic,
   controller: string,
   family: string,
   pin?: boolean

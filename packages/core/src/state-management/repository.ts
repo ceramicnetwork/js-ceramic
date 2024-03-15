@@ -1145,6 +1145,7 @@ export class Repository {
   async close(): Promise<void> {
     if (this.reconEventFeedSubscription) this.reconEventFeedSubscription.unsubscribe()
     await this.recon.stop()
+    await this.#deps.keyValueStore.close(RECON_STORE_USECASE_NAME)
 
     await this.loadingQ.close()
     await this.executionQ.close()

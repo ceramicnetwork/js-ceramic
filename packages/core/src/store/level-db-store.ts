@@ -31,25 +31,19 @@ class LevelDBStoreMap {
     this.#map = new Map<string, Level>()
   }
 
-  createStore(fullLocation: string): Promise<void> {
+  async createStore(fullLocation: string): Promise<void> {
     // Different LevelDB stores live in different subdirectories (named based use-cases with the default being 'networkName'
     // and others being `networkName-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const storePath = path.join(this.#storeRoot, fullLocation)
     if (fs) {
+      // FIXME
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
 
     const levelDb = new Level(storePath, { valueEncoding: 'json' })
-    // level-ts does not have an error handling exposed for opening errors. I access the private DB variable to add callbacks for logging.
-    // @ts-ignore private field
-    levelDb.on('error', (err) => {
-      this.logger.warn(`Received error when starting up leveldb at ${storePath}: ${err}`)
-    })
+    await levelDb.open()
 
     this.#map.set(fullLocation, levelDb)
-
-    // add a small delay after creating the leveldb instance before trying to use it.
-    return new Promise((res) => setTimeout(res, 100))
   }
 
   private getStoreLocation(useCaseName: string, networkName = this.networkName): string {
@@ -116,9 +110,9 @@ export class LevelDbStore implements IKVStore {
     return
   }
 
-  close(useCaseName?: string): Promise<void> {
-    // do nothing
-    return
+  async close(useCaseName?: string): Promise<void> {
+    const store = await this.#storeMap.get(useCaseName)
+    await store.close()
   }
 
   async del(key: string, useCaseName?: string): Promise<void> {
