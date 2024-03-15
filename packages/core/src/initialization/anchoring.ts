@@ -18,7 +18,7 @@ export const DEFAULT_ANCHOR_SERVICE_URLS = {
 const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
   [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
-  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
+  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5', 'eip155:11155111'], // Ethereum Ropsten, Rinkeby, Goerli, Sepolia
   [Networks.LOCAL]: ['eip155:1337'], // Ganache
   [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
 }
