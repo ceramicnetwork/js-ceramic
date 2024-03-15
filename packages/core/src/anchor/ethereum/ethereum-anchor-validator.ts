@@ -40,6 +40,7 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
     type: 'Test',
     endpoint: 'https://rpc.ankr.com/gnosis',
   },
+  'eip155:11155111': { network: 'sepolia', chain: 'ETH', chainId: 11155111, networkId: 11155111, type: 'Test' },
 }
 
 const BASE_CHAIN_ID = 'eip155'

@@ -40,6 +40,7 @@ export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
   'eip155:1': 16695723,
   'eip155:5': 8503000,
   'eip155:100': 26511896,
+  'eip155:11155111': 19421153, // TODO: current height, contract not deployed yet
 }
 
 export const STATE_TABLE_NAME = 'ceramic_indexing_state'
