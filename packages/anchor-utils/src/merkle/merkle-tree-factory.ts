@@ -73,9 +73,8 @@ export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata>
     const root = await this.buildLevel(nodes, 0, metadata)
 
     const depth = this.getTreeDepth(root)
-    console.log(`Merkle tree generated with depth: ${depth}`)
 
-    return new MerkleTree<TData, TLeaf, TMetadata>(this.mergeFn, root, nodes, metadata)
+    return new MerkleTree<TData, TLeaf, TMetadata>(this.mergeFn, root, nodes, metadata, depth)
   }
 
   private getTreeDepth(node: Node<TData>): number {
