@@ -5,6 +5,7 @@ import * as fs from 'fs'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import all from 'it-all'
 import map from 'it-map'
+import { Mutex } from 'await-semaphore'
 
 const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
 // When ELP existed ELP and Mainnet both utilized the elp location because they shared data.
@@ -24,14 +25,16 @@ class LevelDBStoreMap {
   readonly networkName
   readonly #map: Map<string, Level>
   #fullLocations: Record<string, string> = {}
+  #createStoreMutex: Mutex
 
   constructor(storeRoot: string, networkName: string, readonly logger: DiagnosticsLogger) {
     this.networkName = networkName
     this.#storeRoot = storeRoot
     this.#map = new Map<string, Level>()
+    this.#createStoreMutex = new Mutex()
   }
 
-  async createStore(fullLocation: string): Promise<void> {
+  private async createStore(fullLocation: string): Promise<Level> {
     // Different LevelDB stores live in different subdirectories (named based use-cases with the default being 'networkName'
     // and others being `networkName-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const storePath = path.join(this.#storeRoot, fullLocation)
@@ -44,6 +47,7 @@ class LevelDBStoreMap {
     await levelDb.open()
 
     this.#map.set(fullLocation, levelDb)
+    return levelDb
   }
 
   private getStoreLocation(useCaseName: string, networkName = this.networkName): string {
@@ -82,11 +86,12 @@ class LevelDBStoreMap {
   }
 
   async get(useCaseName?: string): Promise<Level> {
-    const location = this.getFullLocation(useCaseName)
-    if (!this.#map.get(location)) {
-      await this.createStore(location)
-    }
-    return this.#map.get(location)
+    return this.#createStoreMutex.use(async () => {
+      const location = this.getFullLocation(useCaseName)
+      const found = this.#map.get(location)
+      if (found) return found
+      return this.createStore(location)
+    })
   }
 
   values(): IterableIterator<Level> {
