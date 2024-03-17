@@ -1,7 +1,7 @@
 import { jest, test, expect, describe, beforeAll, afterAll } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
-import { Utils as CoreUtils } from '@ceramicnetwork/core'
+import { AnchorStatus, EventType, IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { Utils as CoreUtils, ReconApi } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -13,6 +13,7 @@ import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import HttpRequestMock from 'http-request-mock'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -80,6 +81,10 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
     optionalLinkedDoc: { type: 'document', model: MODEL_STREAM_ID },
   },
 }
+
+const RECON_URL = 'http://example.com'
+const LOGGER = new LoggerProvider().getDiagnosticsLogger()
+const mocker = HttpRequestMock.setupForUnitTest('fetch')
 
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
@@ -430,27 +435,68 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let ceramic1: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  /*let reconApi0: ReconApi
+  let reconApi1: ReconApi*/
+
 
   beforeAll(async () => {
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
-    await swarmConnect(ipfs0, ipfs1)
 
-    ceramic0 = await createCeramic(ipfs0)
-    ceramic1 = await createCeramic(ipfs1)
+    await swarmConnect(ipfs0, ipfs1)
+    if (process.env.CERAMIC_RECON_MODE) {
+      const regexPattern = new RegExp(`${RECON_URL}.*`)
+/*
+      reconApi0 = new ReconApi(
+        {
+          enabled: true,
+          url: RECON_URL,
+          feedEnabled: false,
+        },
+        LOGGER,
+        fetch
+      )
+
+      reconApi1 = new ReconApi(
+        {
+          enabled: true,
+          url: RECON_URL,
+          feedEnabled: false,
+        },
+        LOGGER,
+        fetch
+      )
+
+      await reconApi0.init()
+      await reconApi1.init()
+*/
+
+      mocker.mock({
+        url: regexPattern,
+        body: JSON.stringify({events: [], resumeToken: 'test'}),
+        status: 200,
+      })
+
+      ipfs0.config.set('Addresses.API', RECON_URL)
+      ipfs1.config.set('Addresses.API', RECON_URL)
+    }
+
+      ceramic0 = await createCeramic(ipfs0)
+      ceramic1 = await createCeramic(ipfs1)
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
     midMetadata = { model: model.id }
-  }, 12000)
+  }, 22000)
 
   afterAll(async () => {
     await ceramic0.close()
     await ceramic1.close()
     await ipfs0.stop()
     await ipfs1.stop()
+    mocker.reset()
   })
 
-  test('load basic doc', async () => {
+  test.only('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
