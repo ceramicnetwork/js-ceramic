@@ -37,4 +37,5 @@ export interface IKVStoreA {
 
 export interface IKVFactory {
   open(name?: string): Promise<IKVStoreA>
+  close(): Promise<void>
 }
