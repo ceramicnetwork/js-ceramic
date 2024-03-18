@@ -57,6 +57,8 @@ import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
 import { IReconApi, ReconApi } from './recon.js'
+import { IKVFactory } from './store/ikv-store.js'
+import { LevelKVFactory } from './store/level-kv-factory.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -214,6 +216,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
   private readonly _levelStore: LevelDbStore
+  private readonly _kvFactory: IKVFactory
   private readonly _runId: string
   private readonly _startTime: Date
 
@@ -239,6 +242,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       this._logger,
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
       this._networkOptions.name
+    )
+    this._kvFactory = new LevelKVFactory(
+      params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
+      this._networkOptions.name,
+      this._logger
     )
 
     this._ipfs = modules.ipfs
@@ -894,6 +902,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     await this.dispatcher.close()
     await this.repository.close()
     this._ipfsTopology.stop()
+    await this._kvFactory.close()
     this._logger.imp('Ceramic instance closed successfully')
   }
 }

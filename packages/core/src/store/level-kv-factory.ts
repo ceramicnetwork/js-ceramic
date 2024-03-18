@@ -5,6 +5,7 @@ import { access, mkdir } from 'node:fs/promises'
 import { Mutex } from 'await-semaphore'
 import { LevelKVStore } from './level-kv-store.js'
 import { Level } from 'level'
+import { ObjectStore } from './object-store'
 
 export const ELP_NETWORK = 'elp'
 
@@ -76,5 +77,11 @@ export class LevelKVFactory implements IKVFactory {
     const found = this.#cache.get(useCaseName)
     if (found) return found
     return this.create(useCaseName)
+  }
+
+  async close(): Promise<void> {
+    for (const store of this.#cache.values()) {
+      await store.close()
+    }
   }
 }
