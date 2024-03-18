@@ -200,6 +200,7 @@ export class LevelDbStore implements IKVStore {
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
     const store = await this.#storeMap.get(useCaseName)
+
     try {
       await store.put(key, value)
     } catch (err) {
