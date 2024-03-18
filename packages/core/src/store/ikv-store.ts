@@ -21,3 +21,9 @@ export interface IKVStore {
   get(key: string, useCaseName?: string): Promise<any>
   del(key: string, useCaseName?: string): Promise<void>
 }
+
+export interface IKVStoreA {}
+
+export interface IKVFactory {
+  open(name?: string): Promise<IKVStoreA>
+}

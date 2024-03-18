@@ -9,7 +9,7 @@ import {
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { LevelDbStore, OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
+import { LevelDbStore, ELP_NETWORK } from '../level-db-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
 
 class FakeType extends Stream {
@@ -170,7 +170,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, OLD_ELP_DEFAULT_LOCATION)
+    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, ELP_NETWORK)
     await stateStore.open(elpLevelStore)
 
     const state = TestUtils.makeStreamState()

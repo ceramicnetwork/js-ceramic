@@ -21,7 +21,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import first from 'it-first'
 import all from 'it-all'
-import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
+import { ELP_NETWORK } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
@@ -366,7 +366,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, OLD_ELP_DEFAULT_LOCATION)
+    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, ELP_NETWORK)
     await anchorRequestStore.open(elpLevelStore)
 
     const anchorRequestData: AnchorRequestData = {
