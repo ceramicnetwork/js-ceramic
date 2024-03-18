@@ -1,9 +1,10 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
 import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
-import path from 'path'
-import * as fs from 'fs'
+import { join } from 'node:path'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import { Mutex } from 'await-semaphore'
+import { mkdir, access } from 'node:fs/promises'
 
 // When Node.js imports a CJS module from ESM, it considers whole contents of `module.exports` as ESM default export.
 // 'level-ts' is a CommomJS module, which exports Level constructor as `exports.default`.
@@ -17,91 +18,84 @@ import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
-const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
 // When ELP existed ELP and Mainnet both utilized the elp location because they shared data.
 // In order to not lose the data stored there we will continue to do use the elp location for mainnet.
-export const OLD_ELP_DEFAULT_LOCATION = 'elp'
+export const ELP_NETWORK = 'elp'
 
 class NotFoundError extends Error {
   readonly notFound = true
 }
 
 class LevelDBStoreMap {
-  readonly #storeRoot
-  readonly networkName
+  readonly #storeRoot: string
+  readonly networkName: string
   readonly #map: Map<string, Level>
-  #fullLocations: Record<string, string> = {}
+  readonly #createMutex: Mutex
 
   constructor(storeRoot: string, networkName: string, readonly logger: DiagnosticsLogger) {
     this.networkName = networkName
     this.#storeRoot = storeRoot
     this.#map = new Map<string, Level>()
+    this.#createMutex = new Mutex()
   }
 
-  createStore(fullLocation: string): Promise<void> {
-    // Different LevelDB stores live in different subdirectories (named based use-cases with the default being 'networkName'
-    // and others being `networkName-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
-    const storePath = path.join(this.#storeRoot, fullLocation)
-    if (fs) {
-      fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
-    }
+  private createStore(useCaseName: string | undefined): Promise<Level> {
+    return this.#createMutex.use(async () => {
+      const found = this.#map.get(useCaseName)
+      if (found) return found
+      const dirPath = await this.dirPath(useCaseName)
 
-    const levelDb = new LevelC(storePath)
-    // level-ts does not have an error handling exposed for opening errors. I access the private DB variable to add callbacks for logging.
-    // @ts-ignore private field
-    levelDb.DB.on('error', (err) => {
-      this.logger.warn(
-        `Received error when starting up leveldb at ${storePath} using level-ts: ${err}`
-      )
+      const levelDb = new LevelC(dirPath)
+      // level-ts does not have an error handling exposed for opening errors. I access the private DB variable to add callbacks for logging.
+      // @ts-ignore private field
+      levelDb.DB.on('error', (err) => {
+        this.logger.warn(
+          `Received error when starting up leveldb at ${dirPath} using level-ts: ${err}`
+        )
+      })
+
+      this.#map.set(useCaseName, levelDb)
+
+      // add a small delay after creating the leveldb instance before trying to use it.
+      await new Promise((res) => setTimeout(res, 100))
+      return levelDb
     })
-
-    this.#map.set(fullLocation, levelDb)
-
-    // add a small delay after creating the leveldb instance before trying to use it.
-    return new Promise((res) => setTimeout(res, 100))
   }
 
-  private getStoreLocation(useCaseName: string, networkName = this.networkName): string {
-    return useCaseName === DEFAULT_LEVELDB_STORE_USE_CASE_NAME
-      ? networkName
-      : `${networkName}-${useCaseName}`
-  }
-
-  private getFullLocation(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): string {
-    let fullLocation = this.#fullLocations[useCaseName]
-    if (fullLocation != null) {
-      return fullLocation
+  private subDir(name: string | undefined, network = this.networkName): string {
+    if (name) {
+      return `${network}-${name}`
+    } else {
+      return network
     }
+  }
 
+  private async dirPath(useCaseName: string | undefined): Promise<string> {
     // Check if store exists at legacy ELP location
     if (this.networkName === Networks.MAINNET) {
-      const elpLocation = this.getStoreLocation(useCaseName, OLD_ELP_DEFAULT_LOCATION)
-      const storePath = path.join(this.#storeRoot, elpLocation)
-      if (fs.existsSync(storePath)) {
+      const elpDir = this.subDir(useCaseName, ELP_NETWORK)
+      const storePath = join(this.#storeRoot, elpDir)
+      const isPresent = await access(storePath)
+        .then(() => true)
+        .catch(() => false)
+      if (isPresent) {
         // Use ELP location if store exists
         this.logger.warn(
           `LevelDB store ${useCaseName} found with ELP location, using it instead of default mainnet location`
         )
-        fullLocation = elpLocation
+        return storePath
       }
     }
-
-    // Get store location if not already set
-    if (fullLocation == null) {
-      fullLocation = this.getStoreLocation(useCaseName)
-    }
-    // Cache resolved location
-    this.#fullLocations[useCaseName] = fullLocation
-
-    return fullLocation
+    const subDir = this.subDir(useCaseName)
+    const dirPath = join(this.#storeRoot, subDir)
+    await mkdir(dirPath, { recursive: true }) // create dir if it doesn't exist
+    return dirPath
   }
 
   async get(useCaseName?: string): Promise<Level> {
-    const location = this.getFullLocation(useCaseName)
-    if (!this.#map.get(location)) {
-      await this.createStore(location)
-    }
-    return this.#map.get(location)
+    const found = this.#map.get(useCaseName)
+    if (found) return found
+    return this.createStore(useCaseName)
   }
 
   values(): IterableIterator<Level> {
