@@ -21,6 +21,7 @@ export class LevelKVFactory implements IKVFactory {
     this.#cache = new Map()
     this.#createMutex = new Mutex()
     this.#logger = logger
+    this.open = this.open.bind(this)
   }
 
   private create(useCaseName: string | undefined): Promise<LevelKVStore> {
@@ -31,7 +32,10 @@ export class LevelKVFactory implements IKVFactory {
 
       const level = new Level(dirPath, { valueEncoding: 'json' })
       await level.open()
-      const kv = new LevelKVStore(level)
+      const kv = new LevelKVStore(level, this.#logger, this.networkName, async (useCaseName) => {
+        const db = await this.open(useCaseName)
+        return db.level
+      })
 
       this.#cache.set(useCaseName, kv)
       return kv
