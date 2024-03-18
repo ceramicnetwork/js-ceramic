@@ -435,9 +435,8 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let ceramic1: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
-  /*let reconApi0: ReconApi
-  let reconApi1: ReconApi*/
-
+  let reconApi0: ReconApi
+  let reconApi1: ReconApi
 
   beforeAll(async () => {
     ipfs0 = await createIPFS()
@@ -446,10 +445,10 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     await swarmConnect(ipfs0, ipfs1)
     if (process.env.CERAMIC_RECON_MODE) {
       const regexPattern = new RegExp(`${RECON_URL}.*`)
-/*
+
       reconApi0 = new ReconApi(
         {
-          enabled: true,
+          enabled: false,
           url: RECON_URL,
           feedEnabled: false,
         },
@@ -459,7 +458,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
       reconApi1 = new ReconApi(
         {
-          enabled: true,
+          enabled: false,
           url: RECON_URL,
           feedEnabled: false,
         },
@@ -469,24 +468,29 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
       await reconApi0.init()
       await reconApi1.init()
-*/
 
       mocker.mock({
         url: regexPattern,
-        body: JSON.stringify({events: [], resumeToken: 'test'}),
+        body: JSON.stringify({ events: [], resumeToken: 'test' }),
         status: 200,
       })
 
+      // Simulates --ipfs-api
       ipfs0.config.set('Addresses.API', RECON_URL)
       ipfs1.config.set('Addresses.API', RECON_URL)
     }
+    ceramic0 = await createCeramic(ipfs0)
+    ceramic1 = await createCeramic(ipfs1)
 
-      ceramic0 = await createCeramic(ipfs0)
-      ceramic1 = await createCeramic(ipfs1)
+    reconApi0.stop()
+    reconApi1.stop()
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
+    reconApi0.stop()
+    reconApi1.stop()
+
     midMetadata = { model: model.id }
-  }, 22000)
+  }, 80000)
 
   afterAll(async () => {
     await ceramic0.close()
