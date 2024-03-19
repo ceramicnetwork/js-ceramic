@@ -366,7 +366,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (!ModelDefinitionV2.is(model.content)) return
     const immutableFields = model.content.immutableFields
     const hasImmutableFields = immutableFields && immutableFields.length > 0
-    if (!hasImmutableFields) return
+    if (!hasImmutableFields || Object.keys(oldContent).length === 0) return
 
     const newContent = jsonpatch.applyPatch(
       oldContent,
@@ -374,10 +374,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       undefined,
       false
     ).newDocument
+
     for (const lockedField of immutableFields) {
       const mutated =
         JSON.stringify(newContent[lockedField]) !== JSON.stringify(oldContent[lockedField])
-
       if (mutated) {
         throw new Error(`Immutable field "${lockedField}" cannot be updated`)
       }

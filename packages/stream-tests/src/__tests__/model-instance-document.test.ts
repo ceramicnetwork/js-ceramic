@@ -57,6 +57,31 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   },
 }
 
+const MODEL_DEFINITION_SET: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
+  accountRelation: { type: 'set', fields: ['one', 'two'] },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      one: { type: 'string', minLength: 2 },
+      two: { type: 'string', minLength: 2 },
+      three: { type: 'string', minLength: 2 },
+      myData: {
+        type: 'integer',
+        maximum: 100,
+        minimum: 0,
+      },
+    },
+    required: ['one', 'two'],
+  },
+  immutableFields: ['three'],
+}
+
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
 const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
@@ -97,6 +122,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let midRelationMetadata: ModelInstanceDocumentMetadataArgs
   let modelSingle: Model
   let midSingleMetadata: ModelInstanceDocumentMetadataArgs
+  let modelSet: Model
+  let midSetMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -129,6 +156,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     midRelationMetadata = { model: modelWithRelation.id }
     modelSingle = await Model.create(ceramic, MODEL_DEFINITION_SINGLE)
     midSingleMetadata = { model: modelSingle.id }
+    modelSet = await Model.create(ceramic, MODEL_DEFINITION_SET)
+    midSetMetadata = { model: modelSet.id }
 
     await core.index.indexModels([{ streamID: model.id }])
   }, 12000)
@@ -219,6 +248,23 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await doc.replace(CONTENT1)
 
     expect(doc.content).toEqual(CONTENT1)
+    expect(doc.state.log.length).toEqual(2)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
+    expect(doc.state.log[1].type).toEqual(EventType.DATA)
+  })
+
+  test('Can upsert immutable fields in a set relation model', async () => {
+    const doc = await ModelInstanceDocument.set(
+      ceramic,
+      { controller: ceramic.did!.id, model: modelSet.id },
+      ['foo', 'bar']
+    )
+
+    expect(doc.content).toBeNull()
+    const newContent = { one: 'foo', two: 'bar', three: 'foobar', myData: 1 }
+    await doc.replace(newContent)
+
+    expect(doc.content).toEqual(newContent)
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
