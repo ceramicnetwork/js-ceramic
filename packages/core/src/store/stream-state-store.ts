@@ -25,6 +25,7 @@ function deserialize(serialized: string): StreamState {
  */
 export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
   #logger: DiagnosticsLogger
+  readonly useCaseName = undefined
 
   constructor(logger: DiagnosticsLogger) {
     super(generateKey, serialize, deserialize)
