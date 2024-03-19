@@ -9,9 +9,8 @@ import {
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { ELP_NETWORK } from '../level-db-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
-import { LevelKVFactory } from '../level-kv-factory.js'
+import { LevelKVFactory, ELP_NETWORK } from '../level-kv-factory.js'
 
 class FakeType extends Stream {
   isReadOnly = true
