@@ -28,10 +28,9 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import first from 'it-first'
 import all from 'it-all'
-import { ELP_NETWORK } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { LevelKVFactory } from '../level-kv-factory.js'
+import { LevelKVFactory, ELP_NETWORK } from '../level-kv-factory.js'
 import type { Ceramic } from '../../ceramic.js'
 
 const BATCH_TIMEOUT = 100
