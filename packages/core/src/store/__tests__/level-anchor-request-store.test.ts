@@ -169,8 +169,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     await anchorRequestStore.save(streamId1, anchorRequestData)
     expect(putSpy).toBeCalledWith(
       streamId1.toString(),
-      serializeAnchorRequestData(anchorRequestData),
-      'anchor-requests'
+      serializeAnchorRequestData(anchorRequestData)
     )
 
     const retrieved = await anchorRequestStore.load(streamId1)
