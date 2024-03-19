@@ -5,7 +5,6 @@ import { access, mkdir } from 'node:fs/promises'
 import { Mutex } from 'await-semaphore'
 import { LevelKVStore } from './level-kv-store.js'
 import { Level } from 'level'
-import { ObjectStore } from './object-store'
 
 export const ELP_NETWORK = 'elp'
 
@@ -33,10 +32,7 @@ export class LevelKVFactory implements IKVFactory {
 
       const level = new Level(dirPath, { valueEncoding: 'json' })
       await level.open()
-      const kv = new LevelKVStore(level, this.#logger, this.networkName, async (useCaseName) => {
-        const db = await this.open(useCaseName)
-        return db.level
-      })
+      const kv = new LevelKVStore(level, this.#logger, this.networkName)
 
       this.#cache.set(useCaseName, kv)
       return kv

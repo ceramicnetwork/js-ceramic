@@ -39,7 +39,6 @@ import os from 'os'
 import * as path from 'path'
 import { type IndexingConfig, LocalIndexApi, SyncApi } from '@ceramicnetwork/indexing'
 import { ShutdownSignal } from './shutdown-signal.js'
-import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
@@ -215,7 +214,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
-  private readonly _levelStore: LevelDbStore
   private readonly _kvFactory: IKVFactory
   private readonly _runId: string
   private readonly _startTime: Date
@@ -238,11 +236,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this._runId = crypto.randomUUID()
     this._startTime = new Date()
 
-    this._levelStore = new LevelDbStore(
-      this._logger,
-      params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
-      this._networkOptions.name
-    )
     this._kvFactory = new LevelKVFactory(
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
       this._networkOptions.name,
@@ -273,7 +266,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
-      keyValueStore: this._levelStore,
+      kvFactory: this._kvFactory,
       anchorRequestStore: new AnchorRequestStore(this._logger),
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,

@@ -9,31 +9,24 @@ class NotFoundError extends Error {
 }
 
 export class LevelKVStore implements IKVStoreA {
-  readonly #open: (useCaseName?: string) => Promise<Level>
-
   constructor(
     readonly level: Level,
     readonly logger: DiagnosticsLogger,
-    readonly networkName: string,
-    open: (useCaseName?: string) => Promise<Level>
-  ) {
-    this.#open = open
-  }
+    readonly networkName: string
+  ) {}
 
   async init(): Promise<void> {
     // do nothing
     return
   }
 
-  close(useCaseName?: string): Promise<void> {
-    // do nothing
-    return
+  async close(): Promise<void> {
+    await this.level.close()
   }
 
-  async del(key: string, useCaseName?: string): Promise<void> {
-    const store = await this.#open(useCaseName)
+  async del(key: string): Promise<void> {
     try {
-      return await store.del(key)
+      return await this.level.del(key)
     } catch (err) {
       const msg = `Error deleting key ${key} from leveldb state store: ${err}`
       this.logger.warn(msg)
@@ -41,10 +34,9 @@ export class LevelKVStore implements IKVStoreA {
     }
   }
 
-  async get(key: string, useCaseName?: string): Promise<any> {
-    const store = await this.#open(useCaseName)
+  async get(key: string): Promise<any> {
     try {
-      return await store.get(key)
+      return await this.level.get(key)
     } catch (err) {
       const msg = `Error fetching key ${key} from leveldb state store: ${err}`
       if (err.notFound) {
@@ -62,12 +54,12 @@ export class LevelKVStore implements IKVStoreA {
     return keys.length === 0
   }
 
-  async exists(key: string, useCaseName?: string): Promise<boolean> {
+  async exists(key: string): Promise<boolean> {
     try {
-      const val = await this.get(key, useCaseName)
+      const val = await this.get(key)
       return typeof val === 'string'
-    } catch (e) {
-      if (/Key not found in database/.test(e.toString())) {
+    } catch (e: any) {
+      if (e.notFound) {
         return false
       } else {
         throw e
@@ -82,9 +74,8 @@ export class LevelKVStore implements IKVStoreA {
       limit: params?.limit,
     }
     if (params?.gt) searchParams.gt = params.gt
-    const store = await this.#open(params?.useCaseName)
     return all(
-      map(store.iterator(searchParams), (r) => {
+      map(this.level.iterator(searchParams), (r) => {
         return {
           key: r[0],
           value: r[1],
@@ -100,18 +91,16 @@ export class LevelKVStore implements IKVStoreA {
       limit: params?.limit,
     }
 
-    const store = await this.#open(params?.useCaseName)
     return all(
-      map(store.iterator(searchParams), (r) => {
+      map(this.level.iterator(searchParams), (r) => {
         return r[0]
       })
     )
   }
 
-  async put(key: string, value: any, useCaseName?: string): Promise<void> {
-    const store = await this.#open(useCaseName)
+  async put(key: string, value: any): Promise<void> {
     try {
-      await store.put(key, value)
+      await this.level.put(key, value)
     } catch (err) {
       const msg = `Error storing key ${key} to leveldb state store: ${err}`
       this.logger.warn(msg)

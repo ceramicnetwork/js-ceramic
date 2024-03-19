@@ -1,4 +1,4 @@
-import { IKVStore } from './ikv-store.js'
+import { IKVFactory, IKVStore } from './ikv-store.js'
 import { IObjectStore } from './iobject-store.js'
 
 export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
@@ -25,8 +25,8 @@ export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject,
     this.deserialize = deserialize
   }
 
-  async open(store: IKVStore): Promise<void> {
-    this.store = store
+  async open(factory: IKVFactory): Promise<void> {
+    this.store = await factory.open(this.useCaseName)
   }
 
   async close(): Promise<void> {
