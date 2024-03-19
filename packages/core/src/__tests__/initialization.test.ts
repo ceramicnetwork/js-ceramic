@@ -3,7 +3,6 @@ import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import type { IpfsApi } from '@ceramicnetwork/common'
 import { Networks } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
@@ -26,7 +25,6 @@ describe('Ceramic integration', () => {
       stateStoreDirectory,
       indexing: { db: databaseConnectionString.href, models: [] },
     })
-    await TestUtils.delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
     await ceramic.close()
@@ -40,7 +38,6 @@ describe('Ceramic integration', () => {
       stateStoreDirectory,
       indexing: { db: databaseConnectionString.href, models: [] },
     })
-    await TestUtils.delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
     await ceramic.close()
@@ -61,7 +58,6 @@ describe('Ceramic integration', () => {
     await expect(ceramic._init(false)).rejects.toThrow(
       "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']"
     )
-    await TestUtils.delay(1000)
   })
 
   it('cannot create Ceramic instance on invalid network', async () => {
@@ -76,7 +72,6 @@ describe('Ceramic integration', () => {
     ).rejects.toThrow(
       "Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
     )
-    await TestUtils.delay(1000)
   }, 10000)
 
   test('init dispatcher', async () => {
