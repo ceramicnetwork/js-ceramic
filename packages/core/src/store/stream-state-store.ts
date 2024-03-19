@@ -6,7 +6,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { ObjectStore } from './object-store.js'
-import { IKVStore } from './ikv-store.js'
+import type { IKVFactory } from './ikv-store.js'
 
 function generateKey(object: StreamID): string {
   return object.toString()
@@ -46,8 +46,8 @@ export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
     await this.save(streamStateHolder.id, streamStateHolder.state)
   }
 
-  async open(store: IKVStore): Promise<void> {
-    return super.open(store)
+  async open(factory: IKVFactory): Promise<void> {
+    return super.open(factory)
   }
 
   async listStoredStreamIDs(streamId?: StreamID | null, limit?: number): Promise<string[]> {
