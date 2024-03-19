@@ -24,7 +24,6 @@ import { SchemaValidation } from './schema-utils.js'
 import { Model, ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { toString } from 'uint8arrays'
-import _ from 'lodash'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
