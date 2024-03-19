@@ -195,7 +195,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
       expect(doc2.id.toString()).toBe(doc1.id.toString())
       expect(doc2.content).toEqual({ unique: 'foo', other: 'test' })
 
-
       const doc3 = await ModelInstanceDocument.set(ceramic, { model: model.id }, ['bar'])
       expect(doc3.id.toString()).not.toBe(doc1.id.toString())
       expect(doc3.content).toBeNull()
