@@ -1,4 +1,4 @@
-import { IKVStoreA, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
+import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Level } from 'level'
 import all from 'it-all'
@@ -8,12 +8,8 @@ class NotFoundError extends Error {
   readonly notFound = true
 }
 
-export class LevelKVStore implements IKVStoreA {
-  constructor(
-    readonly level: Level,
-    readonly logger: DiagnosticsLogger,
-    readonly networkName: string
-  ) {}
+export class LevelKVStore implements IKVStore {
+  constructor(readonly level: Level, readonly logger: DiagnosticsLogger) {}
 
   async init(): Promise<void> {
     // do nothing
@@ -49,7 +45,7 @@ export class LevelKVStore implements IKVStoreA {
     }
   }
 
-  async isEmpty(params?: StoreSearchParams): Promise<boolean> {
+  async isEmpty(params?: Partial<StoreSearchParams>): Promise<boolean> {
     const keys = await this.findKeys(params)
     return keys.length === 0
   }
@@ -67,7 +63,7 @@ export class LevelKVStore implements IKVStoreA {
     }
   }
 
-  async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
+  async find(params?: Partial<StoreSearchParams>): Promise<Array<IKVStoreFindResult>> {
     const searchParams: Record<string, any> = {
       keys: true,
       values: true,
@@ -84,7 +80,7 @@ export class LevelKVStore implements IKVStoreA {
     )
   }
 
-  async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
+  async findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
     const searchParams: Record<string, any> = {
       keys: true,
       values: false,

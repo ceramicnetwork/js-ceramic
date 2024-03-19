@@ -25,7 +25,7 @@ import type { HandlersMap } from '../handlers-map.js'
 import { distinctUntilKeyChanged, map, Observable, Subscription, concatMap } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
-import { IKVFactory, IKVStore } from '../store/ikv-store.js'
+import { IKVFactory } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ModelMetrics, Observable as ObservableMetric } from '@ceramicnetwork/model-metrics'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
@@ -167,16 +167,14 @@ export class Repository {
   }
 
   /**
-   * Sets the StateStore to use.
+   * Sets the KVFactory to use.
    * This must be called before init().
-   * @param stateStore
    */
-  async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
-    throw new Error(`TODO`) // TODO
-    // this.setDeps({
-    //   ...this.#deps,
-    //   keyValueStore: stateStore,
-    // })
+  injectKVFactory(factory: IKVFactory) {
+    this.setDeps({
+      ...this.#deps,
+      kvFactory: factory,
+    })
   }
 
   async init(): Promise<void> {
