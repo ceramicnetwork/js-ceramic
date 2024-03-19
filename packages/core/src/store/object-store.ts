@@ -1,10 +1,10 @@
-import type { IKVFactory, IKVStoreA } from './ikv-store.js'
+import type { IKVFactory, IKVStore } from './ikv-store.js'
 import type { IObjectStore } from './iobject-store.js'
 
 export abstract class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
   protected abstract useCaseName: string | undefined
 
-  protected store: IKVStoreA
+  protected store: IKVStore
   private readonly generateKey: (object: TKeyObject) => string
   private readonly serialize: (value: TValue) => any
   private readonly deserialize: (serialized: any) => TValue

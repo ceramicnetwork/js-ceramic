@@ -32,7 +32,7 @@ export class LevelKVFactory implements IKVFactory {
 
       const level = new Level(dirPath, { valueEncoding: 'json' })
       await level.open()
-      const kv = new LevelKVStore(level, this.#logger, this.networkName)
+      const kv = new LevelKVStore(level, this.#logger)
 
       this.#cache.set(useCaseName, kv)
       return kv
@@ -69,10 +69,10 @@ export class LevelKVFactory implements IKVFactory {
     return dirPath
   }
 
-  async open(useCaseName?: string): Promise<LevelKVStore> {
-    const found = this.#cache.get(useCaseName)
+  async open(name?: string): Promise<LevelKVStore> {
+    const found = this.#cache.get(name)
     if (found) return found
-    return this.create(useCaseName)
+    return this.create(name)
   }
 
   async close(): Promise<void> {

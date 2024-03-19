@@ -36,7 +36,7 @@ beforeEach(() => {
     put: jest.fn(),
     get: jest.fn(),
     del: jest.fn(),
-  }
+  } as any
 
   stateStore = {
     open: jest.fn() as any,

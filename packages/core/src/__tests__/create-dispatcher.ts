@@ -15,7 +15,7 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   const logger = loggerProvider.getDiagnosticsLogger()
   const levelPath = await tmp.tmpName()
   const factory = new LevelKVFactory(levelPath, 'test', logger)
-  const stateStore = new StreamStateStore(logger)
+  const stateStore = new StreamStateStore()
   await stateStore.open(factory)
   const feed = new Feed()
   const fauxReconApi = {} as IReconApi

@@ -35,7 +35,7 @@ describe('LevelDB-backed StateStore', () => {
     logger = new LoggerProvider().getDiagnosticsLogger()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     kvFactory = new LevelKVFactory(tmpFolder.path, 'testNetwork', logger)
-    stateStore = new StreamStateStore(new LoggerProvider().getDiagnosticsLogger())
+    stateStore = new StreamStateStore()
     await stateStore.open(kvFactory)
 
     // add a small delay after creating the leveldb instance before trying to use it.
@@ -162,7 +162,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
   beforeEach(async () => {
     logger = new LoggerProvider().getDiagnosticsLogger()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new StreamStateStore(logger)
+    stateStore = new StreamStateStore()
   })
 
   afterEach(async () => {
