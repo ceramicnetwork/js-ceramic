@@ -184,8 +184,8 @@ export class Repository {
     await this.index.init()
 
     const reconStore = await this.#deps.kvFactory.open(RECON_STORE_USECASE_NAME)
-    const cursor = (await reconStore.exists(RECON_STORE_CURSOR_KEY, RECON_STORE_USECASE_NAME))
-      ? await reconStore.get(RECON_STORE_CURSOR_KEY, RECON_STORE_USECASE_NAME)
+    const cursor = (await reconStore.exists(RECON_STORE_CURSOR_KEY))
+      ? await reconStore.get(RECON_STORE_CURSOR_KEY)
       : '0'
     await this.recon.init(cursor)
     this.reconEventFeedSubscription = this.recon
