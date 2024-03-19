@@ -24,6 +24,7 @@ import { SchemaValidation } from './schema-utils.js'
 import { Model, ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { toString } from 'uint8arrays'
+import _ from 'lodash'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
@@ -194,9 +195,9 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const oldContent = state.content ?? {}
-    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
+    const newContent = jsonpatch.applyPatch(oldContent, payload.data, undefined, false).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
-    await this._validateContent(context, modelStream, newContent, false, payload)
+    await this._validateContent(context, modelStream, newContent, false, payload, oldContent)
     await this._validateUnique(
       modelStream,
       metadata as unknown as ModelInstanceDocumentMetadata,
@@ -247,7 +248,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     model: Model,
     content: any,
     genesis: boolean,
-    payload?: Payload
+    payload?: Payload,
+    oldContent?: any
   ): Promise<void> {
     if (
       genesis &&
@@ -269,7 +271,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
     if (!genesis && payload) {
-      await this._validateLockedFieldsUpdate(model, payload)
+      await this._validateLockedFieldsUpdate(model, payload, oldContent)
     }
   }
 
@@ -357,16 +359,26 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   /**
    *  Helper function to validate if immutable fields are being mutated
    */
-  async _validateLockedFieldsUpdate(model: Model, payload: Payload): Promise<void> {
+  async _validateLockedFieldsUpdate(
+    model: Model,
+    payload: Payload,
+    oldContent: any
+  ): Promise<void> {
     if (!ModelDefinitionV2.is(model.content)) return
     const immutableFields = model.content.immutableFields
     const hasImmutableFields = immutableFields && immutableFields.length > 0
     if (!hasImmutableFields) return
 
+    const newContent = jsonpatch.applyPatch(
+      oldContent,
+      payload.data as any,
+      undefined,
+      false
+    ).newDocument
     for (const lockedField of immutableFields) {
-      const mutated = payload.data.some(
-        (entry) => entry.path.slice(1).split('/').shift() === lockedField
-      )
+      const mutated =
+        JSON.stringify(newContent[lockedField]) !== JSON.stringify(oldContent[lockedField])
+
       if (mutated) {
         throw new Error(`Immutable field "${lockedField}" cannot be updated`)
       }
