@@ -850,7 +850,7 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  it.only('MIDs with SET account relation validate signed commit fields', async () => {
+  it('MIDs with SET account relation validate signed commit fields', async () => {
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
