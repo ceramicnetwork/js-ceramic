@@ -110,10 +110,6 @@ class S3KVStore implements IKVStore {
     })
   }
 
-  init(): Promise<void> {
-    throw new Error('Method not implemented. And should not be used TBH') // TODO
-  }
-
   close(): Promise<void> {
     return this.level.close()
   }
