@@ -40,7 +40,13 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
     type: 'Test',
     endpoint: 'https://rpc.ankr.com/gnosis',
   },
-  'eip155:11155111': { network: 'sepolia', chain: 'ETH', chainId: 11155111, networkId: 11155111, type: 'Test' },
+  'eip155:11155111': {
+    network: 'sepolia',
+    chain: 'ETH',
+    chainId: 11155111,
+    networkId: 11155111,
+    type: 'Test',
+  },
 }
 
 const BASE_CHAIN_ID = 'eip155'
@@ -53,11 +59,15 @@ const ABI = ['function anchorDagCbor(bytes32)']
 
 const iface = new Interface(ABI)
 
+/**
+ * Block threshold after which all anchors on this chain should be using the smart contract.
+ */
 const BLOCK_THRESHHOLDS = {
   'eip155:1': 16688195, //mainnet
   'eip155:3': 1000000000, //ropsten
   'eip155:5': 8498671, //goerli
   'eip155:100': 26509835, //gnosis
+  'eip155:11155111': 5518585, // sepolia
   'eip155:1337': 1, //ganache
 }
 const ANCHOR_CONTRACT_ADDRESS = '0x231055A0852D67C7107Ad0d0DFeab60278fE6AdC'
