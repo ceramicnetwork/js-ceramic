@@ -269,7 +269,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
-    if (!genesis && payload) {
+    if (!genesis && payload && Object.keys(oldContent).length > 0) {
       await this._validateLockedFieldsUpdate(model, payload, oldContent)
     }
   }
@@ -366,7 +366,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (!ModelDefinitionV2.is(model.content)) return
     const immutableFields = model.content.immutableFields
     const hasImmutableFields = immutableFields && immutableFields.length > 0
-    if (!hasImmutableFields || Object.keys(oldContent).length === 0) return
+    if (!hasImmutableFields) return
 
     const newContent = jsonpatch.applyPatch(
       oldContent,
