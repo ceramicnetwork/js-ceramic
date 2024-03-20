@@ -13,9 +13,6 @@ import {
 import first from 'it-first'
 import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
-export const testIfV3 = process.env['CERAMIC_RECON_MODE'] ? test.skip : test
-export const describeIfV3 = process.env['CERAMIC_RECON_MODE'] ? describe.skip : describe
-
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
   readonly state: StreamState

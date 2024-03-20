@@ -447,34 +447,31 @@ describe('Ceramic interop: core <> http-client', () => {
     clearTimeout(id)
   })
 
-  test(
-    'Aborts fetch if taking too long even if given an AbortSignal that did not get aborted',
-    async () => {
-      const content1 = { test: 123 }
-      const doc = await TileDocument.create(core, content1, null, { anchor: false })
+  test('Aborts fetch if taking too long even if given an AbortSignal that did not get aborted', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
-      const loadStreamMock = jest.spyOn(core, 'loadStream')
-      let id = null
-      loadStreamMock.mockImplementation(() => {
-        return new Promise((resolve) => {
-          id = setTimeout(() => {
-            resolve(doc)
-          }, 4000)
-        })
+    const loadStreamMock = jest.spyOn(core, 'loadStream')
+    let id = null
+    loadStreamMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        id = setTimeout(() => {
+          resolve(doc)
+        }, 4000)
       })
+    })
 
-      const controller = new AbortController()
+    const controller = new AbortController()
 
-      await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
-          signal: controller.signal,
-          timeout: 1000,
-        })
-      ).rejects.toThrow(/aborted/)
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: controller.signal,
+        timeout: 1000,
+      })
+    ).rejects.toThrow(/aborted/)
 
-      clearTimeout(id)
-    }
-  )
+    clearTimeout(id)
+  })
 
   test('Aborts fetch if the AbortSignal given has already been aborted', async () => {
     const content1 = { test: 123 }

@@ -1,6 +1,6 @@
 import { jest, test, expect, describe, beforeAll, afterAll } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi, LoggerProvider, Networks } from '@ceramicnetwork/common'
 import { Utils as CoreUtils, ReconApi } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
@@ -439,56 +439,43 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let reconApi1: ReconApi
 
   beforeAll(async () => {
-    ipfs0 = await createIPFS()
-    ipfs1 = await createIPFS()
-
-    await swarmConnect(ipfs0, ipfs1)
     if (process.env.CERAMIC_RECON_MODE) {
-      const regexPattern = new RegExp(`${RECON_URL}.*`)
-
-      reconApi0 = new ReconApi(
-        {
-          enabled: false,
-          url: RECON_URL,
-          feedEnabled: false,
-        },
-        LOGGER,
-        fetch
-      )
-
-      reconApi1 = new ReconApi(
-        {
-          enabled: false,
-          url: RECON_URL,
-          feedEnabled: false,
-        },
-        LOGGER,
-        fetch
-      )
-
-      await reconApi0.init()
-      await reconApi1.init()
+      /* const regexPattern = new RegExp(`${RECON_URL}.*`)
 
       mocker.mock({
         url: regexPattern,
         body: JSON.stringify({ events: [], resumeToken: 'test' }),
         status: 200,
+      })*/
+      ipfs0 = await createIPFS({
+        rust: {
+          type: 'binary',
+          network: Networks.INMEMORY,
+        },
       })
-
-      // Simulates --ipfs-api
-      ipfs0.config.set('Addresses.API', RECON_URL)
-      ipfs1.config.set('Addresses.API', RECON_URL)
+      ipfs1 = await createIPFS({
+        rust: {
+          type: 'binary',
+          network: Networks.INMEMORY,
+        },
+      })
+    } else {
+      ipfs0 = await createIPFS()
+      ipfs1 = await createIPFS()
     }
+
+    await swarmConnect(ipfs0, ipfs1)
+    console.log("1")
     ceramic0 = await createCeramic(ipfs0)
+    console.log("1")
     ceramic1 = await createCeramic(ipfs1)
-
-    reconApi0.stop()
-    reconApi1.stop()
-
+    console.log("1")
     model = await Model.create(ceramic0, MODEL_DEFINITION)
-    reconApi0.stop()
-    reconApi1.stop()
+    console.log("1")
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic0.repository.recon, model.tip)
 
+      console.log("1")
     midMetadata = { model: model.id }
   }, 80000)
 
@@ -502,6 +489,9 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
   test.only('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
