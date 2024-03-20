@@ -890,7 +890,7 @@ describe('ModelInstanceDocumentHandler', () => {
     await expect(handler.applyCommit(signedCommitDataFail, context, state)).rejects.toThrow(
       'Unique content fields value does not match metadata. If you are trying to change the value of these fields, this is causing this error: these fields values are not mutable.'
     )
-    console.log('voy')
+
     const signedCommitOK = (await ModelInstanceDocument.makeUpdateCommit(
       context.signer,
       doc.commitId,
