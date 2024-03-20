@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.4.0...@ceramicnetwork/indexing@4.5.0-rc.0) (2024-03-20)
+
+
+### Features
+
+* add sepolia to allow chain for dev-unstable ([#3187](https://github.com/ceramicnetwork/js-ceramic/issues/3187)) ([daa4bef](https://github.com/ceramicnetwork/js-ceramic/commit/daa4befff7d639fb0322d6ca06902cf0f5a94c9d))
+
+
+
+
+
 # [4.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.4.0-rc.0...@ceramicnetwork/indexing@4.4.0) (2024-03-20)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "5.3.0",
+  "version": "5.4.0-rc.0",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",

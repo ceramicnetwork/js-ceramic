@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.4.0...@ceramicnetwork/core@5.5.0-rc.0) (2024-03-20)
+
+
+### Bug Fixes
+
+* remove parsing of resume token and add unit tests for recon ([#3179](https://github.com/ceramicnetwork/js-ceramic/issues/3179)) ([e094c48](https://github.com/ceramicnetwork/js-ceramic/commit/e094c481e14c5a10d78284dc21384f6e6049830e))
+
+
+### Features
+
+* add sepolia to allow chain for dev-unstable ([#3187](https://github.com/ceramicnetwork/js-ceramic/issues/3187)) ([daa4bef](https://github.com/ceramicnetwork/js-ceramic/commit/daa4befff7d639fb0322d6ca06902cf0f5a94c9d))
+
+
+
+
+
 # [5.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.4.0-rc.0...@ceramicnetwork/core@5.4.0) (2024-03-20)
 
 **Note:** Version bump only for package @ceramicnetwork/core
