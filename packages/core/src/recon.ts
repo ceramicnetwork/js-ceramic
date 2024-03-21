@@ -124,7 +124,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     if (!this.enabled) {
       throw new Error(`Recon: disabled, not registering interest in model ${model.toString()}`)
     }
-
+    console.log("URL INSIDE RECON", this.#url)
     try {
       await this.#sendRequest(this.#url + `/ceramic/interests/model/${model.toString()}`, {
         method: 'POST',

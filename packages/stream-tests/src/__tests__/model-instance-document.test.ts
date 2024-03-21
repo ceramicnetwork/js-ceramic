@@ -1,7 +1,7 @@
 import { jest, test, expect, describe, beforeAll, afterAll } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, LoggerProvider, Networks } from '@ceramicnetwork/common'
-import { Utils as CoreUtils, ReconApi } from '@ceramicnetwork/core'
+import { AnchorStatus, EventType, IpfsApi, Networks } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -13,7 +13,6 @@ import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import HttpRequestMock from 'http-request-mock'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -81,10 +80,6 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
     optionalLinkedDoc: { type: 'document', model: MODEL_STREAM_ID },
   },
 }
-
-const RECON_URL = 'http://example.com'
-const LOGGER = new LoggerProvider().getDiagnosticsLogger()
-const mocker = HttpRequestMock.setupForUnitTest('fetch')
 
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
@@ -435,28 +430,20 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let ceramic1: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
-  let reconApi0: ReconApi
-  let reconApi1: ReconApi
 
   beforeAll(async () => {
     if (process.env.CERAMIC_RECON_MODE) {
-      /* const regexPattern = new RegExp(`${RECON_URL}.*`)
-
-      mocker.mock({
-        url: regexPattern,
-        body: JSON.stringify({ events: [], resumeToken: 'test' }),
-        status: 200,
-      })*/
+      const host = '127.0.0.1'
       ipfs0 = await createIPFS({
         rust: {
-          type: 'binary',
-          network: Networks.INMEMORY,
+          type: 'remote',
+          host,
         },
       })
       ipfs1 = await createIPFS({
         rust: {
-          type: 'binary',
-          network: Networks.INMEMORY,
+          type: 'remote',
+          host,
         },
       })
     } else {
@@ -471,10 +458,6 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
 
-    if (process.env.CERAMIC_RECON_MODE)
-      await TestUtils.waitForEvent(ceramic0.repository.recon, model.tip)
-
-    console.log('1')
     midMetadata = { model: model.id }
   }, 80000)
 
@@ -483,14 +466,10 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     await ceramic1.close()
     await ipfs0.stop()
     await ipfs1.stop()
-    mocker.reset()
   })
 
   test.only('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
-
-    if (process.env.CERAMIC_RECON_MODE)
-      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
