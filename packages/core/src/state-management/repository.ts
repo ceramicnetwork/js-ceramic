@@ -74,9 +74,7 @@ export type RepositoryDependencies = {
  */
 function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
   const model = state$.state?.metadata?.model
-  if (!model) {
-    return false
-  }
+  if (!model) return false
   return index.shouldIndexStream(model)
 }
 
