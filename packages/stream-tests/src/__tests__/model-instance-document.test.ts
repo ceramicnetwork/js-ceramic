@@ -465,17 +465,16 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     }
 
     await swarmConnect(ipfs0, ipfs1)
-    console.log("1")
+
     ceramic0 = await createCeramic(ipfs0)
-    console.log("1")
     ceramic1 = await createCeramic(ipfs1)
-    console.log("1")
+
     model = await Model.create(ceramic0, MODEL_DEFINITION)
-    console.log("1")
+
     if (process.env.CERAMIC_RECON_MODE)
       await TestUtils.waitForEvent(ceramic0.repository.recon, model.tip)
 
-      console.log("1")
+    console.log('1')
     midMetadata = { model: model.id }
   }, 80000)
 
