@@ -196,7 +196,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content ?? {}
     const newContent = jsonpatch.applyPatch(oldContent, payload.data, undefined, false).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
-    await this._validateContent(context, modelStream, newContent, false, payload, oldContent)
+    const isSetType = modelStream.content.accountRelation.type === 'set'
+    const isFirstDataCommit = !state.log.some(c => c.type === EventType.DATA)
+
+    await this._validateContent(context, modelStream, newContent, false, payload, isSetType && isFirstDataCommit)
     await this._validateUnique(
       modelStream,
       metadata as unknown as ModelInstanceDocumentMetadata,
@@ -248,7 +251,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     content: any,
     genesis: boolean,
     payload?: Payload,
-    oldContent?: any
+    hasContent?: boolean
   ): Promise<void> {
     if (
       genesis &&
@@ -269,8 +272,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
-    if (!genesis && payload && Object.keys(oldContent).length > 0) {
-      await this._validateLockedFieldsUpdate(model, payload, oldContent)
+    if (!genesis && payload && !hasContent) {
+      await this._validateLockedFieldsUpdate(model, payload)
     }
   }
 
@@ -360,24 +363,17 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _validateLockedFieldsUpdate(
     model: Model,
-    payload: Payload,
-    oldContent: any
+    payload: Payload
   ): Promise<void> {
     if (!ModelDefinitionV2.is(model.content)) return
     const immutableFields = model.content.immutableFields
     const hasImmutableFields = immutableFields && immutableFields.length > 0
     if (!hasImmutableFields) return
 
-    const newContent = jsonpatch.applyPatch(
-      oldContent,
-      payload.data as any,
-      undefined,
-      false
-    ).newDocument
-
     for (const lockedField of immutableFields) {
-      const mutated =
-        JSON.stringify(newContent[lockedField]) !== JSON.stringify(oldContent[lockedField])
+      const mutated = payload.data.some(
+        (entry) => entry.path.slice(1).split('/').shift() === lockedField
+      )
       if (mutated) {
         throw new Error(`Immutable field "${lockedField}" cannot be updated`)
       }
