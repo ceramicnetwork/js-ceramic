@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi, Networks } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
@@ -736,8 +736,18 @@ describe('Model API multi-node tests', () => {
   let ceramic1: Ceramic
 
   beforeAll(async () => {
-    ipfs0 = await createIPFS()
-    ipfs1 = await createIPFS()
+    ipfs0 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
+    })
+    ipfs1 = await createIPFS({
+      rust: {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      },
+    })
     await swarmConnect(ipfs0, ipfs1)
   }, 12000)
 
