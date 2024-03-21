@@ -251,7 +251,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param model - The model that this ModelInstanceDocument belongs to
    * @param content - Content to validate
    * @param genesis - Whether the commit being applied is a genesis commit
-   * @param enforceImmutableFields - Whether the incoming commit is the first data commit for a model with deterministic creation (Optional)
+   * @param skipImmutableFieldsCheck - Whether the incoming commit is the first data commit for a model with deterministic creation (Optional)
    * @private
    */
   async _validateContent(
@@ -260,7 +260,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     content: any,
     genesis: boolean,
     payload?: Payload,
-    enforceImmutableFields?: boolean
+    skipImmutableFieldsCheck?: boolean
   ): Promise<void> {
     if (
       genesis &&
@@ -281,7 +281,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
-    if (!genesis && payload && !enforceImmutableFields) {
+    if (!genesis && payload && !skipImmutableFieldsCheck) {
       await this._validateLockedFieldsUpdate(model, payload)
     }
   }
