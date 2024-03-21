@@ -430,34 +430,18 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let ceramic1: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let disablePeerDataSync: boolean
 
   beforeAll(async () => {
-    if (process.env.CERAMIC_RECON_MODE) {
-      const host = '127.0.0.1'
-      ipfs0 = await createIPFS({
-        rust: {
-          type: 'remote',
-          host,
-        },
-      })
-      ipfs1 = await createIPFS({
-        rust: {
-          type: 'remote',
-          host,
-        },
-      })
-    } else {
-      ipfs0 = await createIPFS()
-      ipfs1 = await createIPFS()
-    }
-
+    disablePeerDataSync = process.env.CERAMIC_RECON_MODE ? true : false
+    ipfs0 = await createIPFS()
+    ipfs1 = await createIPFS()
     await swarmConnect(ipfs0, ipfs1)
 
-    ceramic0 = await createCeramic(ipfs0)
-    ceramic1 = await createCeramic(ipfs1)
+    ceramic0 = await createCeramic(ipfs0, { disablePeerDataSync, reconFeedEnabled: false })
+    ceramic1 = await createCeramic(ipfs1, { disablePeerDataSync, reconFeedEnabled: false })
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
-
     midMetadata = { model: model.id }
   }, 80000)
 
@@ -468,7 +452,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     await ipfs1.stop()
   })
 
-  test.only('load basic doc', async () => {
+  test('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
