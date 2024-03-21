@@ -47,6 +47,7 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
     type: 'object',
     additionalProperties: false,
     properties: {
+      one: { type: 'string', minLength: 2 },
       myData: {
         type: 'integer',
         maximum: 10000,
@@ -55,6 +56,7 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
     },
     required: ['myData'],
   },
+  immutableFields: ['one'],
 }
 
 const MODEL_DEFINITION_SET: ModelDefinition = {
@@ -253,7 +255,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
   })
 
-  test('Can upsert immutable fields in a set relation model', async () => {
+  test('Can upsert immutable fields in a set/single relation model', async () => {
+    // set
     const doc = await ModelInstanceDocument.set(
       ceramic,
       { controller: ceramic.did!.id, model: modelSet.id },
@@ -268,6 +271,16 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
+    // single
+    const singleDoc = await ModelInstanceDocument.single(ceramic, midSingleMetadata)
+    expect(singleDoc.content).toBeNull()
+    const singleNewContent = { one: 'foo', myData: 1 }
+    await singleDoc.replace(singleNewContent)
+
+    expect(singleDoc.content).toEqual(singleNewContent)
+    expect(singleDoc.state.log.length).toEqual(2)
+    expect(singleDoc.state.log[0].type).toEqual(EventType.INIT)
+    expect(singleDoc.state.log[1].type).toEqual(EventType.DATA)
   })
 
   test(`Cannot create document with relation that isn't a valid streamid`, async () => {

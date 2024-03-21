@@ -161,6 +161,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state: StreamState<ModelInstanceDocumentStateMetadata>,
     context: StreamReaderWriter
   ): Promise<StreamState> {
+    const deterministicTypes = ['set', 'single']
     // Retrieve the payload
     const payload = commitData.commit
     StreamUtils.assertCommitLinksToState(state, payload)
@@ -196,7 +197,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content ?? {}
     const newContent = jsonpatch.applyPatch(oldContent, payload.data, undefined, false).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
-    const isSetType = modelStream.content.accountRelation.type === 'set'
+    const isDetType = deterministicTypes.includes(modelStream.content.accountRelation.type)
     const isFirstDataCommit = !state.log.some((c) => c.type === EventType.DATA)
 
     await this._validateContent(
@@ -205,7 +206,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       newContent,
       false,
       payload,
-      isSetType && isFirstDataCommit
+      isDetType && isFirstDataCommit
     )
     await this._validateUnique(
       modelStream,
