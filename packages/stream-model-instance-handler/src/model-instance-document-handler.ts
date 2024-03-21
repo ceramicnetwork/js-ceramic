@@ -197,9 +197,16 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const newContent = jsonpatch.applyPatch(oldContent, payload.data, undefined, false).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
     const isSetType = modelStream.content.accountRelation.type === 'set'
-    const isFirstDataCommit = !state.log.some(c => c.type === EventType.DATA)
+    const isFirstDataCommit = !state.log.some((c) => c.type === EventType.DATA)
 
-    await this._validateContent(context, modelStream, newContent, false, payload, isSetType && isFirstDataCommit)
+    await this._validateContent(
+      context,
+      modelStream,
+      newContent,
+      false,
+      payload,
+      isSetType && isFirstDataCommit
+    )
     await this._validateUnique(
       modelStream,
       metadata as unknown as ModelInstanceDocumentMetadata,
@@ -361,10 +368,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   /**
    *  Helper function to validate if immutable fields are being mutated
    */
-  async _validateLockedFieldsUpdate(
-    model: Model,
-    payload: Payload
-  ): Promise<void> {
+  async _validateLockedFieldsUpdate(model: Model, payload: Payload): Promise<void> {
     if (!ModelDefinitionV2.is(model.content)) return
     const immutableFields = model.content.immutableFields
     const hasImmutableFields = immutableFields && immutableFields.length > 0
