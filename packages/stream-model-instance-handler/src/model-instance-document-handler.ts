@@ -161,6 +161,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state: StreamState<ModelInstanceDocumentStateMetadata>,
     context: StreamReaderWriter
   ): Promise<StreamState> {
+    const deterministicTypes = ['set', 'single']
     // Retrieve the payload
     const payload = commitData.commit
     StreamUtils.assertCommitLinksToState(state, payload)
@@ -196,7 +197,17 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content ?? {}
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
-    await this._validateContent(context, modelStream, newContent, false, payload)
+    const isDetType = deterministicTypes.includes(modelStream.content.accountRelation.type)
+    const isFirstDataCommit = !state.log.some((c) => c.type === EventType.DATA)
+
+    await this._validateContent(
+      context,
+      modelStream,
+      newContent,
+      false,
+      payload,
+      isDetType && isFirstDataCommit
+    )
     await this._validateUnique(
       modelStream,
       metadata as unknown as ModelInstanceDocumentMetadata,
@@ -238,8 +249,9 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * Validates content against the schema of the model stream with given stream id
    * @param ceramic - Interface for reading streams from ceramic network
    * @param model - The model that this ModelInstanceDocument belongs to
-   * @param content - content to validate
-   * @param genesis - whether the commit being applied is a genesis commit
+   * @param content - Content to validate
+   * @param genesis - Whether the commit being applied is a genesis commit
+   * @param skipImmutableFieldsCheck - Whether the incoming commit is the first data commit for a model with deterministic creation (Optional)
    * @private
    */
   async _validateContent(
@@ -247,7 +259,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     model: Model,
     content: any,
     genesis: boolean,
-    payload?: Payload
+    payload?: Payload,
+    skipImmutableFieldsCheck?: boolean
   ): Promise<void> {
     if (
       genesis &&
@@ -268,7 +281,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
-    if (!genesis && payload) {
+    if (!genesis && payload && !skipImmutableFieldsCheck) {
       await this._validateLockedFieldsUpdate(model, payload)
     }
   }

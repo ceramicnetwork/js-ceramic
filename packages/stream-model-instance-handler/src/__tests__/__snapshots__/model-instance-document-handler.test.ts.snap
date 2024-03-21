@@ -6,6 +6,7 @@ exports[`ModelInstanceDocumentHandler MIDs with SET account relation validate si
   "content": {
     "myData": 2,
     "one": "foo",
+    "three": "three",
     "two": "bar",
   },
   "log": [
