@@ -39,8 +39,10 @@ const MODEL_DEFINITION: ModelDefinition = {
 }
 
 const MODEL_DEFINITION_SINGLE: ModelDefinition = {
-  name: 'MySingleModel',
-  version: '1.0',
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
   accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -50,7 +52,7 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
       one: { type: 'string', minLength: 2 },
       myData: {
         type: 'integer',
-        maximum: 10000,
+        maximum: 100,
         minimum: 0,
       },
     },
@@ -125,7 +127,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let modelSingle: Model
   let midSingleMetadata: ModelInstanceDocumentMetadataArgs
   let modelSet: Model
-  let midSetMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -159,7 +160,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
     modelSingle = await Model.create(ceramic, MODEL_DEFINITION_SINGLE)
     midSingleMetadata = { model: modelSingle.id }
     modelSet = await Model.create(ceramic, MODEL_DEFINITION_SET)
-    midSetMetadata = { model: modelSet.id }
 
     await core.index.indexModels([{ streamID: model.id }])
   }, 12000)
@@ -271,6 +271,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
+
+    //second update
+    newContent.three = 'barfoo'
+    await expect(doc.replace(newContent)).rejects.toThrow(
+      new RegExp(`.*Immutable field \\\\\\"three\\\\\\" cannot be updated.*`)
+    )
+
     // single
     const singleDoc = await ModelInstanceDocument.single(ceramic, midSingleMetadata)
     expect(singleDoc.content).toBeNull()
@@ -281,6 +288,12 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(singleDoc.state.log.length).toEqual(2)
     expect(singleDoc.state.log[0].type).toEqual(EventType.INIT)
     expect(singleDoc.state.log[1].type).toEqual(EventType.DATA)
+
+    //second update
+    singleNewContent.one = 'barfoo'
+    await expect(singleDoc.replace(singleNewContent)).rejects.toThrow(
+      new RegExp(`.*Immutable field \\\\\\"one\\\\\\" cannot be updated.*`)
+    )
   })
 
   test(`Cannot create document with relation that isn't a valid streamid`, async () => {
