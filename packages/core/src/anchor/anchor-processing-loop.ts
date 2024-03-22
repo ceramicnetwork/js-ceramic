@@ -89,7 +89,7 @@ export class AnchorProcessingLoop {
           const err_msg = `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
           logger.err(err_msg)
           ModelMetrics.recordError(err_msg)
-          
+
           // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
         }
       }

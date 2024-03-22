@@ -803,6 +803,7 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModels()
+    console.log(`RECORDING NUMBER INDEXED MODELS: {indexedModels.length}`)
     ModelMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
     const body = {
       models: indexedModels.map((id) => id.toString()),

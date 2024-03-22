@@ -212,7 +212,10 @@ export class Repository {
    * Returns the number of streams with writes that are waiting to be anchored by the CAS.
    */
   get numPendingAnchors(): number {
-    ModelMetrics.observe(ObservableMetric.CURRENT_PENDING_REQUESTS, this.#numPendingAnchorSubscriptions)
+    ModelMetrics.observe(
+      ObservableMetric.CURRENT_PENDING_REQUESTS,
+      this.#numPendingAnchorSubscriptions
+    )
     return this.#numPendingAnchorSubscriptions
   }
 
