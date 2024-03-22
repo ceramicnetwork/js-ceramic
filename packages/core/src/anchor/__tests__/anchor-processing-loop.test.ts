@@ -152,7 +152,7 @@ test('Dont process the same entry multiple times concurrently', async () => {
   async function* overEntries(): AsyncGenerator<number> {
     do {
       // Need this sleep or else the Node runtime might never switch back to the "process" function.
-      await CommonTestUtils.delay(1)
+      await CommonTestUtils.delay(5)
       for (const e of entries) yield e
     } while (true)
   }
