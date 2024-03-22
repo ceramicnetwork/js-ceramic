@@ -350,13 +350,13 @@ export class CeramicDaemon {
       ModelMetrics.start({ ceramic: ceramic,
                        network: params.networkOptions.name,
                        ceramicVersion: version,
-                       ipfsVersion: ipfsVersion.toString(),
+                       ipfsVersion: ipfsVersion.version,
                        intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-                       nodeId: ipfsId.toString(), // what makes the best ID for the node?
+                       nodeId: ipfsId.publicKey, // what makes the best ID for the node?
                        nodeName: daemon.hostname,
-                       nodeAuthDID: did.toString(),
+                       nodeAuthDID: did.id,
                        nodeIPAddr: daemon.hostname,
-                       nodePeerId: ipfsId.toString(),
+                       nodePeerId: ipfsId.publicKey,
                        logger: diagnosticsLogger
                      })
     }
