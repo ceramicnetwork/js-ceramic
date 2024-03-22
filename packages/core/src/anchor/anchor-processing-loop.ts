@@ -7,6 +7,7 @@ import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
+import { ModelMetrics, Observable, Counter } from '@ceramicnetwork/model-metrics'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
@@ -69,6 +70,9 @@ export class AnchorProcessingLoop {
             // "timestamp" field from "entry", which was set as the current time when the request was
             // first written into the AnchorRequestStore.
             this.#anchorPollingMetrics.record(entry)
+            ModelMetrics.recordAnchorRequestAgeMS(entry)
+            ModelMetrics.count(Counter.RECENT_COMPLETED_REQUESTS, 1)
+
             // Remove iff tip stored equals to the tip we processed
             // Sort of Compare-and-Swap.
             await this.#anchorStoreQueue.run(streamId.toString(), async () => {
@@ -82,9 +86,10 @@ export class AnchorProcessingLoop {
             })
           }
         } catch (err) {
-          logger.err(
-            `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
-          )
+          const err_msg = `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
+          logger.err(err_msg)
+          ModelMetrics.recordError(err_msg)
+          
           // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
         }
       }

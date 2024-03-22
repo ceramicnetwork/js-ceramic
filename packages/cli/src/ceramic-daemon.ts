@@ -8,6 +8,8 @@ import {
 import {
   DEFAULT_PUBLISH_INTERVAL_MS,
   ModelMetrics,
+  Counter,
+  Observable
 } from '@ceramicnetwork/model-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
@@ -801,6 +803,7 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModels()
+    ModelMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
     const body = {
       models: indexedModels.map((id) => id.toString()),
     }
