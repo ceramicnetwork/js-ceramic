@@ -153,8 +153,12 @@ test('Dont process the same entry multiple times concurrently', async () => {
     do {
       // Need this sleep or else the Node runtime might never switch back to the "process" function.
       await CommonTestUtils.delay(1)
-      for (const e of entries) yield e
-    } while (true)
+      for (const e of entries) {
+        if (!processed.has(e)) {
+          yield e
+        }
+      }
+    } while (!isDone.isResolved)
   }
 
   const process = jest.fn(async (entry) => {
