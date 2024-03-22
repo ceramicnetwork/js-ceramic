@@ -158,7 +158,7 @@ test('Dont process the same entry multiple times concurrently', async () => {
   }
 
   const process = jest.fn(async (entry) => {
-    await CommonTestUtils.delay(50)
+    await CommonTestUtils.delay(100)
     processed.add(entry)
     if (entries.every((e) => processed.has(e))) {
       isDone.resolve()
