@@ -538,13 +538,15 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     await ipfs1.stop()
   })
 
-  test.only('load basic doc', async () => {
+  test('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
 
     if (process.env.CERAMIC_RECON_MODE)
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+    const hasBothUpdates = (state: StreamState) => state.log.length === 2
+    await TestUtils.waitFor(loaded, hasBothUpdates)
 
     const docState = doc.state
     const loadedState = loaded.state
