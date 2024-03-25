@@ -189,6 +189,7 @@ const MODEL_DEFINITION_SET: ModelDefinition = {
     properties: {
       one: { type: 'string', minLength: 2 },
       two: { type: 'string', minLength: 2 },
+      three: { type: 'string', minLength: 2 },
       myData: {
         type: 'integer',
         maximum: 100,
@@ -197,6 +198,7 @@ const MODEL_DEFINITION_SET: ModelDefinition = {
     },
     required: ['myData'],
   },
+  immutableFields: ['three'],
 }
 
 const MODEL_DEFINITION_BLOB: ModelDefinition = {
@@ -893,7 +895,7 @@ describe('ModelInstanceDocumentHandler', () => {
       context.signer,
       doc.commitId,
       doc.content,
-      { one: 'foo', two: 'bar', myData: 2 }
+      { one: 'foo', two: 'bar', three: 'three', myData: 2 }
     )) as SignedCommitContainer
     await ipfs.dag.put(signedCommitOK, FAKE_CID_3)
 
@@ -926,7 +928,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: genesisCommit,
     }
 
-    // The deterministic genesis creation works independently of content validation as determinitic commits have no content
+    // The deterministic genesis creation works independently of content validation as deterministic commits have no content
     const state = await handler.applyCommit(genesisCommitData, context)
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)

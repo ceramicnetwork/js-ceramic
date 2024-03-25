@@ -11,7 +11,7 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 const ROOT_CID = 'bafyreie44gklj64ldakdfwfytho74sarfagfpccdf3wgkuf6dgjugrmlde'
 const ANCHOR_PROOF = {
   root: CID.parse(ROOT_CID),
-  chainId: 'eip155:5',
+  chainId: 'eip155:11155111', // TODO: not sure about the Eth hash below, maybe something needs deployed for the test?
   txHash: convertEthHashToCid('0xed6b5d7a9e8b3890651f7f0d8ed9b8939e9857cdd0b48bf77917cd709ddf7afc'),
 }
 

@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@4.3.0...@ceramicnetwork/anchor-utils@4.4.0-rc.0) (2024-03-20)
+
+
+### Features
+
+* add log for anchor-util merkel tree depth ([#3184](https://github.com/ceramicnetwork/js-ceramic/issues/3184)) ([38f0223](https://github.com/ceramicnetwork/js-ceramic/commit/38f0223bac6c608a78b56d62955540811c7af2b4))
+* add sepolia to allow chain for dev-unstable ([#3187](https://github.com/ceramicnetwork/js-ceramic/issues/3187)) ([daa4bef](https://github.com/ceramicnetwork/js-ceramic/commit/daa4befff7d639fb0322d6ca06902cf0f5a94c9d))
+
+
+
+
+
+# [4.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@4.3.0-rc.0...@ceramicnetwork/anchor-utils@4.3.0) (2024-03-20)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
 # [4.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@4.2.0...@ceramicnetwork/anchor-utils@4.3.0-rc.0) (2024-03-12)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-utils
