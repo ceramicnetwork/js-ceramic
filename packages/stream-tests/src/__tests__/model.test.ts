@@ -792,7 +792,7 @@ describe('Model API multi-node tests', () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
     if (process.env.CERAMIC_RECON_MODE)
-    await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
