@@ -8,6 +8,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'myModel',
@@ -752,8 +753,8 @@ describe('Model API multi-node tests', () => {
   }, 12000)
 
   beforeEach(async () => {
-    ceramic0 = await createCeramic(ipfs0)
-    ceramic1 = await createCeramic(ipfs1)
+    ceramic0 = await createCeramic(ipfs0, { networkName: Networks.INMEMORY })
+    ceramic1 = await createCeramic(ipfs1, { networkName: Networks.INMEMORY })
   }, 12000)
 
   afterEach(async () => {
@@ -769,6 +770,12 @@ describe('Model API multi-node tests', () => {
   test('load basic model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
+
     const loaded = await Model.load(ceramic1, model.id)
 
     const modelState = model.state
@@ -783,6 +790,12 @@ describe('Model API multi-node tests', () => {
 
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
+
+    if (process.env.CERAMIC_RECON_MODE)
+    await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
     await CoreUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
