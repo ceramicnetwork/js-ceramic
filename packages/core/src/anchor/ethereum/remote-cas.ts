@@ -29,7 +29,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
   }
   const parsed = validation.right
   if (ErrorResponse.is(parsed)) {
-    Metrics.count('cas_request_failed', 1, )
+    Metrics.count('cas_request_failed', 1)
     return {
       status: AnchorRequestStatusName.FAILED,
       streamId: streamId,
