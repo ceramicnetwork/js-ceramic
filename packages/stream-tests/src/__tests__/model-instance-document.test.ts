@@ -518,11 +518,17 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     })
     await swarmConnect(ipfs0, ipfs1)
 
-    ceramic0 = await createCeramic(ipfs0)
-    ceramic1 = await createCeramic(ipfs1)
+    ceramic0 = await createCeramic(ipfs0, { networkName: Networks.INMEMORY })
+    ceramic1 = await createCeramic(ipfs1, { networkName: Networks.INMEMORY })
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
     midMetadata = { model: model.id }
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
   }, 80000)
 
   afterAll(async () => {
@@ -534,6 +540,12 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
   test('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: doc.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: doc.id }])
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
@@ -549,6 +561,13 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
   test('load updated doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: doc.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: doc.id }])
+
     await doc.replace(CONTENT1)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
@@ -565,6 +584,12 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
   test('load updated and anchored doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: doc.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: doc.id }])
 
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(ceramic0, doc)

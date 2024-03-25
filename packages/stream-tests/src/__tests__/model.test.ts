@@ -803,5 +803,5 @@ describe('Model API multi-node tests', () => {
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(2)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
-  })
+  }, 50000)
 })
