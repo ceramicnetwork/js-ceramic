@@ -9,6 +9,7 @@ import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 const MAX_FAILED_REQUESTS = 3
 const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
@@ -28,6 +29,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
   }
   const parsed = validation.right
   if (ErrorResponse.is(parsed)) {
+    Metrics.count('cas_request_failed', 1, )
     return {
       status: AnchorRequestStatusName.FAILED,
       streamId: streamId,
@@ -36,6 +38,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
     }
   } else {
     if (parsed.status === AnchorRequestStatusName.COMPLETED) {
+      Metrics.count('cas_request_success', 1)
       return {
         status: parsed.status,
         streamId: parsed.streamId,
@@ -43,6 +46,9 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
         message: parsed.message,
         witnessCar: parsed.witnessCar,
       }
+    }
+    if (parsed.status === AnchorRequestStatusName.PENDING) {
+      Metrics.count('cas_request_pending', 1)
     }
     return {
       status: parsed.status,
