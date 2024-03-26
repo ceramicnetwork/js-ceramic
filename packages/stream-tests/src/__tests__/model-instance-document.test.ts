@@ -545,8 +545,6 @@ describe('ModelInstanceDocument API multi-node tests', () => {
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
-    const hasBothUpdates = (state: StreamState) => state.log.length === 2
-    await TestUtils.waitFor(loaded, hasBothUpdates)
 
     const docState = doc.state
     const loadedState = loaded.state
@@ -565,7 +563,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     await doc.replace(CONTENT1)
-
+    await TestUtils.delay(1000)
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
     const docState = doc.state
