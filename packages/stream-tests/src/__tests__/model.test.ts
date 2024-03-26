@@ -798,6 +798,7 @@ describe('Model API multi-node tests', () => {
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
     await CoreUtils.anchorUpdate(ceramic0, model)
 
+    await TestUtils.delay(1000)
     const loaded = await Model.load(ceramic1, model.id)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
