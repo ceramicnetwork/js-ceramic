@@ -584,7 +584,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(ceramic0, doc)
-
+    await TestUtils.delay(1000)
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
