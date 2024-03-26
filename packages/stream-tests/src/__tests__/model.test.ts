@@ -791,6 +791,7 @@ describe('Model API multi-node tests', () => {
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
+    await TestUtils.delay(2000)
     if (process.env.CERAMIC_RECON_MODE)
       await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
