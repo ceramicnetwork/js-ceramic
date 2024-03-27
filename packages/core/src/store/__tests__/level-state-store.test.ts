@@ -9,8 +9,8 @@ import {
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { LevelDbStore, OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
+import { LevelKVFactory, ELP_NETWORK } from '../level-kv-factory.js'
 
 class FakeType extends Stream {
   isReadOnly = true
@@ -22,21 +22,21 @@ class FakeType extends Stream {
 }
 
 const streamFromState = function (state: StreamState) {
-  return new FakeType(TestUtils.runningState(state), {})
+  return new FakeType(TestUtils.runningState(state), {} as any)
 }
 
 describe('LevelDB-backed StateStore', () => {
   let tmpFolder: any
-  let levelStore: LevelDbStore
   let stateStore: StreamStateStore
+  let kvFactory: LevelKVFactory
   let logger: DiagnosticsLogger
 
   beforeEach(async () => {
     logger = new LoggerProvider().getDiagnosticsLogger()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
-    stateStore = new StreamStateStore(new LoggerProvider().getDiagnosticsLogger())
-    await stateStore.open(levelStore)
+    kvFactory = new LevelKVFactory(tmpFolder.path, 'testNetwork', logger)
+    stateStore = new StreamStateStore()
+    await stateStore.open(kvFactory)
 
     // add a small delay after creating the leveldb instance before trying to use it.
     await TestUtils.delay(100)
@@ -44,7 +44,7 @@ describe('LevelDB-backed StateStore', () => {
 
   afterEach(async () => {
     await stateStore.close()
-    await levelStore.close()
+    await kvFactory.close()
     await tmpFolder.cleanup()
   })
 
@@ -55,7 +55,7 @@ describe('LevelDB-backed StateStore', () => {
     const stream = streamFromState(state)
     await stateStore.saveFromStreamStateHolder(stream)
     const streamId = stream.id.baseID
-    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state), undefined)
+    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
 
     const retrieved = await stateStore.load(streamId)
     expect(retrieved).toEqual(state)
@@ -162,7 +162,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
   beforeEach(async () => {
     logger = new LoggerProvider().getDiagnosticsLogger()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new StreamStateStore(logger)
+    stateStore = new StreamStateStore()
   })
 
   afterEach(async () => {
@@ -170,8 +170,8 @@ describe('LevelDB-backed StateStore network change tests', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, OLD_ELP_DEFAULT_LOCATION)
-    await stateStore.open(elpLevelStore)
+    const elpKVFactory = new LevelKVFactory(tmpFolder.path, ELP_NETWORK, logger)
+    await stateStore.open(elpKVFactory)
 
     const state = TestUtils.makeStreamState()
     const stream = streamFromState(state)
@@ -181,16 +181,16 @@ describe('LevelDB-backed StateStore network change tests', () => {
 
     await stateStore.close()
 
-    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
-    await stateStore.open(mainnetLevelStore)
+    const mainnetKVFactory = new LevelKVFactory(tmpFolder.path, Networks.MAINNET, logger)
+    await stateStore.open(mainnetKVFactory)
 
     const retrievedFromMainnet = await stateStore.load(stream.id.baseID)
     expect(retrievedFromMainnet).toEqual(state)
   })
 
   test('switch from Clay to Mainnet does not preserve data', async () => {
-    const clayLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.TESTNET_CLAY)
-    await stateStore.open(clayLevelStore)
+    const clayKVFactory = new LevelKVFactory(tmpFolder.path, Networks.TESTNET_CLAY, logger)
+    await stateStore.open(clayKVFactory)
 
     const state = TestUtils.makeStreamState()
     const stream = streamFromState(state)
@@ -200,8 +200,8 @@ describe('LevelDB-backed StateStore network change tests', () => {
 
     await stateStore.close()
 
-    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
-    await stateStore.open(mainnetLevelStore)
+    const mainnetKVFactory = new LevelKVFactory(tmpFolder.path, Networks.MAINNET, logger)
+    await stateStore.open(mainnetKVFactory)
 
     const retrievedFromMainnet = await stateStore.load(stream.id.baseID)
     expect(retrievedFromMainnet).toEqual(null)

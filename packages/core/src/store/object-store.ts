@@ -1,8 +1,9 @@
-import { IKVStore } from './ikv-store.js'
-import { IObjectStore } from './iobject-store.js'
+import type { IKVFactory, IKVStore } from './ikv-store.js'
+import type { IObjectStore } from './iobject-store.js'
 
-export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
-  protected useCaseName: string | undefined
+export abstract class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
+  protected abstract useCaseName: string | undefined
+
   protected store: IKVStore
   private readonly generateKey: (object: TKeyObject) => string
   private readonly serialize: (value: TValue) => any
@@ -25,25 +26,25 @@ export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject,
     this.deserialize = deserialize
   }
 
-  async open(store: IKVStore): Promise<void> {
-    this.store = store
+  async open(factory: IKVFactory): Promise<void> {
+    this.store = await factory.open(this.useCaseName)
   }
 
   async close(): Promise<void> {
     if (!this.store) return
-    await this.store.close(this.useCaseName)
+    await this.store.close()
     this.store = undefined
   }
 
   async save(object: TKeyObject, value: TValue): Promise<void> {
     this.throwIfNotOpened()
-    await this.store.put(this.generateKey(object), this.serialize(value), this.useCaseName)
+    await this.store.put(this.generateKey(object), this.serialize(value))
   }
 
   async load(object: TKeyObject): Promise<TValue> {
     this.throwIfNotOpened()
     try {
-      const serialized = await this.store.get(this.generateKey(object), this.useCaseName)
+      const serialized = await this.store.get(this.generateKey(object))
       if (serialized) {
         return this.deserialize(serialized)
       } else {
@@ -59,6 +60,6 @@ export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject,
 
   async remove(object: TKeyObject): Promise<void> {
     this.throwIfNotOpened()
-    await this.store.del(this.generateKey(object), this.useCaseName)
+    await this.store.del(this.generateKey(object))
   }
 }
