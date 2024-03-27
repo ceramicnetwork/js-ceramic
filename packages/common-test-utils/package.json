@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common-test-utils",
-  "version": "3.5.0-rc.0",
+  "version": "3.5.0",
   "description": "Ceramic Common Module Test Utils",
   "keywords": [
     "ceramic"
@@ -30,7 +30,7 @@
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
     "@ceramicnetwork/base-test-utils": "^3.0.0",
-    "@ceramicnetwork/common": "^5.4.0-rc.0",
+    "@ceramicnetwork/common": "^5.4.0",
     "@ceramicnetwork/streamid": "^5.0.0",
     "it-first": "^3.0.4",
     "multiformats": "^13.0.0",
