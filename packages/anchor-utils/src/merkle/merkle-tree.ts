@@ -74,7 +74,11 @@ export class MerkleTree<TData, TLeaf extends TData, TMetadata>
     /**
      * Tree metadata
      */
-    readonly metadata: TMetadata | null
+    readonly metadata: TMetadata | null,
+    /**
+     * Tree depth
+     */
+    readonly depth: number
   ) {}
 
   /**
