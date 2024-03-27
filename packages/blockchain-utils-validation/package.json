@@ -64,7 +64,7 @@
     "@taquito/signer": "^11.2.0",
     "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.2",
-    "http-request-mock": "^1.8.17",
+    "http-request-mock": "^1.8.18",
     "near-api-js": "^0.44.2"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

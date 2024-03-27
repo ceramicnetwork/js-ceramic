@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^5.5.0-rc.0",
-    "http-request-mock": "^1.8.17",
+    "http-request-mock": "^1.8.18",
     "multiformats": "^13.0.0"
   },
   "publishConfig": {

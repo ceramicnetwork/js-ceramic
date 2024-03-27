@@ -50,7 +50,7 @@
   "devDependencies": {
     "@ceramicnetwork/http-client": "^5.6.0-rc.0",
     "did-resolver": "^4.0.1",
-    "http-request-mock": "^1.8.17"
+    "http-request-mock": "^1.8.18"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
