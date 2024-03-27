@@ -83,7 +83,7 @@
     "it-first": "^3.0.4",
     "knex": "^2.5.1",
     "least-recent": "^1.0.3",
-    "level-ts": "^2.1.0",
+    "level": "^8.0.1",
     "lodash.clonedeep": "^4.5.0",
     "mapmoize": "^1.2.1",
     "multiformats": "^13.0.0",

@@ -361,7 +361,7 @@ describe('Ceramic API', () => {
     })
 
     test('will update stream if under size limits', async () => {
-      const CONTENT0 = { myData: 'abcdef' }
+      const CONTENT0 = { myData: `abcdef` }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
