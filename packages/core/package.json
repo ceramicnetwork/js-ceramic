@@ -51,7 +51,7 @@
     "@ceramicnetwork/indexing": "^4.5.0-rc.0",
     "@ceramicnetwork/ipfs-topology": "^5.4.0-rc.0",
     "@ceramicnetwork/job-queue": "^4.5.0-rc.0",
-    "@ceramicnetwork/model-metrics": "^1.2.4",
+    "@ceramicnetwork/model-metrics": "^1.2.5",
     "@ceramicnetwork/observability": "^1.4.4",
     "@ceramicnetwork/pinning-aggregation": "^5.4.0-rc.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^5.4.0-rc.0",
