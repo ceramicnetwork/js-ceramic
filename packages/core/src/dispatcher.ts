@@ -367,9 +367,10 @@ export class Dispatcher {
       Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {
-      this._logger.err(`Error while storing commit to IPFS: ${e}`)
+      const errorMessage = `Error in repository.ts.storeInitEvent: Error - ${e} while storing commit to ipfs: ${e.message} | recon.mode: ${this.recon.enabled}`
+      this._logger.err(errorMessage)
       Metrics.count(ERROR_STORING_COMMIT, 1)
-      throw e
+      throw new Error(errorMessage)
     }
   }
 
