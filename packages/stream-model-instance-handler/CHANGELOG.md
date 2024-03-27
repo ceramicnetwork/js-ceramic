@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.5.0...@ceramicnetwork/stream-model-instance-handler@4.6.0-rc.0) (2024-03-27)
+
+
+### Features
+
+* update how we check immutability ([#3188](https://github.com/ceramicnetwork/js-ceramic/issues/3188)) ([102d357](https://github.com/ceramicnetwork/js-ceramic/commit/102d357c5b49fcf7bf1f613569f27148f9aa3fd8))
+
+
+
+
+
 # [4.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.5.0-rc.0...@ceramicnetwork/stream-model-instance-handler@4.5.0) (2024-03-27)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
