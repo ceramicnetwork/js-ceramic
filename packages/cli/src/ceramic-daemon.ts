@@ -353,9 +353,9 @@ export class CeramicDaemon {
                        ipfsVersion: ipfsVersion.version,
                        intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
                        nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-                       nodeName: daemon.hostname,
+                       nodeName: '', // daemon.hostname is not useful
                        nodeAuthDID: did.id,
-                       nodeIPAddr: daemon.hostname,
+                       nodeIPAddr: '', // daemon.hostname is not the external name
                        nodePeerId: ipfsId.publicKey,
                        logger: diagnosticsLogger
                      })
