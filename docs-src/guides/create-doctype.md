@@ -19,14 +19,13 @@ One interface worth noting is the `CeramicAPI` interface which lets the develope
 	
 # Stream
 
-The [[Stream]] interface extends the `EventEmitter` interface which means that the developer can subscribe to events emitted from the Ceramic node like the `change` event (*more events will be defined in the future*).
+The [Stream](../../packages/common/src/stream.ts) interface extends the [Observable](https://rxjs.dev/guide/observable) interface which means that the developer can subscribe to events emitted from the Ceramic node (*more events will be defined in the future*).
 
-The method `change` is more or less sugar coating for the developer since all the operations can be implemented using the [[CeramicApi]] interface. For example the [[TileDocument]] included in the Ceramic node out-of-the-box.
+The event based design is more or less sugar coating for the developer since all the operations can be implemented using the [CeramicApi](../../packages/common/src/ceramic-api.ts) interface. See [TileDocument](../../packages/stream-tile/src/tile-document.ts) or [ModelInstanceDocument](../../packages/stream-model-instance/src/model-instance-document.ts) for examples of streams included in the Ceramic node out-of-the-box.
 
 
 # StreamHandler
 
-The [[StreamHandler]] interface is used for determining the next **state** of the document. The method worth noting is `applyCommit` which is used for that *state transition*. For example the [[TileDocumentHandler]] is included in the Ceramic node out-of-the-box as well.
+The [StreamHandler](../../packages/common/src/stream.ts) interface is used for determining the next **state** of the document. The method worth noting is `applyCommit` which is used for that *state transition*.
 
-The [[StreamHandler]] uses [[CeramicApi]] which is included in the [[Context]] instance.
-
+The `StreamHandler` uses `CeramicApi` which is included in the [Context](../../packages/common/src/context.ts) instance.

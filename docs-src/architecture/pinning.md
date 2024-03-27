@@ -56,7 +56,7 @@ Based on the semantics, it makes sense to have:
 3. pinning backends aggregator - responsible for pinning commits using multiple pinning backends simultaneously,
 4. pin store aggregator - responsible for storing state and pinning dependent commits.
 
-![Pinning Design](media://pinning-design.png)
+![Pinning Design](../media/pinning-design.png)
 
 Legend:
 - filled arrow - call,
@@ -96,6 +96,6 @@ For CLI defined in `ceramic-cli` package, we add additional `--pinning` option. 
 
 For example, this would start ceramic daemon with three backends. One is on Powergate, that is Filecoin, another is on operational IPFS node used by Ceramic node, and the third one uses additional IPFS node, for redundancy.
 
-```
-$ ceramic daemon --pinning "powergate+http://localhost:6002?token=940a1a4d-ce97-459d-996e-461209e9c863" --pinning "ipfs://__context" --pinning "ipfs+https://remote.cloud.com:5006"
+```sh
+ceramic daemon --pinning "powergate+http://localhost:6002?token=940a1a4d-ce97-459d-996e-461209e9c863" --pinning "ipfs://__context" --pinning "ipfs+https://remote.cloud.com:5006"
 ```  
