@@ -5,6 +5,12 @@ import {
   DEFAULT_TRACE_SAMPLE_RATIO,
   ServiceMetrics as Metrics,
 } from '@ceramicnetwork/observability'
+import {
+  DEFAULT_PUBLISH_INTERVAL_MS,
+  ModelMetrics,
+  Counter,
+  Observable
+} from '@ceramicnetwork/model-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -79,7 +85,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   const prometheusExporterEnabled =
     opts.metrics?.prometheusExporterEnabled && opts.metrics?.prometheusExporterPort
 
-  // If desired, enable metrics
+  // If desired, enable OTLP metrics
   if (metricsExporterEnabled && prometheusExporterEnabled) {
     Metrics.start(
       opts.metrics.collectorHost,
@@ -100,7 +106,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
       true,
       opts.metrics.prometheusExporterPort
     )
-  } // else do nothing, no metrics are configured.
+  }
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
@@ -114,7 +120,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
-    disablePeerDataSync: opts.ipfs.disablePeerDataSync,
+    disablePeerDataSync: opts.ipfs.disablePeerDataSync
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
@@ -336,6 +342,25 @@ export class CeramicDaemon {
 
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
+
+    // Now that ceramic node is set up we can start publishing metrics
+    if (opts.metrics?.metricsPublisherEnabled) {
+
+      const ipfsVersion = await ipfs.version();
+      ModelMetrics.start({ ceramic: ceramic,
+                       network: params.networkOptions.name,
+                       ceramicVersion: version,
+                       ipfsVersion: ipfsVersion.version,
+                       intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+                       nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+                       nodeName: '', // daemon.hostname is not useful
+                       nodeAuthDID: did.id,
+                       nodeIPAddr: '', // daemon.hostname is not the external name
+                       nodePeerId: ipfsId.publicKey,
+                       logger: diagnosticsLogger
+                     })
+    }
+
     return daemon
   }
 
@@ -778,6 +803,7 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModels()
+    ModelMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
     const body = {
       models: indexedModels.map((id) => id.toString()),
     }

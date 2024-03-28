@@ -382,10 +382,22 @@ export class DaemonMetricsConfig {
   metricsExporterEnabled?: boolean
 
   /**
-   * If 'enabled' is true, this contains the port on which the metrics exporter will listen
+   * If 'promethus-exporter-enabled' is true, this contains the port on which the metrics exporter will listen
    */
   @jsonMember(String, { name: 'collector-host' })
   collectorHost?: string
+
+  /**
+   * Controls whether we publish metrics periodically on the Ceramic Network
+   */
+  @jsonMember(Boolean, { name: 'metrics-publisher-enabled' })
+  metricsPublisherEnabled?: boolean
+
+  /**
+   * If metrics publishing enabled, publish interval in milliseconds
+   */
+  @jsonMember(Number, { name: 'metrics-publish-interval-ms' })
+  metricsPublishIntervalMS?: number
 }
 
 /**

@@ -27,6 +27,7 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { ModelMetrics, Observable as ObservableMetric } from '@ceramicnetwork/model-metrics'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
@@ -211,6 +212,10 @@ export class Repository {
    * Returns the number of streams with writes that are waiting to be anchored by the CAS.
    */
   get numPendingAnchors(): number {
+    ModelMetrics.observe(
+      ObservableMetric.CURRENT_PENDING_REQUESTS,
+      this.#numPendingAnchorSubscriptions
+    )
     return this.#numPendingAnchorSubscriptions
   }
 
