@@ -30,6 +30,7 @@ import {
 } from '../../pubsub/pubsub-message.js'
 import { asIpfsMessage } from '../../pubsub/__tests__/as-ipfs-message.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { SchemaValidation } from 'ajv-threads'
 
 const TOPIC = '/ceramic/test12345'
 const CONTENT0 = { step: 0 }
@@ -58,6 +59,7 @@ describeIfV3('Streamloader', () => {
 
     let dispatcher: Dispatcher
     let dispatcherIpfs: IpfsApi
+    let schemaValidator: SchemaValidation
     let streamLoader: StreamLoader
 
     let ceramicIpfs: IpfsApi
@@ -82,7 +84,10 @@ describeIfV3('Streamloader', () => {
         dispatcher,
         ceramic.anchorService.validator
       )
-      const handlers = new HandlersMap(logger)
+
+      schemaValidator = new SchemaValidation(1)
+      await schemaValidator.init()
+      const handlers = HandlersMap.makeWithDefaultHandlers(logger, schemaValidator)
       const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
       streamLoader = new StreamLoader(
         logger,
@@ -98,6 +103,7 @@ describeIfV3('Streamloader', () => {
     afterAll(async () => {
       await dispatcher.close()
       await ceramic.close()
+      await schemaValidator.shutdown()
 
       // Wait for pubsub unsubscribe to be processed
       // TODO(1963): Remove this once dispatcher.close() won't resolve until the pubsub unsubscribe
@@ -302,6 +308,7 @@ describeIfV3('Streamloader', () => {
     let ipfs: IpfsApi
 
     let dispatcher: Dispatcher
+    let schemaValidator: SchemaValidation
     let streamLoader: StreamLoader
 
     let stream: TileDocument
@@ -337,7 +344,9 @@ describeIfV3('Streamloader', () => {
         dispatcher,
         ceramic.anchorService.validator
       )
-      const handlers = new HandlersMap(logger)
+
+      schemaValidator = new SchemaValidation()
+      const handlers = HandlersMap.makeWithDefaultHandlers(logger, schemaValidator)
       const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
       streamLoader = new StreamLoader(
         logger,
@@ -388,6 +397,7 @@ describeIfV3('Streamloader', () => {
 
     afterAll(async () => {
       await dispatcher.close()
+      await schemaValidator.shutdown()
 
       // Wait for pubsub unsubscribe to be processed
       // TODO(1963): Remove this once dispatcher.close() won't resolve until the pubsub unsubscribe

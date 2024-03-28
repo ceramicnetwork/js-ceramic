@@ -4,7 +4,6 @@ import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import {
   CreateOpts,
   Stream,
-  StreamHandler,
   DiagnosticsLogger,
   StreamUtils,
   LoadOpts,
@@ -57,6 +56,7 @@ import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
 import { IReconApi, ReconApi } from './recon.js'
+import { SchemaValidation } from 'ajv-threads'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -205,7 +205,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
 
-  readonly _streamHandlers: HandlersMap
+  private readonly _streamHandlers: HandlersMap
+  private readonly _schemaValidator: SchemaValidation
   private readonly _readOnly: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -243,7 +244,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
     this._ipfs = modules.ipfs
 
-    this._streamHandlers = new HandlersMap(this._logger)
+    const numCores = os.cpus().length
+    // Use number of threads equal to half the available cores for schema validation. Leave the
+    // other half for signature validation.
+    this._schemaValidator = new SchemaValidation(Math.max(1, Math.ceil(numCores / 2)))
+    this._streamHandlers = HandlersMap.makeWithDefaultHandlers(this._logger, this._schemaValidator)
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
@@ -482,6 +487,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         this._logger.warn(`Starting in read-only mode. All write operations will fail`)
       }
 
+      await this._schemaValidator.init()
       await this.repository.init()
       await this.dispatcher.init()
 
@@ -579,14 +585,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         )
       }
     }
-  }
-
-  /**
-   * Register new stream handler
-   * @param streamHandler - Stream type handler
-   */
-  addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
-    this._streamHandlers.add(streamHandler)
   }
 
   async nodeStatus(): Promise<NodeStatusResponse> {
@@ -893,6 +891,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     await this.syncApi.shutdown()
     await this.dispatcher.close()
     await this.repository.close()
+    await this._schemaValidator.shutdown()
     this._ipfsTopology.stop()
     this._logger.imp('Ceramic instance closed successfully')
   }
