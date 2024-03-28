@@ -788,7 +788,6 @@ describe('Model API multi-node tests', () => {
     expect(JSON.stringify(loadedState)).toEqual(JSON.stringify(modelState))
   })
 
-
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
