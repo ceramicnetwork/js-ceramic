@@ -124,7 +124,6 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     if (!this.enabled) {
       throw new Error(`Recon: disabled, not registering interest in model ${model.toString()}`)
     }
-
     try {
       await this.#sendRequest(this.#url + `/ceramic/interests/model/${model.toString()}`, {
         method: 'POST',
@@ -195,7 +194,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     return of({ events: [], cursor: initialCursor, first: true }).pipe(
       // projects the starting event to an Observable that emits the next events. Then it recursively projects each event to an Observable that emits the next event
       expand((prev) => {
-        // creates an observable that emits the next event after a ceratin delay (pollInterval) unless this is the first event
+        // creates an observable that emits the next event after a certain delay (pollInterval) unless this is the first event
         return timer(prev.first ? 0 : this.#pollInterval).pipe(
           // concat map is used to ensure that the next event is only emitted after the previous event has been processed
           concatMap(() =>
