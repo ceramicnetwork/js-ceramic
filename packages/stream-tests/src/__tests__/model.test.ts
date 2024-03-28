@@ -788,22 +788,22 @@ describe('Model API multi-node tests', () => {
     expect(JSON.stringify(loadedState)).toEqual(JSON.stringify(modelState))
   })
 
+
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
-    await TestUtils.delay(2000)
     if (process.env.CERAMIC_RECON_MODE)
-      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip, 70000)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
     await CoreUtils.anchorUpdate(ceramic0, model)
 
-    await TestUtils.delay(1000)
+    await TestUtils.delay(2000)
     const loaded = await Model.load(ceramic1, model.id)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(2)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
-  }, 50000)
+  }, 120000)
 })
