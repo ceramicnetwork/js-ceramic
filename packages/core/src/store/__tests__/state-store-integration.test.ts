@@ -19,8 +19,8 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { RunningState } from '../../state-management/running-state.js'
 import { Repository } from '../../state-management/repository.js'
-import { LevelDbStore } from '../level-db-store.js'
 import { IPLDRecordsCache } from '../ipld-records-cache.js'
+import { LevelKVFactory } from '../level-kv-factory.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -66,9 +66,9 @@ describe('Level data store', () => {
       },
       logger
     )
-    const levelStore = new LevelDbStore(logger, levelPath, 'inmemory')
+    const kvFactory = new LevelKVFactory(levelPath, 'inmemory', logger)
     store = storeFactory.createPinStore()
-    await store.open(levelStore)
+    await store.open(kvFactory)
   })
 
   it('pins stream correctly without IPFS pinning', async () => {
@@ -157,7 +157,7 @@ describe('Level data store', () => {
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const localLevelStore = new LevelDbStore(logger, levelPath, 'local')
+    const localKVFactory = new LevelKVFactory(levelPath, 'local', logger)
     const storeFactoryLocal = new PinStoreFactory(
       ipfs,
       new IPLDRecordsCache(10),
@@ -168,7 +168,7 @@ describe('Level data store', () => {
       new LoggerProvider().getDiagnosticsLogger()
     )
     const localStore = storeFactoryLocal.createPinStore()
-    await localStore.open(localLevelStore)
+    await localStore.open(localKVFactory)
 
     await localStore.stateStore.saveFromStreamStateHolder({ id: streamId, state: streamState })
     await expect(localStore.stateStore.load(streamId)).resolves.toEqual(streamState)
@@ -176,7 +176,7 @@ describe('Level data store', () => {
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const inmemoryLevelStore = new LevelDbStore(logger, levelPath, 'inmemory')
+    const inmemoryKVFactory = new LevelKVFactory(levelPath, 'inmemory', logger)
     const storeFactoryInMemory = new PinStoreFactory(
       ipfs,
       new IPLDRecordsCache(10),
@@ -187,7 +187,7 @@ describe('Level data store', () => {
       new LoggerProvider().getDiagnosticsLogger()
     )
     const inMemoryStore = storeFactoryInMemory.createPinStore()
-    await inMemoryStore.open(inmemoryLevelStore)
+    await inMemoryStore.open(inmemoryKVFactory)
 
     // The new pin store shouldn't be able to see streams that were pinned on the other network
     await expect(inMemoryStore.stateStore.load(streamId)).resolves.toBeNull()

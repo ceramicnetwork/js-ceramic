@@ -25,7 +25,7 @@ import type { HandlersMap } from '../handlers-map.js'
 import { distinctUntilKeyChanged, map, Observable, Subscription, concatMap } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
-import { IKVStore } from '../store/ikv-store.js'
+import { IKVFactory } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
@@ -58,7 +58,7 @@ const RECON_STORE_CURSOR_KEY = 'cursor'
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
-  keyValueStore: IKVStore
+  kvFactory: IKVFactory
   anchorRequestStore: AnchorRequestStore
   handlers: HandlersMap
   anchorService: AnchorService
@@ -166,28 +166,24 @@ export class Repository {
   }
 
   /**
-   * Sets the StateStore to use.
+   * Sets the KVFactory to use.
    * This must be called before init().
-   * @param stateStore
    */
-  async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
+  injectKVFactory(factory: IKVFactory) {
     this.setDeps({
       ...this.#deps,
-      keyValueStore: stateStore,
+      kvFactory: factory,
     })
   }
 
   async init(): Promise<void> {
-    await this.#deps.keyValueStore.init()
-    await this.pinStore.open(this.#deps.keyValueStore)
-    await this.anchorRequestStore.open(this.#deps.keyValueStore) // Initialization hell
+    await this.pinStore.open(this.#deps.kvFactory)
+    await this.anchorRequestStore.open(this.#deps.kvFactory) // Initialization hell
     await this.index.init()
 
-    const cursor = (await this.#deps.keyValueStore.exists(
-      RECON_STORE_CURSOR_KEY,
-      RECON_STORE_USECASE_NAME
-    ))
-      ? await this.#deps.keyValueStore.get(RECON_STORE_CURSOR_KEY, RECON_STORE_USECASE_NAME)
+    const reconStore = await this.#deps.kvFactory.open(RECON_STORE_USECASE_NAME)
+    const cursor = (await reconStore.exists(RECON_STORE_CURSOR_KEY))
+      ? await reconStore.get(RECON_STORE_CURSOR_KEY)
       : '0'
     await this.recon.init(cursor)
     this.reconEventFeedSubscription = this.recon
@@ -571,15 +567,11 @@ export class Repository {
         await this.handleUpdateFromNetwork(new StreamID(type, genesisCid), eventId.event, model)
       } catch (e) {
         this.logger.err(`Error handling recon event with eventID ${eventId}: ${e}`)
-        continue
       }
     }
 
-    await this.#deps.keyValueStore.put(
-      RECON_STORE_CURSOR_KEY,
-      cursor.toString(),
-      RECON_STORE_USECASE_NAME
-    )
+    const reconStore = await this.#deps.kvFactory.open(RECON_STORE_USECASE_NAME)
+    await reconStore.put(RECON_STORE_CURSOR_KEY, cursor.toString())
   }
 
   /**
