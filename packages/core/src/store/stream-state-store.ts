@@ -1,6 +1,12 @@
-import type { StreamID } from '@ceramicnetwork/streamid'
-import { StreamUtils, type StreamState, type StreamStateHolder } from '@ceramicnetwork/common'
+import { StreamID } from '@ceramicnetwork/streamid'
+import {
+  DiagnosticsLogger,
+  StreamState,
+  StreamStateHolder,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 import { ObjectStore } from './object-store.js'
+import { IKVStore } from './ikv-store.js'
 
 function generateKey(object: StreamID): string {
   return object.toString()
@@ -18,10 +24,18 @@ function deserialize(serialized: string): StreamState {
  * An object-value store being able to save, retrieve and delete stream states identified by stream ids
  */
 export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
-  readonly useCaseName = undefined
+  #logger: DiagnosticsLogger
 
-  constructor() {
+  constructor(logger: DiagnosticsLogger) {
     super(generateKey, serialize, deserialize)
+    this.#logger = logger
+  }
+
+  /**
+   * Gets network name
+   */
+  get networkName(): string {
+    return this.store.networkName
   }
 
   /**
@@ -30,6 +44,10 @@ export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
    */
   async saveFromStreamStateHolder(streamStateHolder: StreamStateHolder): Promise<void> {
     await this.save(streamStateHolder.id, streamStateHolder.state)
+  }
+
+  async open(store: IKVStore): Promise<void> {
+    return super.open(store)
   }
 
   async listStoredStreamIDs(streamId?: StreamID | null, limit?: number): Promise<string[]> {

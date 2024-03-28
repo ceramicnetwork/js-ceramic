@@ -53,7 +53,6 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
  * This store is used to save and retrieve this data so that it can be re-sent to CAS in case of networking issues.
  */
 export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
-  readonly useCaseName = 'anchor-requests'
   #shouldStop: boolean
   #logger: DiagnosticsLogger
   // This timeout currently only applies to batches within the infiniteList() function
@@ -62,12 +61,13 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
 
   constructor(logger: DiagnosticsLogger, infiniteListBatchTimeoutMs = DEFAULT_BATCH_TIMEOUT_MS) {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
+    this.useCaseName = 'anchor-requests'
     this.#logger = logger
     this.#infiniteListBatchTimeoutMs = infiniteListBatchTimeoutMs
   }
 
   exists(key: StreamID): Promise<boolean> {
-    return this.store.exists(generateKey(key))
+    return this.store.exists(generateKey(key), this.useCaseName)
   }
 
   async *list(batchSize = 1): AsyncIterable<Array<AnchorRequestStoreListResult>> {
@@ -76,6 +76,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       // TODO: Add timeout to the query
       const batch = await this.store.find({
         limit: batchSize,
+        useCaseName: this.useCaseName,
         gt: generateKey(gt),
       })
       if (batch.length > 0) {
@@ -117,6 +118,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
         this.#logger.debug(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
         const batchPromise = this.store.find({
           limit: batchSize,
+          useCaseName: this.useCaseName,
           gt: generateKey(gt),
         })
         const batch = await Promise.race([batchPromise, timeoutPromise])

@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { IKVFactory } from './ikv-store.js'
+import { IKVStore } from './ikv-store.js'
 import { StreamStateStore } from './stream-state-store.js'
 import { Semaphore } from 'await-semaphore'
 
@@ -29,8 +29,8 @@ export class PinStore {
     this.semaphore = new Semaphore(concurrencyLimit)
   }
 
-  async open(factory: IKVFactory): Promise<void> {
-    await this.stateStore.open(factory)
+  async open(store: IKVStore): Promise<void> {
+    await this.stateStore.open(store)
     this.pinning.open()
   }
 

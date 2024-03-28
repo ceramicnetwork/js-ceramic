@@ -1,9 +1,8 @@
-import type { IKVFactory, IKVStore } from './ikv-store.js'
-import type { IObjectStore } from './iobject-store.js'
+import { IKVStore } from './ikv-store.js'
+import { IObjectStore } from './iobject-store.js'
 
-export abstract class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
-  protected abstract useCaseName: string | undefined
-
+export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
+  protected useCaseName: string | undefined
   protected store: IKVStore
   private readonly generateKey: (object: TKeyObject) => string
   private readonly serialize: (value: TValue) => any
@@ -26,25 +25,25 @@ export abstract class ObjectStore<TKeyObject, TValue> implements IObjectStore<TK
     this.deserialize = deserialize
   }
 
-  async open(factory: IKVFactory): Promise<void> {
-    this.store = await factory.open(this.useCaseName)
+  async open(store: IKVStore): Promise<void> {
+    this.store = store
   }
 
   async close(): Promise<void> {
     if (!this.store) return
-    await this.store.close()
+    await this.store.close(this.useCaseName)
     this.store = undefined
   }
 
   async save(object: TKeyObject, value: TValue): Promise<void> {
     this.throwIfNotOpened()
-    await this.store.put(this.generateKey(object), this.serialize(value))
+    await this.store.put(this.generateKey(object), this.serialize(value), this.useCaseName)
   }
 
   async load(object: TKeyObject): Promise<TValue> {
     this.throwIfNotOpened()
     try {
-      const serialized = await this.store.get(this.generateKey(object))
+      const serialized = await this.store.get(this.generateKey(object), this.useCaseName)
       if (serialized) {
         return this.deserialize(serialized)
       } else {
@@ -60,6 +59,6 @@ export abstract class ObjectStore<TKeyObject, TValue> implements IObjectStore<TK
 
   async remove(object: TKeyObject): Promise<void> {
     this.throwIfNotOpened()
-    await this.store.del(this.generateKey(object))
+    await this.store.del(this.generateKey(object), this.useCaseName)
   }
 }

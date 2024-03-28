@@ -36,15 +36,16 @@ beforeEach(() => {
     put: jest.fn(),
     get: jest.fn(),
     del: jest.fn(),
-  } as any
+  }
 
   stateStore = {
-    open: jest.fn() as any,
-    close: jest.fn() as any,
-    remove: jest.fn() as any,
-    saveFromStreamStateHolder: jest.fn() as any,
-    load: jest.fn() as any,
-  } as any
+    open: jest.fn(),
+    close: jest.fn(),
+    list: jest.fn(),
+    remove: jest.fn(),
+    saveFromStreamStateHolder: jest.fn(),
+    load: jest.fn(),
+  }
   pinning = {
     id: 'test',
     open: jest.fn(),

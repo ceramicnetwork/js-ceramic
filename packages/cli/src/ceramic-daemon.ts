@@ -39,7 +39,7 @@ import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 import { version } from './version.js'
 import { LRUCache } from 'least-recent'
-import { S3KVFactory } from './s3-store.js'
+import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
 import { SseFeed } from './daemon/sse-feed.js'
@@ -322,14 +322,14 @@ export class CeramicDaemon {
     ceramic.did = did
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3kvFactory = new S3KVFactory(
-        opts.stateStore?.s3Bucket,
+      const s3Store = new S3Store(
         params.networkOptions.name,
         diagnosticsLogger,
+        opts.stateStore?.s3Bucket,
         opts.stateStore?.s3Endpoint
       )
 
-      ceramic.repository.injectKVFactory(s3kvFactory)
+      await ceramic.repository.injectKeyValueStore(s3Store)
     }
 
     await ceramic._init(true)
