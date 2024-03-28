@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.6.0-rc.0...@ceramicnetwork/stream-tests@5.6.0-rc.1) (2024-03-28)
+
+
+### Reverts
+
+* Revert "chore: Use "level" instead of "level-ts" (#3189)" ([ed54626](https://github.com/ceramicnetwork/js-ceramic/commit/ed546268c0ab861a7868fe71130cb23c9d320d77)), closes [#3189](https://github.com/ceramicnetwork/js-ceramic/issues/3189)
+
+
+
+
+
 # [5.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.5.0...@ceramicnetwork/stream-tests@5.6.0-rc.0) (2024-03-27)
 
 

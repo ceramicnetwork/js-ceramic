@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.6.0-rc.0...@ceramicnetwork/core@5.6.0-rc.1) (2024-03-28)
+
+
+### Features
+
+* add ability to publish metrics as ceramic model instance documents (rebased) ([#3190](https://github.com/ceramicnetwork/js-ceramic/issues/3190)) ([781fe82](https://github.com/ceramicnetwork/js-ceramic/commit/781fe82a5b3428cd9faa50b82800727df73064df))
+
+
+### Reverts
+
+* Revert "chore: Use "level" instead of "level-ts" (#3189)" ([ed54626](https://github.com/ceramicnetwork/js-ceramic/commit/ed546268c0ab861a7868fe71130cb23c9d320d77)), closes [#3189](https://github.com/ceramicnetwork/js-ceramic/issues/3189)
+
+
+
+
+
 # [5.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.5.0...@ceramicnetwork/core@5.6.0-rc.0) (2024-03-27)
 
 
