@@ -736,13 +736,11 @@ describe('Model API multi-node tests', () => {
   let ceramic0: Ceramic
   let ceramic1: Ceramic
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
     await swarmConnect(ipfs0, ipfs1)
-  }, 12000)
 
-  beforeEach(async () => {
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
   }, 12000)
@@ -750,9 +748,6 @@ describe('Model API multi-node tests', () => {
   afterEach(async () => {
     await ceramic0.close()
     await ceramic1.close()
-  })
-
-  afterAll(async () => {
     await ipfs0.stop()
     await ipfs1.stop()
   })
