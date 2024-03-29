@@ -504,22 +504,12 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    ipfs0 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
-    ipfs1 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
+    ipfs0 = await createIPFS()
+    ipfs1 = await createIPFS()
     await swarmConnect(ipfs0, ipfs1)
 
-    ceramic0 = await createCeramic(ipfs0, { networkName: Networks.INMEMORY })
-    ceramic1 = await createCeramic(ipfs1, { networkName: Networks.INMEMORY })
+    ceramic0 = await createCeramic(ipfs0)
+    ceramic1 = await createCeramic(ipfs1)
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
     midMetadata = { model: model.id }

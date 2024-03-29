@@ -737,24 +737,14 @@ describe('Model API multi-node tests', () => {
   let ceramic1: Ceramic
 
   beforeAll(async () => {
-    ipfs0 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
-    ipfs1 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
+    ipfs0 = await createIPFS()
+    ipfs1 = await createIPFS()
     await swarmConnect(ipfs0, ipfs1)
   }, 12000)
 
   beforeEach(async () => {
-    ceramic0 = await createCeramic(ipfs0, { networkName: Networks.INMEMORY })
-    ceramic1 = await createCeramic(ipfs1, { networkName: Networks.INMEMORY })
+    ceramic0 = await createCeramic(ipfs0)
+    ceramic1 = await createCeramic(ipfs1)
   }, 12000)
 
   afterEach(async () => {
