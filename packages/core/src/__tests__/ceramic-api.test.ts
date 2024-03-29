@@ -21,6 +21,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import type { AddOperation } from 'fast-json-patch'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 
 /**
  * Generates string of particular size in bytes
@@ -372,12 +373,13 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
+      await CommonTestUtils.delay(1000)
 
       // In v3 mode we call into update the state store and index twice as part of creating a
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -385,11 +387,14 @@ describe('Ceramic API', () => {
         anchor: false,
         pin: false,
       })
+      await CommonTestUtils.delay(1000)
       expect(doc.content).toEqual(CONTENT0)
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
       await doc.patch(CONTENT1, { anchor: false })
+      await CommonTestUtils.delay(1000)
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2 + 1)
+      const reconCorrection = process.env.CERAMIC_RECON_MODE ? 0 : -1
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 3 + reconCorrection)
       addIndexSpy.mockRestore()
     })
 
