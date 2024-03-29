@@ -782,15 +782,16 @@ describe('Model API multi-node tests', () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
     if (process.env.CERAMIC_RECON_MODE)
-      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip, 70000)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
     await CoreUtils.anchorUpdate(ceramic0, model)
 
-    const hasAnchorUpdate = (state: StreamState) => state.log.length === 2
-    await TestUtils.waitFor(model, hasAnchorUpdate)
     const loaded = await Model.load(ceramic1, model.id)
+    const hasAnchorUpdate = (state: StreamState) =>
+      state.log.some((entry) => entry.type === EventType.TIME)
+    await TestUtils.waitFor(loaded, hasAnchorUpdate)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(2)
