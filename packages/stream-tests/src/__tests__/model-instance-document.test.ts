@@ -553,9 +553,11 @@ describe('ModelInstanceDocument API multi-node tests', () => {
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     await doc.replace(CONTENT1)
-    const hasUpdate = (state: StreamState) => state.log.length === 2
-    await TestUtils.waitFor(doc, hasUpdate)
+
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+    const hasDataUpdate = (state: StreamState) =>
+      state.log.some((entry) => entry.type === EventType.DATA)
+    await TestUtils.waitFor(loaded, hasDataUpdate)
 
     const docState = doc.state
     const loadedState = loaded.state
@@ -575,10 +577,11 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(ceramic0, doc)
-    const hasBothUpdates = (state: StreamState) => state.log.length === 3
-    await TestUtils.waitFor(doc, hasBothUpdates)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+    const hasAnchorUpdate = (state: StreamState) =>
+      state.log.some((entry) => entry.type === EventType.TIME)
+    await TestUtils.waitFor(loaded, hasAnchorUpdate)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(3)
