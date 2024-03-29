@@ -36,7 +36,7 @@ export class PinStoreFactory {
       props.pinningBackends && props.pinningBackends.length > 0
         ? props.pinningBackends
         : [IpfsPinning]
-    this._stateStore = new StreamStateStore()
+    this._stateStore = new StreamStateStore(logger)
   }
 
   public createPinStore(): PinStore {

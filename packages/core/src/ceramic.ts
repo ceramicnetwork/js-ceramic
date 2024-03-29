@@ -39,6 +39,7 @@ import os from 'os'
 import * as path from 'path'
 import { type IndexingConfig, LocalIndexApi, SyncApi } from '@ceramicnetwork/indexing'
 import { ShutdownSignal } from './shutdown-signal.js'
+import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
@@ -56,8 +57,6 @@ import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
 import { IReconApi, ReconApi } from './recon.js'
-import { IKVFactory } from './store/ikv-store.js'
-import { LevelKVFactory } from './store/level-kv-factory.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -214,7 +213,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
-  private readonly _kvFactory: IKVFactory
+  private readonly _levelStore: LevelDbStore
   private readonly _runId: string
   private readonly _startTime: Date
 
@@ -236,10 +235,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this._runId = crypto.randomUUID()
     this._startTime = new Date()
 
-    this._kvFactory = new LevelKVFactory(
+    this._levelStore = new LevelDbStore(
+      this._logger,
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
-      this._networkOptions.name,
-      this._logger
+      this._networkOptions.name
     )
 
     this._ipfs = modules.ipfs
@@ -266,7 +265,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
-      kvFactory: this._kvFactory,
+      keyValueStore: this._levelStore,
       anchorRequestStore: new AnchorRequestStore(this._logger),
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
@@ -895,7 +894,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     await this.dispatcher.close()
     await this.repository.close()
     this._ipfsTopology.stop()
-    await this._kvFactory.close()
     this._logger.imp('Ceramic instance closed successfully')
   }
 }

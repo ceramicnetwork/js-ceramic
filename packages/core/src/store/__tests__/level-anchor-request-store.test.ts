@@ -1,5 +1,7 @@
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { LevelDbStore } from '../level-db-store.js'
 import {
+  CeramicApi,
   EventType,
   DiagnosticsLogger,
   GenesisCommit,
@@ -12,26 +14,16 @@ import {
   AnchorRequestStoreListResult,
   serializeAnchorRequestData,
 } from '../anchor-request-store.js'
-import {
-  jest,
-  describe,
-  test,
-  expect,
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-} from '@jest/globals'
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import first from 'it-first'
 import all from 'it-all'
+import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { LevelKVFactory, ELP_NETWORK } from '../level-kv-factory.js'
-import type { Ceramic } from '../../ceramic.js'
 
 const BATCH_TIMEOUT = 100
 
@@ -90,10 +82,10 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   jest.setTimeout(1000 * 30)
 
   let tmpFolder: any
-  let kvFactory: LevelKVFactory
+  let levelStore: LevelDbStore
   let anchorRequestStore: AnchorRequestStore
   let ipfs: IpfsApi
-  let ceramic: Ceramic
+  let ceramic: CeramicApi
   let logger: DiagnosticsLogger
   let streamId1: StreamID
   let genesisCommit1: GenesisCommit
@@ -105,7 +97,10 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   // use Utils to load the genesis commit for a stream so it converts CIDs for us
   // and we avoid any issues with one having `Symbol(Symbol.toStringTag): "CID"` and one not
   // because the getter function isn't copied by _.cloneDeep.
-  async function loadGenesisCommit(ceramic: Ceramic, streamId: StreamID): Promise<GenesisCommit> {
+  async function loadGenesisCommit(
+    ceramic: CeramicApi,
+    streamId: StreamID
+  ): Promise<GenesisCommit> {
     const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
     expect(commit.type).toEqual(EventType.INIT)
     return commit.commit as GenesisCommit
@@ -141,9 +136,9 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    kvFactory = new LevelKVFactory(tmpFolder.path, 'fakeNetwork', logger)
+    levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
     anchorRequestStore = new AnchorRequestStore(logger, BATCH_TIMEOUT)
-    await anchorRequestStore.open(kvFactory)
+    await anchorRequestStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
     await TestUtils.delay(100)
@@ -152,7 +147,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   afterEach(async () => {
     jest.restoreAllMocks()
     await anchorRequestStore.close()
-    await kvFactory.close()
+    await levelStore.close()
     await tmpFolder.cleanup()
   })
 
@@ -169,7 +164,8 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     await anchorRequestStore.save(streamId1, anchorRequestData)
     expect(putSpy).toBeCalledWith(
       streamId1.toString(),
-      serializeAnchorRequestData(anchorRequestData)
+      serializeAnchorRequestData(anchorRequestData),
+      'anchor-requests'
     )
 
     const retrieved = await anchorRequestStore.load(streamId1)
@@ -370,8 +366,8 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpKVFactory = new LevelKVFactory(tmpFolder.path, ELP_NETWORK, logger)
-    await anchorRequestStore.open(elpKVFactory)
+    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, OLD_ELP_DEFAULT_LOCATION)
+    await anchorRequestStore.open(elpLevelStore)
 
     const anchorRequestData: AnchorRequestData = {
       cid: TestUtils.randomCID(),
@@ -385,16 +381,16 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     await anchorRequestStore.close()
 
-    const mainnetKVFactory = new LevelKVFactory(tmpFolder.path, Networks.MAINNET, logger)
-    await anchorRequestStore.open(mainnetKVFactory)
+    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
+    await anchorRequestStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await anchorRequestStore.load(streamId1)
     expect(retrievedFromMainnet).toEqual(anchorRequestData)
   })
 
   test('switch from Clay to Mainnet does not preserve data', async () => {
-    const testnetKVFactory = new LevelKVFactory(tmpFolder.path, Networks.TESTNET_CLAY, logger)
-    await anchorRequestStore.open(testnetKVFactory)
+    const testnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.TESTNET_CLAY)
+    await anchorRequestStore.open(testnetLevelStore)
 
     const anchorRequestData: AnchorRequestData = {
       cid: TestUtils.randomCID(),
@@ -408,8 +404,8 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     await anchorRequestStore.close()
 
-    const mainnetKVFactory = new LevelKVFactory(tmpFolder.path, Networks.MAINNET, logger)
-    await anchorRequestStore.open(mainnetKVFactory)
+    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
+    await anchorRequestStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await anchorRequestStore.load(streamId1)
     expect(retrievedFromMainnet).toEqual(null)

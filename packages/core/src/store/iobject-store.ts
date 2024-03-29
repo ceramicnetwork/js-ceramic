@@ -1,7 +1,7 @@
-import type { IKVFactory } from './ikv-store.js'
+import { IKVStore } from './ikv-store.js'
 
 export interface IObjectStore<O, V> {
-  open(store: IKVFactory): Promise<void>
+  open(store: IKVStore): Promise<void>
   close(): Promise<void>
   save(object: O, value: V): Promise<void>
   load(object: O): Promise<V>

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "5.6.0-rc.0",
+  "version": "5.6.0-rc.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "engines": {
     "node": ">=20.8"
@@ -51,6 +51,7 @@
     "@ceramicnetwork/indexing": "^4.6.0-rc.0",
     "@ceramicnetwork/ipfs-topology": "^5.5.0-rc.0",
     "@ceramicnetwork/job-queue": "^4.6.0-rc.0",
+    "@ceramicnetwork/model-metrics": "^1.2.5",
     "@ceramicnetwork/observability": "^1.4.4",
     "@ceramicnetwork/pinning-aggregation": "^5.5.0-rc.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^5.5.0-rc.0",
@@ -83,7 +84,7 @@
     "it-first": "^3.0.4",
     "knex": "^2.5.1",
     "least-recent": "^1.0.3",
-    "level": "^8.0.1",
+    "level-ts": "^2.1.0",
     "lodash.clonedeep": "^4.5.0",
     "mapmoize": "^1.2.1",
     "multiformats": "^13.0.0",
