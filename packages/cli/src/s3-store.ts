@@ -33,6 +33,7 @@ export class S3KVFactory implements IKVFactory {
     this.#customEndpoint = customEndpoint
     this.#cache = new Map()
     this.#logger = logger
+    this.#createMutex = new Mutex()
   }
 
   storeRoot(networkName = this.#networkName) {
