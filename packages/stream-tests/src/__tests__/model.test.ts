@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, Networks } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
@@ -788,7 +788,8 @@ describe('Model API multi-node tests', () => {
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
     await CoreUtils.anchorUpdate(ceramic0, model)
 
-    await TestUtils.delay(2000)
+    const hasAnchorUpdate = (state: StreamState) => state.log.length === 2
+    await TestUtils.waitFor(model, hasAnchorUpdate)
     const loaded = await Model.load(ceramic1, model.id)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)

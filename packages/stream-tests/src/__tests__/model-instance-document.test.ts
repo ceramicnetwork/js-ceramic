@@ -1,6 +1,6 @@
 import { jest, test, expect, describe, beforeAll, afterAll } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, Networks } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
@@ -553,7 +553,8 @@ describe('ModelInstanceDocument API multi-node tests', () => {
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     await doc.replace(CONTENT1)
-    await TestUtils.delay(2000)
+    const hasUpdate = (state: StreamState) => state.log.length === 2
+    await TestUtils.waitFor(doc, hasUpdate)
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
     const docState = doc.state
@@ -574,7 +575,9 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(ceramic0, doc)
-    await TestUtils.delay(2000)
+    const hasBothUpdates = (state: StreamState) => state.log.length === 3
+    await TestUtils.waitFor(doc, hasBothUpdates)
+
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)

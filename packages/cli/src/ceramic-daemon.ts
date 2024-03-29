@@ -9,7 +9,7 @@ import {
   DEFAULT_PUBLISH_INTERVAL_MS,
   ModelMetrics,
   Counter,
-  Observable
+  Observable,
 } from '@ceramicnetwork/model-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
@@ -120,7 +120,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
-    disablePeerDataSync: opts.ipfs.disablePeerDataSync
+    disablePeerDataSync: opts.ipfs.disablePeerDataSync,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
@@ -345,20 +345,20 @@ export class CeramicDaemon {
 
     // Now that ceramic node is set up we can start publishing metrics
     if (opts.metrics?.metricsPublisherEnabled) {
-
-      const ipfsVersion = await ipfs.version();
-      ModelMetrics.start({ ceramic: ceramic,
-                       network: params.networkOptions.name,
-                       ceramicVersion: version,
-                       ipfsVersion: ipfsVersion.version,
-                       intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-                       nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-                       nodeName: '', // daemon.hostname is not useful
-                       nodeAuthDID: did.id,
-                       nodeIPAddr: '', // daemon.hostname is not the external name
-                       nodePeerId: ipfsId.publicKey,
-                       logger: diagnosticsLogger
-                     })
+      const ipfsVersion = await ipfs.version()
+      ModelMetrics.start({
+        ceramic: ceramic,
+        network: params.networkOptions.name,
+        ceramicVersion: version,
+        ipfsVersion: ipfsVersion.version,
+        intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+        nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+        nodeName: '', // daemon.hostname is not useful
+        nodeAuthDID: did.id,
+        nodeIPAddr: '', // daemon.hostname is not the external name
+        nodePeerId: ipfsId.publicKey,
+        logger: diagnosticsLogger,
+      })
     }
 
     return daemon
