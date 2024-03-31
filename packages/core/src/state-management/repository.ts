@@ -43,6 +43,7 @@ import { IReconApi, ReconEventFeedResponse } from '../recon.js'
 import { Utils } from '../utils.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model } from '@ceramicnetwork/stream-model'
+import { FeedAggregationStore } from '../store/feed-aggregation-store.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -122,6 +123,7 @@ export class Repository {
   readonly inmemory: StateCache<RunningState>
 
   private readonly feed: Feed
+  private readonly feedAggregationStore: FeedAggregationStore
 
   private reconEventFeedSubscription: Subscription | undefined
 
@@ -164,6 +166,7 @@ export class Repository {
       state$.complete()
     })
     this.updates$ = this.updates$.bind(this)
+    this.feedAggregationStore = new FeedAggregationStore()
   }
 
   /**
@@ -178,6 +181,7 @@ export class Repository {
   }
 
   async init(): Promise<void> {
+    await this.feedAggregationStore.open(this.#deps.kvFactory)
     await this.pinStore.open(this.#deps.kvFactory)
     await this.anchorRequestStore.open(this.#deps.kvFactory) // Initialization hell
     await this.index.init()
