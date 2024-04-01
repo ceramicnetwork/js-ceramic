@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
@@ -8,6 +8,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'myModel',
@@ -76,9 +77,6 @@ const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
 }
 
-// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
-const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
 describe('Model API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -133,11 +131,7 @@ describe('Model API http-client tests', () => {
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
     expect(model.state.log[0].type).toEqual(EventType.INIT)
-
-    if (!process.env.CERAMIC_RECON_MODE) {
-      // TODO (WS1-1471): Re-enable this check even in Recon mode
-      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    }
+    expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
   })
 
@@ -150,10 +144,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -174,10 +165,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -200,10 +188,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -229,10 +214,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(
         ceramic.admin.startIndexingModelData([
@@ -256,10 +238,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -287,10 +266,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -326,10 +302,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -365,10 +338,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -412,10 +382,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -462,10 +429,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -506,10 +470,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -530,10 +491,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -559,10 +517,7 @@ describe('Model API http-client tests', () => {
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
       expect(model.state.log[0].type).toEqual(EventType.INIT)
-      if (!process.env.CERAMIC_RECON_MODE) {
-        // TODO (WS1-1471): Re-enable this check even in Recon mode
-        expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      }
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
 
@@ -594,13 +549,10 @@ describe('Model API http-client tests', () => {
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
     expect(model.state.log[0].type).toEqual(EventType.INIT)
-    if (!process.env.CERAMIC_RECON_MODE) {
-      // TODO (WS1-1471): Re-enable this check even in Recon mode
-      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    }
+    expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
-  testIfV3ShouldPassWithAnchoring('Anchor genesis', async () => {
+  test('Anchor genesis', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -683,7 +635,7 @@ describe('Model API http-client tests', () => {
     )
   })
 
-  testIfV3ShouldPassWithAnchoring('Can load a complete stream', async () => {
+  test('Can load a complete stream', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
     await CoreUtils.anchorUpdate(core, model)
     await model.sync()
@@ -776,10 +728,7 @@ describe('Model API http-client tests', () => {
   })
 })
 
-// should pass on v4 as soon as recon is integrated and cross-node syncing works.
-const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass('Model API multi-node tests', () => {
+describe('Model API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs0: IpfsApi
@@ -787,13 +736,11 @@ describeIfV3ShouldPass('Model API multi-node tests', () => {
   let ceramic0: Ceramic
   let ceramic1: Ceramic
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
     await swarmConnect(ipfs0, ipfs1)
-  }, 12000)
 
-  beforeEach(async () => {
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
   }, 12000)
@@ -801,15 +748,18 @@ describeIfV3ShouldPass('Model API multi-node tests', () => {
   afterEach(async () => {
     await ceramic0.close()
     await ceramic1.close()
-  })
-
-  afterAll(async () => {
     await ipfs0.stop()
     await ipfs1.stop()
   })
 
   test('load basic model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
     const loaded = await Model.load(ceramic1, model.id)
 
@@ -825,12 +775,21 @@ describeIfV3ShouldPass('Model API multi-node tests', () => {
 
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
+
+    if (process.env.CERAMIC_RECON_MODE)
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+
+    await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
+    await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
     await CoreUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
+    const hasAnchorUpdate = (state: StreamState) =>
+      state.log.some((entry) => entry.type === EventType.TIME)
+    await TestUtils.waitFor(loaded, hasAnchorUpdate)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(2)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
-  })
+  }, 120000)
 })

@@ -125,10 +125,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
-    if (!process.env.CERAMIC_RECON_MODE) {
-      // TODO (WS1-1471): Re-enable this check even in Recon mode
-      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    }
+    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
   test(`Can create deterministic doc with create method`, async () => {
@@ -141,10 +138,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
-    if (!process.env.CERAMIC_RECON_MODE) {
-      // TODO (WS1-1471): Re-enable this check even in Recon mode
-      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    }
+    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
   test(`Creating doc with SINGLE accountRelation non-deterministically should fail `, async () => {
@@ -263,10 +257,8 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
     const docState = doc.state
     const loadedState = loaded.state
-    // TODO(WS1-1471): Enable anchoring when in Recon (Prime) mode.
-    expect(docState.anchorStatus).toEqual(
-      process.env.CERAMIC_RECON_MODE ? AnchorStatus.NOT_REQUESTED : AnchorStatus.PENDING
-    )
+
+    expect(docState.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(loadedState.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     delete docState.anchorStatus
     delete loadedState.anchorStatus
@@ -284,10 +276,8 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
     const docState = doc.state
     const loadedState = loaded.state
-    // TODO(WS1-1471): Enable anchoring when in Recon (Prime) mode.
-    expect(docState.anchorStatus).toEqual(
-      process.env.CERAMIC_RECON_MODE ? AnchorStatus.NOT_REQUESTED : AnchorStatus.PENDING
-    )
+
+    expect(docState.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(loadedState.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     delete docState.anchorStatus
     delete loadedState.anchorStatus

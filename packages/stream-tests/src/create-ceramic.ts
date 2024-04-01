@@ -1,13 +1,13 @@
 import mergeOpts from 'merge-options'
 import { CeramicConfig, Ceramic } from '@ceramicnetwork/core'
-import { IpfsApi } from '@ceramicnetwork/common'
+import { IpfsApi, Networks } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { createDid } from './create_did.js'
 import type { ProvidersCache } from '@ceramicnetwork/core'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config: CeramicConfig & { seed?: string } = {},
+  config: CeramicConfig & { seed?: string } = { networkName: Networks.INMEMORY },
   providersCache?: ProvidersCache
 ): Promise<Ceramic> {
   const stateStoreDirectory = await tmp.tmpName()
