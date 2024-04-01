@@ -38,7 +38,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
     }
   } else {
     if (parsed.status === AnchorRequestStatusName.COMPLETED) {
-      Metrics.count('cas_request_success', 1)
+      Metrics.count('cas_request_completed', 1)
       return {
         status: parsed.status,
         streamId: parsed.streamId,
@@ -46,9 +46,6 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
         message: parsed.message,
         witnessCar: parsed.witnessCar,
       }
-    }
-    if (parsed.status === AnchorRequestStatusName.PENDING) {
-      Metrics.count('cas_request_pending', 1)
     }
     return {
       status: parsed.status,
