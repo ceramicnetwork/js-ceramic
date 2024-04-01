@@ -32,11 +32,15 @@ export class CommonTestUtils {
     return BaseTestUtils.randomCID(version, codec, hasher)
   }
 
+  /**
+   * See comments for BaseTestUtils.waitForConditionOrTimeout
+   */
   static async waitForConditionOrTimeout(
     predicate: () => Promise<boolean>,
-    timeoutMs = 1000 * 30
-  ): Promise<boolean> {
-    return BaseTestUtils.waitForConditionOrTimeout(predicate, timeoutMs)
+    timeoutMs = 1000 * 30,
+    errMsgGenerator?: string | (() => string)
+  ): Promise<void> {
+    return BaseTestUtils.waitForConditionOrTimeout(predicate, timeoutMs, errMsgGenerator)
   }
 
   static async delay(ms: number, signal?: AbortSignal): Promise<void> {

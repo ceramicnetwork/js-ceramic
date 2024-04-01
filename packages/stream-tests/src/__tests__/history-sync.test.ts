@@ -204,7 +204,7 @@ const extractDocuments = (
 const waitForMidsToBeIndexed = async (
   ceramic: Ceramic,
   docs: ModelInstanceDocument[]
-): Promise<boolean> => {
+): Promise<void> => {
   // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
   // in the index, instead of this polling-based approach.
   return TestUtils.waitForConditionOrTimeout(async () => {
@@ -400,8 +400,7 @@ describeIfV3('Sync tests', () => {
 
     await provider.mineBlocks([merkleTree1.root, merkleTree2.root, merkleTree3.root])
 
-    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2, mid3])
-    expect(success).toEqual(true)
+    await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2, mid3])
   })
 
   test('Can perform sync for the first time starting from the model`s anchored block', async () => {
@@ -435,8 +434,7 @@ describeIfV3('Sync tests', () => {
 
     await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
-    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
-    expect(success).toEqual(true)
+    await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
 
     const jobData = addSyncJobSpy.mock.calls[0][1] as any
     expect(jobData.fromBlock).toBeGreaterThan(DEFAULT_START_BLOCK)
@@ -471,8 +469,7 @@ describeIfV3('Sync tests', () => {
 
     await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
-    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
-    expect(success).toEqual(true)
+    await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
 
     const jobData = addSyncJobSpy.mock.calls[0][1] as any
     expect(jobData.fromBlock).toEqual(DEFAULT_START_BLOCK)
@@ -498,7 +495,6 @@ describeIfV3('Sync tests', () => {
 
     syncingCeramic = await createSyncingCeramic()
     await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
-    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid])
-    expect(success).toEqual(true)
+    await waitForMidsToBeIndexed(syncingCeramic, [mid])
   })
 })
