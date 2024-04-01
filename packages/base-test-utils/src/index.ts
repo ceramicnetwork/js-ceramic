@@ -13,19 +13,21 @@ export class BaseTestUtils {
   /**
    * Wait up to 'timeoutMs' for the given predicate to return true.  Polls the given predicate once
    * every 100ms (plus however long it takes for the predicate itself to execute).
-   * Returns true if the predicate eventually returned true, or false if it timed out
-   * without ever becoming true.
-   *
-   * This test doesn't throw when it times out as that would wind up throwing a fairly uninformative
-   * "timeout" error message.  So instead, test code using this should make sure to re-check the
-   * condition that is being waited for, in case this actually did time out without the condition
-   * ever being satisfied.  That will allow tests to throw more useful errors indicating what
-   * condition actually failed.
+   * Throws an Error if the predicate does not become true within the timeout.
+   * The error message in the thrown Error can be customized with the 'errMsgGenerator' arg.
+   * @param predicate - function that returns a boolean. predicate function will be called multiple
+   *   times, until either it returns true or the timeout passes.
+   * @param timeoutMs - time limit for how long the predicate has to return true.
+   * @param errMsgGenerator - customization for the message text in the thrown Error on timeout.
+   *   Can be a single string, or a function that is called to generate a string, which can be
+   *   useful when used with a closure over state in the test so that the error message can include
+   *   additional information about current state.
    */
   static async waitForConditionOrTimeout(
     predicate: () => Promise<boolean>,
-    timeoutMs = 1000 * 30
-  ): Promise<boolean> {
+    timeoutMs = 1000 * 30,
+    errMsgGenerator?: string | (() => string)
+  ): Promise<void> {
     const startTime = new Date()
     const deadline = new Date(startTime.getTime() + timeoutMs)
     let now = startTime
@@ -36,15 +38,20 @@ export class BaseTestUtils {
       try {
         const res = await predicate()
         if (res) {
-          return res
+          return
         }
       } catch (err) {
         console.warn(err)
       }
     }
 
-    console.warn(`timed out after ${timeoutMs}ms waiting for condition to be true`)
-    return false
+    const baseErrMsg = `timed out after ${timeoutMs}ms waiting for condition to be true`
+    if (!errMsgGenerator) {
+      throw new Error(baseErrMsg)
+    }
+
+    const customMsg = typeof errMsgGenerator == 'string' ? errMsgGenerator : errMsgGenerator()
+    throw new Error(baseErrMsg + ': ' + customMsg)
   }
 
   static async delay(ms: number, signal?: AbortSignal): Promise<void> {
