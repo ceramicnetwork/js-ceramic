@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.6.0-rc.1...@ceramicnetwork/core@5.6.0) (2024-04-03)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
 # [5.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.6.0-rc.0...@ceramicnetwork/core@5.6.0-rc.1) (2024-03-28)
 
 
