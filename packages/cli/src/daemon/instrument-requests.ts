@@ -9,9 +9,10 @@ export function instrumentRequests(req, res, next) {
 
   const HTTP_REQUEST = 'http_request'
 
-  const clean_endpoint_re = /(\/streams\/)[^/?]+(\?.+)?/
+  const clean_endpoint_re = /(\/(ceramic|streams)\/[^/]+\/[^/]+\/).*$/
 
-  const endpoint = req.url.replace(clean_endpoint_re, '$1...$2')
+  const endpoint = req.url.replace(clean_endpoint_re, '$1...')
+
 
   Metrics.count(HTTP_REQUEST, 1, {
     method: req.method,
