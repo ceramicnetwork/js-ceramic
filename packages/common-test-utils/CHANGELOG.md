@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.6.0...@ceramicnetwork/common-test-utils@3.7.0-rc.0) (2024-04-03)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
 # [3.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.6.0-rc.0...@ceramicnetwork/common-test-utils@3.6.0) (2024-04-03)
 
 **Note:** Version bump only for package @ceramicnetwork/common-test-utils

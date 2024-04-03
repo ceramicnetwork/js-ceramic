@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.6.0...@ceramicnetwork/cli@5.7.0-rc.0) (2024-04-03)
+
+
+### Features
+
+* FeedAggregationStore ([#3191](https://github.com/ceramicnetwork/js-ceramic/issues/3191)) ([db38970](https://github.com/ceramicnetwork/js-ceramic/commit/db38970ab8a632ebe189864591226637a53ba362))
+
+
+
+
+
 # [5.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.6.0-rc.1...@ceramicnetwork/cli@5.6.0) (2024-04-03)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
