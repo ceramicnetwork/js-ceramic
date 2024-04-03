@@ -326,7 +326,7 @@ export class Repository {
    * Helper for updating the state from within the ExecutionQueue, which protects all updates
    * to the state store.
    */
-  private async _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
+  private _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
     return this.executionQ.forStream(state$.id).run(() => {
       return this._updateStateIfPinned(state$)
     })
@@ -341,7 +341,9 @@ export class Repository {
     const shouldIndex =
       state$.state.metadata.model && this.index.shouldIndexStream(state$.state.metadata.model)
     if (isPinned || shouldIndex) {
-      await this.pinStore.add(state$)
+      const pinStoreAdd = this._pin_UNSAFE(state$)
+      const feedStorePut = this.feedAggregationStore.put(state$.id)
+      await Promise.all([pinStoreAdd, feedStorePut])
     }
     await this._indexStreamIfNeeded(state$)
   }
@@ -981,7 +983,7 @@ export class Repository {
   /**
    * Only safe to call from within the ExecutionQueue
    */
-  private async _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
+  private _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
     return this.pinStore.add(state$, force)
   }
 

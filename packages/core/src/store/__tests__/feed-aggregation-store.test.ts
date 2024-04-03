@@ -15,6 +15,7 @@ import { FeedAggregationStore } from '../feed-aggregation-store.js'
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 import { IKVStore } from '../ikv-store.js'
 import { Deferred } from '../../anchor/processing-loop.js'
+import MockDate from 'mockdate'
 
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -32,6 +33,12 @@ beforeAll(async () => {
     return feedKVStore
   }
   await feedAggregationStore.open({ open })
+})
+
+afterEach(async () => {
+  const keys = await feedAggregationStore.findKeys()
+  const removeAll = keys.map((k) => feedAggregationStore.remove(Number(k)))
+  await Promise.all(removeAll)
 })
 
 afterAll(async () => {
@@ -74,6 +81,32 @@ describe('deleteStale', () => {
     expect(keysB.length).toEqual(TIMESTAMPS.length) // No changes!
     expect(batchSpy).not.toBeCalled()
     batchSpy.mockRestore()
+  })
+})
+
+describe('put', () => {
+  test('use current timestamp', async () => {
+    const fauxNow = new Date()
+    MockDate.set(fauxNow) // "Freeze" Date.now to `fauxNow`
+    const streamId = CommonTestUtils.randomStreamID()
+    await feedAggregationStore.put(streamId)
+    const keys = await feedAggregationStore.findKeys()
+    expect(keys.length).toEqual(1)
+    const first = Number(keys[0])
+    expect(first).toEqual(fauxNow.valueOf())
+    const stored = await feedAggregationStore.load(first)
+    expect(stored).toEqual(streamId)
+    MockDate.reset() // Unfreeze Date.now
+  })
+
+  test('use explicit timestamp', async () => {
+    const streamId = CommonTestUtils.randomStreamID()
+    const timestamp = 1000
+    await feedAggregationStore.put(streamId, timestamp)
+    const keys = await feedAggregationStore.findKeys()
+    expect(keys.length).toEqual(1)
+    const stored = await feedAggregationStore.load(timestamp)
+    expect(stored).toEqual(streamId)
   })
 })
 
