@@ -1,5 +1,5 @@
 import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
-import { IKVFactory, IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
+import { ChainedKVBatch, IKVFactory, IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
@@ -113,6 +113,10 @@ class S3KVStore implements IKVStore {
 
   close(): Promise<void> {
     return this.level.close()
+  }
+
+  batch(): ChainedKVBatch {
+    return this.level.batch() as any // Same interface despite TS complaints
   }
 
   async isEmpty(params?: Partial<StoreSearchParams>): Promise<boolean> {

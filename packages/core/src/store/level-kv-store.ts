@@ -1,5 +1,10 @@
-import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import type {
+  ChainedKVBatch,
+  IKVStore,
+  IKVStoreFindResult,
+  StoreSearchParams,
+} from './ikv-store.js'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Level } from 'level'
 import all from 'it-all'
 import map from 'it-map'
@@ -14,6 +19,10 @@ export class LevelKVStore implements IKVStore {
   async init(): Promise<void> {
     // do nothing
     return
+  }
+
+  batch(): ChainedKVBatch {
+    return this.level.batch()
   }
 
   async close(): Promise<void> {
