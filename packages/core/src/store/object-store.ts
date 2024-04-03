@@ -26,7 +26,7 @@ export abstract class ObjectStore<TKeyObject, TValue> implements IObjectStore<TK
     this.deserialize = deserialize
   }
 
-  async open(factory: IKVFactory): Promise<void> {
+  async open(factory: Pick<IKVFactory, 'open'>): Promise<void> {
     this.store = await factory.open(this.useCaseName)
   }
 
