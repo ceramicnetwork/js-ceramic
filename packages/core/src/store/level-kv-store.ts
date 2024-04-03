@@ -1,5 +1,10 @@
-import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import type {
+  ChainedKVBatch,
+  IKVStore,
+  IKVStoreFindResult,
+  StoreSearchParams,
+} from './ikv-store.js'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Level } from 'level'
 import all from 'it-all'
 import map from 'it-map'
@@ -14,6 +19,10 @@ export class LevelKVStore implements IKVStore {
   async init(): Promise<void> {
     // do nothing
     return
+  }
+
+  batch(): ChainedKVBatch {
+    return this.level.batch()
   }
 
   async close(): Promise<void> {
@@ -64,12 +73,11 @@ export class LevelKVStore implements IKVStore {
   }
 
   async find(params?: Partial<StoreSearchParams>): Promise<Array<IKVStoreFindResult>> {
-    const searchParams: Record<string, any> = {
+    const searchParams = {
       keys: true,
       values: true,
-      limit: params?.limit,
+      ...params,
     }
-    if (params?.gt) searchParams.gt = params.gt
     return all(
       map(this.level.iterator(searchParams), (r) => {
         return {
@@ -81,10 +89,10 @@ export class LevelKVStore implements IKVStore {
   }
 
   async findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
-    const searchParams: Record<string, any> = {
+    const searchParams = {
       keys: true,
       values: false,
-      limit: params?.limit,
+      ...params,
     }
 
     return all(

@@ -1,11 +1,22 @@
 export type StoreSearchParams = {
+  reverse: boolean
   limit: number
+  gte: string
+  lte: string
   gt: string
+  lt: string
 }
 
 export type IKVStoreFindResult = {
   key: string
   value: any
+}
+
+export interface ChainedKVBatch {
+  put(key: string, value: string): this
+  del(key: string): this
+  clear(): this
+  write(): Promise<void>
 }
 
 export interface IKVStore {
@@ -17,6 +28,7 @@ export interface IKVStore {
   put(key: string, value: any): Promise<void>
   get(key: string): Promise<any>
   del(key: string): Promise<void>
+  batch(): ChainedKVBatch
 }
 
 export interface IKVFactory {
