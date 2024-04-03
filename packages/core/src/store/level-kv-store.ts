@@ -73,12 +73,11 @@ export class LevelKVStore implements IKVStore {
   }
 
   async find(params?: Partial<StoreSearchParams>): Promise<Array<IKVStoreFindResult>> {
-    const searchParams: Record<string, any> = {
+    const searchParams = {
       keys: true,
       values: true,
-      limit: params?.limit,
+      ...params,
     }
-    if (params?.gt) searchParams.gt = params.gt
     return all(
       map(this.level.iterator(searchParams), (r) => {
         return {
@@ -90,10 +89,10 @@ export class LevelKVStore implements IKVStore {
   }
 
   async findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
-    const searchParams: Record<string, any> = {
+    const searchParams = {
       keys: true,
       values: false,
-      limit: params?.limit,
+      ...params,
     }
 
     return all(

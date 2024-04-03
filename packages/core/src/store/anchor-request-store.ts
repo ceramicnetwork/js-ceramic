@@ -1,8 +1,9 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
-import { DiagnosticsLogger, GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
+import { StreamUtils, type DiagnosticsLogger, type GenesisCommit } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import type { StoreSearchParams } from './ikv-store.js'
 
 // How long to wait for the store to return a batch from a find request.
 const DEFAULT_BATCH_TIMEOUT_MS = 60 * 1000 // 1 minute
@@ -46,6 +47,20 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
   }
 }
 
+// Level does not understand `undefined` as `gt` query.
+function listQuery(batchSize: number, gt: StreamID | undefined): Partial<StoreSearchParams> {
+  if (gt) {
+    return {
+      limit: batchSize,
+      gt: generateKey(gt),
+    }
+  } else {
+    return {
+      limit: batchSize,
+    }
+  }
+}
+
 /**
  * An object-value store being able to save, retrieve and delete anchor request data identified by stream ids
  *
@@ -74,10 +89,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     let gt: StreamID | undefined = undefined
     do {
       // TODO: Add timeout to the query
-      const batch = await this.store.find({
-        limit: batchSize,
-        gt: generateKey(gt),
-      })
+      const batch = await this.store.find(listQuery(batchSize, gt))
       if (batch.length > 0) {
         gt = StreamID.fromString(batch[batch.length - 1].key)
         yield batch.map((item) => {
@@ -115,10 +127,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           }, this.#infiniteListBatchTimeoutMs)
         })
         this.#logger.debug(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
-        const batchPromise = this.store.find({
-          limit: batchSize,
-          gt: generateKey(gt),
-        })
+        const batchPromise = this.store.find(listQuery(batchSize, gt))
         const batch = await Promise.race([batchPromise, timeoutPromise])
         clearTimeout(timeout)
         if (batch && batch.length > 0) {
