@@ -1,5 +1,5 @@
 import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
-import { ChainedKVBatch, IKVFactory, IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
+import type { ChainedKVBatch, IKVFactory, IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'

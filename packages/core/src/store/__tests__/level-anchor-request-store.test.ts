@@ -22,7 +22,7 @@ import {
   beforeAll,
   afterAll,
 } from '@jest/globals'
-import tmp from 'tmp-promise'
+import tmp, { type DirectoryResult } from 'tmp-promise'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
@@ -89,7 +89,7 @@ const MODEL_CONTENT_3: ModelDefinition = {
 describe('LevelDB-backed AnchorRequestStore state store', () => {
   jest.setTimeout(1000 * 30)
 
-  let tmpFolder: any
+  let tmpFolder: DirectoryResult
   let kvFactory: LevelKVFactory
   let anchorRequestStore: AnchorRequestStore
   let ipfs: IpfsApi
