@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-handler-common@4.5.0-rc.0...@ceramicnetwork/stream-handler-common@4.5.0) (2024-04-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-handler-common
+
+
+
+
+
 # [4.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-handler-common@4.4.0...@ceramicnetwork/stream-handler-common@4.5.0-rc.0) (2024-03-27)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-handler-common
