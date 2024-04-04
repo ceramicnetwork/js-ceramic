@@ -986,7 +986,6 @@ export class Repository {
    * Only safe to call from within the ExecutionQueue
    */
   private _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
-    console.log('add.0', state$)
     return this.pinStore.add(state$, force)
   }
 
