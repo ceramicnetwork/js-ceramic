@@ -813,7 +813,7 @@ describe('_registerRunningState', () => {
 })
 
 describe('_updateStateIfPinned', () => {
-  test('add to pinStore, to feedAggregationStore', async () => {
+  test('add to pinStore and feedAggregationStore', async () => {
     const streamState = TestUtils.makeStreamState()
     const runningState = new RunningState(streamState, false)
     const pinAddSpy = jest
