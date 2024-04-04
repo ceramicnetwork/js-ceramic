@@ -336,7 +336,6 @@ export class Repository {
    * Must be called from within the ExecutionQueue to be safe.
    */
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
-    console.log('a.0', state$)
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
     const shouldIndex =
