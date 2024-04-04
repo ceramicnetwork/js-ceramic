@@ -52,6 +52,10 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     return keys.length
   }
 
+  put(streamId: StreamID, timestamp: number = Date.now()): Promise<void> {
+    return this.save(timestamp, streamId)
+  }
+
   async open(factory: Pick<IKVFactory, 'open'>): Promise<void> {
     await super.open(factory)
     if (this.cleanupInterval) {

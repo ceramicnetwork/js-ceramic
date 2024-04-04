@@ -123,7 +123,7 @@ export class Repository {
   readonly inmemory: StateCache<RunningState>
 
   private readonly feed: Feed
-  private readonly feedAggregationStore: FeedAggregationStore
+  readonly feedAggregationStore: FeedAggregationStore
 
   private reconEventFeedSubscription: Subscription | undefined
 
@@ -326,7 +326,7 @@ export class Repository {
    * Helper for updating the state from within the ExecutionQueue, which protects all updates
    * to the state store.
    */
-  private async _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
+  private _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
     return this.executionQ.forStream(state$.id).run(() => {
       return this._updateStateIfPinned(state$)
     })
@@ -341,7 +341,8 @@ export class Repository {
     const shouldIndex =
       state$.state.metadata.model && this.index.shouldIndexStream(state$.state.metadata.model)
     if (isPinned || shouldIndex) {
-      await this.pinStore.add(state$)
+      await this._pin_UNSAFE(state$)
+      await this.feedAggregationStore.put(state$.id)
     }
     await this._indexStreamIfNeeded(state$)
   }
@@ -981,7 +982,7 @@ export class Repository {
   /**
    * Only safe to call from within the ExecutionQueue
    */
-  private async _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
+  private _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
     return this.pinStore.add(state$, force)
   }
 
