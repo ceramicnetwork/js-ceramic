@@ -10,6 +10,7 @@ import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import {fetchJsonWithLogging} from '@ceramicnetwork/common'
 
 const MAX_FAILED_REQUESTS = 3
 const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
@@ -140,12 +141,13 @@ export class RemoteCAS implements CASClient {
    */
   async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
     const response = await firstValueFrom(this.create$(carFileReader))
+    // TODO_1:[WS2-3164] For status returned as created for an anchor request add a metric
     return parseResponse(carFileReader.streamId, carFileReader.tip, response)
   }
 
   create$(carFileReader: AnchorRequestCarFileReader): Observable<unknown> {
     const sendRequest$ = deferAbortable(async (signal) => {
-      const response = await this.#sendRequest(this.#requestsApiEndpoint, {
+      const response = await fetchJsonWithLogging(this.#requestsApiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/vnd.ipld.car',

@@ -1,4 +1,6 @@
 import { mergeAbortSignals, TimedAbortSignal, abortable } from './abort-signal-utils.js'
+import { StatusCodes } from 'http-status-codes'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
 
@@ -62,4 +64,16 @@ export async function fetchJson(url: URL | string, opts: Partial<FetchOpts> = {}
   }
 
   return res.json()
+}
+
+export async function fetchJsonWithLogging(url: URL | string, opts: Partial<FetchOpts> = {}): Promise<any> {
+  const rawResponse = await fetch(String(url), {
+    ...opts,
+    credentials: 'include',
+  })
+  if(rawResponse.status === StatusCodes.CREATED){
+    Metrics.count('cas_request_created', 1)
+  }
+  const parsedResponse = await fetchJson(url, opts)
+  return parsedResponse
 }
