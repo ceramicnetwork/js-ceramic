@@ -811,3 +811,22 @@ describe('_registerRunningState', () => {
     subscription.unsubscribe()
   })
 })
+
+describe('_updateStateIfPinned', () => {
+  test('add to pinStore, to feedAggregationStore', async () => {
+    const streamState = TestUtils.makeStreamState()
+    const runningState = new RunningState(streamState, false)
+    const pinAddSpy = jest
+      .spyOn(repository.pinStore, 'add')
+      .mockImplementation(() => Promise.resolve())
+    const feedPutSpy = jest.spyOn(repository.feedAggregationStore, 'put')
+    // To mark it pin-worthy
+    await repository.pinStore.stateStore.save(runningState.id, streamState)
+    const updateStateIfPinned = (repository as any)._updateStateIfPinned.bind(repository)
+    await updateStateIfPinned(runningState)
+    expect(pinAddSpy).toBeCalledWith(runningState, undefined)
+    expect(feedPutSpy).toBeCalledWith(runningState.id)
+    pinAddSpy.mockRestore()
+    feedPutSpy.mockRestore()
+  })
+})
