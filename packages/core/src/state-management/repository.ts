@@ -343,9 +343,6 @@ export class Repository {
     if (isPinned || shouldIndex) {
       await this._pin_UNSAFE(state$)
       await this.feedAggregationStore.put(state$.id)
-      // const pinStoreAdd = this._pin_UNSAFE(state$)
-      // const feedStorePut = this.feedAggregationStore.put(state$.id)
-      // await Promise.all([pinStoreAdd, feedStorePut])
     }
     await this._indexStreamIfNeeded(state$)
   }
