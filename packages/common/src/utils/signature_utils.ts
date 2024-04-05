@@ -7,8 +7,11 @@ import { getStacksVerifier } from '@didtools/pkh-stacks'
 import { getTezosVerifier } from '@didtools/pkh-tezos'
 import { CeramicSigner } from '../ceramic-signer.js'
 import { StreamUtils } from './stream-utils.js'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS = 24 * 60 * 60
+
+export const CACAO_EXPIRED = 'cacao_expired'
 
 // Register supported CACAO Verifiers
 const verifiersCACAO = {
@@ -52,6 +55,10 @@ export class SignatureUtils {
       })
     } catch (e: any) {
       const original = e.message ? e.message : String(e)
+      if (original.includes('CACAO has expired')) {
+        // TODO: string matching error messages is brittle. Can we use a stable error code instead?
+        Metrics.count(CACAO_EXPIRED, 1, { source: 'new_commit' })
+      }
       throw new Error(
         `Can not verify signature for commit ${commitData.cid} to stream ${streamId} which has controller DID ${controller}: ${original}`
       )
@@ -101,6 +108,7 @@ export class SignatureUtils {
       }
       const expirationTime = logEntry.expirationTime + DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS
       if (expirationTime < timestamp) {
+        Metrics.count(CACAO_EXPIRED, 1, { source: 'existing_state' })
         throw new Error(
           `CACAO expired: Commit ${logEntry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
             state
