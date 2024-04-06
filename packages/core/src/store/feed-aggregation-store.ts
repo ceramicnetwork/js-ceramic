@@ -1,6 +1,6 @@
 import { ObjectStore } from './object-store.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { IKVFactory, StoreSearchParams } from './ikv-store.js'
+import type { IKVFactory, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
 
 function serializeStreamID(streamID: StreamID): string {
@@ -38,6 +38,10 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
 
   findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
     return this.store.findKeys(params)
+  }
+
+  find(params?: Partial<StoreSearchParams>): Promise<Array<IKVStoreFindResult>> {
+    return this.store.find(params)
   }
 
   async deleteStale(lessThan: number): Promise<number> {

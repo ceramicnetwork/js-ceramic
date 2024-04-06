@@ -5,12 +5,23 @@ import type {
   StoreSearchParams,
 } from './ikv-store.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { Level } from 'level'
+import { Level, type IteratorOptions } from 'level'
 import all from 'it-all'
 import map from 'it-map'
+import type { DeepNonNullable } from 'ts-essentials'
 
 class NotFoundError extends Error {
   readonly notFound = true
+}
+
+function definiteSearchParams<T extends IteratorOptions<string, string>>(
+  obj: T
+): DeepNonNullable<T> {
+  return Object.keys(obj).reduce(
+    (acc, key) =>
+      obj[key] === undefined || obj[key] === null ? { ...acc } : { ...acc, [key]: obj[key] },
+    {}
+  ) as DeepNonNullable<T>
 }
 
 export class LevelKVStore implements IKVStore {
@@ -73,11 +84,11 @@ export class LevelKVStore implements IKVStore {
   }
 
   async find(params?: Partial<StoreSearchParams>): Promise<Array<IKVStoreFindResult>> {
-    const searchParams = {
+    const searchParams = definiteSearchParams({
       keys: true,
       values: true,
       ...params,
-    }
+    })
     return all(
       map(this.level.iterator(searchParams), (r) => {
         return {
@@ -89,11 +100,11 @@ export class LevelKVStore implements IKVStore {
   }
 
   async findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
-    const searchParams = {
+    const searchParams = definiteSearchParams({
       keys: true,
       values: false,
       ...params,
-    }
+    })
 
     return all(
       map(this.level.iterator(searchParams), (r) => {
