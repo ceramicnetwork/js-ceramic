@@ -2,6 +2,40 @@ import type { Observable } from 'rxjs'
 import type { Response } from 'express'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 
+export class SSESink<T> implements UnderlyingSink<T> {
+  constructor(
+    private readonly res: Response,
+    private readonly stringify: (value: T) => string = JSON.stringify
+  ) {
+    this.close = this.close.bind(this)
+  }
+
+  start(controller: WritableStreamDefaultController) {
+    this.res.writeHead(200, {
+      Connection: 'keep-alive',
+      'Cache-Control': 'no-cache',
+      'Content-Type': 'text/event-stream',
+    })
+    this.res.once('error', controller.error.bind(controller))
+    this.res.once('close', this.close)
+    this.res.once('abort', this.close)
+  }
+
+  async write(element: T) {
+    const canWriteMore = this.res.write(`data: ${this.stringify(element)}\n\n`)
+    if (!canWriteMore) {
+      // Wait till data are drained
+      await new Promise((resolve) => {
+        this.res.once('drain', resolve)
+      })
+    }
+  }
+
+  close() {
+    this.res.end()
+  }
+}
+
 /**
  * Server-Sent Events (SSE) Feed.
  */
