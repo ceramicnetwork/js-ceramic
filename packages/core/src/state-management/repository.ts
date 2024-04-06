@@ -37,7 +37,7 @@ import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CAR } from 'cartonne'
-import { FeedDocument, type Feed } from '../feed.js'
+import { FeedDocument, Feed } from '../feed.js'
 import { doNotWait } from '../ancillary/do-not-wait.js'
 import { IReconApi, ReconEventFeedResponse } from '../recon.js'
 import { Utils } from '../utils.js'
@@ -122,7 +122,7 @@ export class Repository {
    */
   readonly inmemory: StateCache<RunningState>
 
-  private readonly feed: Feed
+  readonly feed: Feed
   readonly feedAggregationStore: FeedAggregationStore
 
   private reconEventFeedSubscription: Subscription | undefined
@@ -146,18 +146,16 @@ export class Repository {
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
-   * @param feed - Feed to push StreamStates to.
    */
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
-    feed: Feed,
     private readonly recon: IReconApi,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
-    this.feed = feed
+    this.feed = new Feed()
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)

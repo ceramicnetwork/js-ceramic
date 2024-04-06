@@ -6,7 +6,6 @@ import { Repository, RepositoryDependencies } from '../state-management/reposito
 import { PinStore } from '../store/pin-store.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
-import { Feed } from '../feed.js'
 import { IReconApi } from '../recon.js'
 import { LevelKVFactory } from '../store/level-kv-factory.js'
 
@@ -17,9 +16,8 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   const factory = new LevelKVFactory(levelPath, 'test', logger)
   const stateStore = new StreamStateStore()
   await stateStore.open(factory)
-  const feed = new Feed()
   const fauxReconApi = {} as IReconApi
-  const repository = new Repository(100, 100, feed, fauxReconApi, logger)
+  const repository = new Repository(100, 100, fauxReconApi, logger)
   const pinStore = {
     stateStore,
   } as unknown as PinStore
