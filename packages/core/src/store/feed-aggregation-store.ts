@@ -79,3 +79,22 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     await super.close()
   }
 }
+
+export class StreamIDFeedSource implements UnderlyingSource<StreamID> {
+  #gt: string | undefined
+
+  constructor(
+    private readonly store: FeedAggregationStore,
+    startWith: string | undefined = undefined
+  ) {
+    this.#gt = startWith
+  }
+
+  async pull(controller: ReadableStreamController<StreamID>) {
+    const k = await this.store.find({ limit: controller.desiredSize, gt: this.#gt })
+    if (k.length === 0) return // Nothing to do here
+    for (const item of k) {
+      controller.enqueue(item.value)
+    }
+  }
+}

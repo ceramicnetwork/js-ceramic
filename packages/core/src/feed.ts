@@ -1,6 +1,6 @@
 import { EventType, StreamMetadata, StreamState } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
-import { CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '@ceramicnetwork/common'
 
 export class FeedDocument {
@@ -35,5 +35,19 @@ export interface PublicFeed {
 export class Feed implements PublicFeed {
   readonly aggregation = {
     documents: new DocumentsSubject(),
+  }
+}
+
+export class StreamLoadTransformer implements Transformer<StreamID, FeedDocument> {
+  constructor(
+    private readonly fromMemoryOrStore: (streamId: StreamID) => Promise<StreamState | undefined>
+  ) {}
+
+  async transform(streamId: StreamID, controller: TransformStreamDefaultController<FeedDocument>) {
+    const found = await this.fromMemoryOrStore(streamId)
+    if (found) {
+      const feedDocument = FeedDocument.fromStreamState(found)
+      controller.enqueue(feedDocument)
+    }
   }
 }
