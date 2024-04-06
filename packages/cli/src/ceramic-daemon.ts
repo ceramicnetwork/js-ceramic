@@ -8,7 +8,6 @@ import {
 import {
   DEFAULT_PUBLISH_INTERVAL_MS,
   ModelMetrics,
-  Counter,
   Observable,
 } from '@ceramicnetwork/model-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
@@ -48,7 +47,7 @@ import { LRUCache } from 'least-recent'
 import { S3KVFactory } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
-import { SseFeed } from './daemon/sse-feed.js'
+import { SSESink } from './daemon/sse-feed.js'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
@@ -423,7 +422,7 @@ export class CeramicDaemon {
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
     adminShutdownRouter.postAsync('/', this.shutdownServer.bind(this))
-    feedRouter.get('/aggregation/documents', this.documentsFeed.bind(this))
+    feedRouter.getAsync('/aggregation/documents', this.documentsFeed.bind(this))
 
     if (!readOnly) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -884,14 +883,10 @@ export class CeramicDaemon {
     })
   }
 
-  documentsFeed(_: Request, res: Response): void {
-    const source = this.ceramic.feed.aggregation.documents
-    const feed = new SseFeed(
-      this.diagnosticsLogger,
-      source,
-      JsonAsString.pipe(AggregationDocument).encode
-    )
-    feed.send(res)
+  async documentsFeed(_: Request, res: Response): Promise<void> {
+    const readableStream = this.ceramic.feed.aggregation.documentsA()
+    const sink = new SSESink(res, JsonAsString.pipe(AggregationDocument).encode)
+    await readableStream.pipeTo(new WritableStream(sink))
   }
 
   async shutdownServer(req: Request, res: Response): Promise<void> {

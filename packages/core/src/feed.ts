@@ -30,6 +30,7 @@ class DocumentsSubject extends Subject<FeedDocument> {}
 export interface PublicFeed {
   aggregation: {
     documents: Observable<FeedDocument>
+    documentsA: (gt?: string) => ReadableStream<FeedDocument>
   }
 }
 

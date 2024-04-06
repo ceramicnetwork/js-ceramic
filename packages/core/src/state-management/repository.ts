@@ -27,7 +27,6 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVFactory } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { ModelMetrics, Observable as ObservableMetric } from '@ceramicnetwork/model-metrics'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
@@ -140,12 +139,11 @@ export class Repository {
    */
   #syncedPinnedStreams: Set<string> = new Set()
 
-  #numPendingAnchorSubscriptions = 0
-
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
+   * @param recon - Recon API
    */
   constructor(
     cacheLimit: number,
@@ -205,17 +203,6 @@ export class Repository {
 
   private get streamUpdater(): StreamUpdater {
     return this.#deps.streamUpdater
-  }
-
-  /**
-   * Returns the number of streams with writes that are waiting to be anchored by the CAS.
-   */
-  get numPendingAnchors(): number {
-    ModelMetrics.observe(
-      ObservableMetric.CURRENT_PENDING_REQUESTS,
-      this.#numPendingAnchorSubscriptions
-    )
-    return this.#numPendingAnchorSubscriptions
   }
 
   private get anchorService(): AnchorService {
