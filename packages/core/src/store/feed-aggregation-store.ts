@@ -83,11 +83,8 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
 export class StreamIDFeedSource implements UnderlyingSource<StreamID> {
   #gt: string | undefined
 
-  constructor(
-    private readonly store: FeedAggregationStore,
-    startWith: string | undefined = undefined
-  ) {
-    this.#gt = startWith
+  constructor(private readonly store: FeedAggregationStore, gt: string | undefined = undefined) {
+    this.#gt = gt
   }
 
   async pull(controller: ReadableStreamController<StreamID>) {
