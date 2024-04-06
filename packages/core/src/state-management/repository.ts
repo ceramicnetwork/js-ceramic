@@ -155,7 +155,6 @@ export class Repository {
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
-    this.feed = new Feed()
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -164,7 +163,9 @@ export class Repository {
       state$.complete()
     })
     this.updates$ = this.updates$.bind(this)
+    this.streamState = this.streamState.bind(this)
     this.feedAggregationStore = new FeedAggregationStore()
+    this.feed = new Feed(this.feedAggregationStore, this.streamState)
   }
 
   /**

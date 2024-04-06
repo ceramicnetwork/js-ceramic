@@ -34,6 +34,7 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     this.cleanupInterval = cleanupInterval
     this.tasks = new TaskQueue()
     this.#interval = undefined
+    this.find = this.find.bind(this)
   }
 
   findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
@@ -73,6 +74,11 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     }
   }
 
+  streamIDs(gt?: string): ReadableStream<StreamID> {
+    const source = new StreamIDFeedSource(this.find, gt)
+    return new ReadableStream()
+  }
+
   async close(): Promise<void> {
     clearInterval(this.#interval)
     await this.tasks.onIdle()
@@ -80,18 +86,21 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
   }
 }
 
-export class StreamIDFeedSource implements UnderlyingSource<StreamID> {
+class StreamIDFeedSource implements UnderlyingSource<StreamID> {
   #gt: string | undefined
 
-  constructor(private readonly store: FeedAggregationStore, gt: string | undefined = undefined) {
+  constructor(
+    private readonly find: FeedAggregationStore['find'],
+    gt: string | undefined = undefined
+  ) {
     this.#gt = gt
   }
 
   async pull(controller: ReadableStreamController<StreamID>) {
-    const k = await this.store.find({ limit: controller.desiredSize, gt: this.#gt })
-    if (k.length === 0) return // Nothing to do here
-    for (const item of k) {
-      controller.enqueue(item.value)
+    const entries = await this.find({ limit: controller.desiredSize, gt: this.#gt })
+    if (entries.length === 0) return // Nothing to do here
+    for (const entry of entries) {
+      controller.enqueue(entry.value)
     }
   }
 }
