@@ -5,6 +5,8 @@ import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
 import { getTezosVerifier } from '@didtools/pkh-tezos'
+import { WebauthnAuth } from '@didtools/key-webauthn'
+
 import { CeramicSigner } from '../ceramic-signer.js'
 import { StreamUtils } from './stream-utils.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
@@ -19,6 +21,8 @@ const verifiersCACAO = {
   ...getSolanaVerifier(),
   ...getStacksVerifier(),
   ...getTezosVerifier(),
+  ...WebauthnAuth.getVerifier(),
+  // Add Webauthn verifier
 }
 
 /**
