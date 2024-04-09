@@ -22,7 +22,6 @@ const verifiersCACAO = {
   ...getStacksVerifier(),
   ...getTezosVerifier(),
   ...WebauthnAuth.getVerifier(),
-  // Add Webauthn verifier
 }
 
 /**
