@@ -8,6 +8,7 @@ import { getTezosVerifier } from '@didtools/pkh-tezos'
 import { CeramicSigner } from '../ceramic-signer.js'
 import { StreamUtils } from './stream-utils.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { WebauthnAuth } from '@didtools/key-webauthn'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS = 24 * 60 * 60
 
@@ -19,6 +20,7 @@ const verifiersCACAO = {
   ...getSolanaVerifier(),
   ...getStacksVerifier(),
   ...getTezosVerifier(),
+  ...WebauthnAuth.getVerifier(),
 }
 
 /**
