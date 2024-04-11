@@ -42,7 +42,7 @@ const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
-const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
+const IPFS_CACHE_SIZE = process.env.CERAMIC_AUDIT_EVENT_PERSISTENCE == 'true' ? 1 : 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 const PUBSUB_CACHE_SIZE = 500
 
