@@ -76,7 +76,7 @@ describeIfVPrime('Tests that sync streams with many updates', () => {
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
     // Wait for all updates to the stream to be delivered
-    for (let i = 0; i < doc.state.log.length; i++) {
+    for (let i = doc.state.log.length - 1; i >= 0; i--) {
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.state.log[i].cid)
     }
 
