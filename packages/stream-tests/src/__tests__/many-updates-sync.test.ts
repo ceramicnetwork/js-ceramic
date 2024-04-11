@@ -76,7 +76,9 @@ describeIfVPrime('Tests that sync streams with many updates', () => {
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
     // Wait for all updates to the stream to be delivered
-    await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+    for (let i = 0; i < doc.state.log.length; i++) {
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.state.log[i].cid)
+    }
 
     // Assert that the states are equal between the two nodes
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
