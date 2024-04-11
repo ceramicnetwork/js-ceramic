@@ -99,7 +99,7 @@ const MOCK_IPFS_SERVICE: IpfsService = {
 
   storeRecord: jest.fn((record: Record<string, unknown>) => Promise.resolve(TestUtils.randomCID())),
 
-  storeCommit: jest.fn((data: any, streamId?: StreamID) => Promise.resolve(TestUtils.randomCID())),
+  storeEvent: jest.fn((data: any, streamId: StreamID) => Promise.resolve(TestUtils.randomCID())),
 
   retrieveCommit: jest.fn((cid: CID | string, streamId: StreamID) => mockRetreiveFromIpfs(cid)),
 }
@@ -144,12 +144,15 @@ describe('Rebuild Anchor Commits Worker', () => {
 
     expect(MOCK_IPFS_SERVICE.retrieveCommit).toBeCalledTimes(8)
 
-    expect(MOCK_IPFS_SERVICE.storeCommit).toBeCalledTimes(1)
-    expect(MOCK_IPFS_SERVICE.storeCommit).toHaveBeenCalledWith({
-      id: StreamID.fromString(STREAM_USING_MODEL1).cid,
-      prev: COMMIT_USING_MODEL1,
-      proof: proofCid,
-      path: '0/0',
-    })
+    expect(MOCK_IPFS_SERVICE.storeEvent).toBeCalledTimes(1)
+    expect(MOCK_IPFS_SERVICE.storeEvent).toHaveBeenCalledWith(
+      {
+        id: StreamID.fromString(STREAM_USING_MODEL1).cid,
+        prev: COMMIT_USING_MODEL1,
+        proof: proofCid,
+        path: '0/0',
+      },
+      StreamID.fromString(STREAM_USING_MODEL1)
+    )
   })
 })

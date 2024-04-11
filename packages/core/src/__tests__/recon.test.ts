@@ -1,14 +1,21 @@
-import { ReconApi, ReconApiConfig } from '../recon.js'
-import { EventID, StreamID } from '@ceramicnetwork/streamid'
+import { ReconApi, ReconEvent } from '../recon.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { FetchRequest, LoggerProvider } from '@ceramicnetwork/common'
 import { jest } from '@jest/globals'
-import { type CAR } from 'cartonne'
+import { CARFactory, type CAR } from 'cartonne'
 import { toArray, take, lastValueFrom, firstValueFrom, race, timer } from 'rxjs'
 
 const RECON_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
 const MODEL = StreamID.fromString('kjzl6cwe1jw147ww5d8pswh1hjh686mut8v1br10dar8l9a3n1t8l15l0vrzn88')
-const FAKE_EVENT = { id: EventID.createRandom('inmemory', 0), data: {} as CAR }
+
+const carFactory = new CARFactory()
+const createRandomCar = (): CAR => {
+  const carFile = carFactory.build()
+  carFile.put(Math.random().toString(), { isRoot: true })
+  return carFile
+}
+const FAKE_EVENT: ReconEvent = { data: createRandomCar() }
 
 describe('ReconApi', () => {
   let mockSendRequest: jest.Mock<FetchRequest>
@@ -19,7 +26,7 @@ describe('ReconApi', () => {
       url = url.toString()
       if (url.includes('/ceramic/feed/events')) {
         return Promise.resolve({
-          events: [{ id: EventID.createRandom('inmemory', 0).toString(), data: undefined }],
+          events: [{ data: createRandomCar().bytes }],
           resumeToken: 'test',
         })
       }
@@ -31,6 +38,7 @@ describe('ReconApi', () => {
         enabled: true,
         url: RECON_URL,
         feedEnabled: true,
+        codecs: [],
       },
       LOGGER,
       mockSendRequest
@@ -47,7 +55,7 @@ describe('ReconApi', () => {
     test('should not init if recon is disabled', async () => {
       const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
-        { enabled: false, url: RECON_URL, feedEnabled: true },
+        { enabled: false, url: RECON_URL, feedEnabled: true, codecs: [] },
         LOGGER,
         mockSendRequest
       )
@@ -65,7 +73,7 @@ describe('ReconApi', () => {
     test('should not start polling if feed is disabled', async () => {
       const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
-        { enabled: true, url: RECON_URL, feedEnabled: false },
+        { enabled: true, url: RECON_URL, feedEnabled: false, codecs: [] },
         LOGGER,
         mockSendRequest
       )
@@ -78,7 +86,7 @@ describe('ReconApi', () => {
   describe('registerInterest', () => {
     test('should throw if recon is disabled', async () => {
       const reconApi = new ReconApi(
-        { enabled: false, url: RECON_URL, feedEnabled: true },
+        { enabled: false, url: RECON_URL, feedEnabled: true, codecs: [] },
         LOGGER,
         mockSendRequest
       )
@@ -100,7 +108,7 @@ describe('ReconApi', () => {
     test('should do nothing if recon is disabled', async () => {
       const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
-        { enabled: false, url: RECON_URL, feedEnabled: true },
+        { enabled: false, url: RECON_URL, feedEnabled: true, codecs: [] },
         LOGGER,
         mockSendRequest
       )
@@ -113,7 +121,7 @@ describe('ReconApi', () => {
 
       expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/events`, {
         method: 'POST',
-        body: { id: FAKE_EVENT.id.toString(), data: FAKE_EVENT.data.toString() },
+        body: { data: FAKE_EVENT.data.toString() },
       })
     })
   })
@@ -124,7 +132,7 @@ describe('ReconApi', () => {
       mockSendRequest.mockImplementation(async () => {
         resumeToken = resumeToken + 1
         return {
-          events: [{ id: EventID.createRandom('inmemory', 0).toString(), data: undefined }],
+          events: [{ data: createRandomCar().bytes }],
           resumeToken: resumeToken.toString(),
         }
       })
@@ -144,7 +152,7 @@ describe('ReconApi', () => {
         if (resumeToken == 102) throw Error('transient error')
 
         return {
-          events: [{ id: EventID.createRandom('inmemory', 0).toString(), data: undefined }],
+          events: [{ data: createRandomCar().bytes }],
           resumeToken: resumeToken.toString(),
         }
       })

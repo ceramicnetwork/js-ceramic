@@ -28,7 +28,7 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
 
   return new Dispatcher(
     ipfs,
-    { pubsubTopic, id: 0, name: Networks.INMEMORY },
+    pubsubTopic,
     repository,
     logger,
     loggerProvider.makeServiceLogger('pubsub'),

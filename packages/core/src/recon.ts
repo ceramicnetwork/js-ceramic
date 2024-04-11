@@ -1,4 +1,4 @@
-import { type CAR } from 'cartonne'
+import { type CAR, CARFactory } from 'cartonne'
 import {
   Subject,
   defer,
@@ -10,16 +10,15 @@ import {
   Observable,
   Subscription,
   filter,
-  tap,
   takeUntil,
   Subscriber,
   TeardownLogic,
-  ReplaySubject,
 } from 'rxjs'
 
 import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
-import { EventID, StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
+import type { BlockCodec } from 'multiformats/codecs/interface'
 
 const DEFAULT_POLL_INTERVAL = 1_000 // 1 seconds
 // Note this limit is arbitrary. This limit represents the upper bound on being able to recover after being down
@@ -35,13 +34,14 @@ export type ReconApiConfig = {
   url: string | Promise<string>
   // Whether the event feed is enabled
   feedEnabled: boolean
+  // codecs needed to parse CAR data
+  codecs: Array<BlockCodec<any, any>>
 }
 
 /**
  * Recon Event
  */
 export interface ReconEvent {
-  id: EventID
   data: CAR
 }
 
@@ -71,6 +71,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
   #url: string
   #initialized = false
 
+  readonly #carFactory: CARFactory
   readonly #pollInterval: number
   #eventsSubscription: Subscription
   readonly #feed$: Subject<ReconEventFeedResponse> = new Subject()
@@ -90,6 +91,11 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     this.#logger = logger
     this.#sendRequest = sendRequest
     this.#pollInterval = pollInterval
+    this.#carFactory = new CARFactory()
+
+    for (const codec of config.codecs) {
+      this.#carFactory.codecs.add(codec)
+    }
   }
 
   /**
@@ -144,12 +150,12 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
    * @returns
    */
   async put(event: ReconEvent, opts: AbortOptions = {}): Promise<void> {
+    const cid = event.data.roots[0]
     if (!this.enabled) {
-      this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
+      this.#logger.imp(`Recon: disabled, not putting event with cid ${cid.toString()}`)
       return
     }
     const body = {
-      id: event.id.toString(),
       data: event.data.toString(),
     }
     try {
@@ -158,9 +164,9 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
         body,
         signal: opts.signal,
       })
-      this.#logger.debug(`Recon: put event ${event.id}`)
+      this.#logger.debug(`Recon: put event with cid ${cid.toString()}`)
     } catch (err) {
-      this.#logger.err(`Recon: failed to add event ${event.id} with error ${err}`)
+      this.#logger.err(`Recon: failed to add event with cid ${cid.toString()} with error ${err}`)
       throw err
     }
   }
@@ -207,10 +213,9 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
                 }
               )
               return {
-                events: response.events.map(({ id, _data }) => {
+                events: response.events.map(({ data }) => {
                   return {
-                    id: EventID.fromString(id),
-                    data: undefined,
+                    data: this.#carFactory.fromBytes(data),
                   }
                 }),
                 cursor: response.resumeToken,

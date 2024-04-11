@@ -553,19 +553,20 @@ export class Repository {
     const { events, cursor } = response
 
     for (const event of events) {
-      const { id: eventId } = event
+      const { data } = event
+      const cid = data.roots[0]
 
       try {
-        const commitData = await Utils.getCommitData(this.dispatcher, eventId.event)
+        const commitData = await Utils.getCommitData(this.dispatcher, cid)
 
-        const genesisCid = commitData.commit.id ? commitData.commit.id : eventId.event
+        const genesisCid = commitData.commit.id ? commitData.commit.id : cid
         const genesisCommitData = commitData.commit.header
           ? commitData
           : await Utils.getCommitData(this.dispatcher, genesisCid)
 
         if (!genesisCommitData.commit.header.model) {
           throw new Error(
-            `Model not found in genesis commit header ${genesisCid.toString()} for eventId ${eventId.toString()} for cid ${eventId.event.toString()}`
+            `Model not found in genesis commit header ${genesisCid.toString()} for event for cid ${cid.toString()}`
           )
         }
 
@@ -575,9 +576,9 @@ export class Repository {
             ? Model.STREAM_TYPE_ID
             : ModelInstanceDocument.STREAM_TYPE_ID
 
-        await this.handleUpdateFromNetwork(new StreamID(type, genesisCid), eventId.event, model)
+        await this.handleUpdateFromNetwork(new StreamID(type, genesisCid), cid, model)
       } catch (e) {
-        this.logger.err(`Error handling recon event with eventID ${eventId}: ${e}`)
+        this.logger.err(`Error handling recon event with event for cid ${cid}: ${e}`)
       }
     }
 
@@ -762,17 +763,7 @@ export class Repository {
     ) {
       try {
         if (witnessCAR) {
-          const anchorCommit = witnessCAR.get(anchorCommitCID)
-          const height = StreamUtils.getCommitHeight(state$.state, anchorCommit)
-
-          await this.dispatcher.storeTimeEvent(
-            witnessCAR,
-            streamId,
-            state$.state.metadata.controllers,
-            height,
-            state$.state.metadata.model
-          )
-
+          await this.dispatcher.importCAR(witnessCAR, streamId)
           this.logger.verbose(`successfully imported CAR file for ${streamId}`)
         }
 
@@ -898,7 +889,7 @@ export class Repository {
     this.anchorService.assertCASAccessible()
 
     // TODO: WS1-1494 validate genesis commit before storing
-    const genesisCid = await this.dispatcher.storeInitEvent(genesis)
+    const genesisCid = await this.dispatcher.storeInitEvent(genesis, type)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.load(streamId, opts)
 
