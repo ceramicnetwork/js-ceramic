@@ -15,7 +15,6 @@ const createRandomCar = (): CAR => {
   carFile.put(Math.random().toString(), { isRoot: true })
   return carFile
 }
-const FAKE_EVENT: ReconEvent = { data: createRandomCar() }
 
 describe('ReconApi', () => {
   let mockSendRequest: jest.Mock<FetchRequest>
@@ -112,16 +111,17 @@ describe('ReconApi', () => {
         LOGGER,
         mockSendRequest
       )
-      await expect(reconApi.put(FAKE_EVENT)).resolves
+      await expect(reconApi.put({ data: createRandomCar() })).resolves
       expect(mockSendRequest).not.toHaveBeenCalled()
     })
 
     test('put should put an event to the Recon API', async () => {
-      await reconApi.put(FAKE_EVENT, {})
+      const fakeEvent = { data: createRandomCar() }
+      await reconApi.put(fakeEvent)
 
       expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/events`, {
         method: 'POST',
-        body: { data: FAKE_EVENT.data.toString() },
+        body: { data: fakeEvent.data.toString() },
       })
     })
   })
