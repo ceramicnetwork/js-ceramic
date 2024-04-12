@@ -382,7 +382,6 @@ describe('Ceramic API', () => {
       const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
-      console.log('AFTER MODEL CREATE CHECK')
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
