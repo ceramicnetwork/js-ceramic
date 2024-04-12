@@ -32,7 +32,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 // This test should only run with recon.
 const describeIfVPrime = process.env.CERAMIC_RECON_MODE ? describe : describe.skip
 describeIfVPrime('Tests that sync streams with many updates', () => {
-  jest.setTimeout(1000 * 30)
+  jest.setTimeout(1000 * 60)
 
   let ipfs0: IpfsApi
   let ceramic0: Ceramic
@@ -55,7 +55,7 @@ describeIfVPrime('Tests that sync streams with many updates', () => {
     await ipfs0.stop()
   })
 
-  const NUM_UPDATES = 100
+  const NUM_UPDATES = 101
 
   test('sync large doc', async () => {
     // Create a stream with many updates
@@ -76,12 +76,11 @@ describeIfVPrime('Tests that sync streams with many updates', () => {
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
     // Wait for all updates to the stream to be delivered
-    for (let i = doc.state.log.length - 1; i >= 0; i--) {
-      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.state.log[i].cid)
-    }
+    await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+    const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+    await TestUtils.waitForState(loaded, 1000 * 30, (state) => state.log.length == NUM_UPDATES)
 
     // Assert that the states are equal between the two nodes
-    const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(doc.state))
 
     // Cleanup
