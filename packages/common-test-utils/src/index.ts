@@ -1,7 +1,7 @@
 import type { CID } from 'multiformats/cid'
 import { BehaviorSubject, Observable, filter, timeout, throwError, firstValueFrom } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { StreamState, Stream } from '@ceramicnetwork/common'
+import type { StreamState, Stream, StreamReader } from '@ceramicnetwork/common'
 import {
   AdminApi,
   AnchorStatus,
@@ -46,6 +46,31 @@ export class CommonTestUtils {
   static async delay(ms: number, signal?: AbortSignal): Promise<void> {
     return BaseTestUtils.delay(ms, signal)
   }
+
+  /**
+   * Waits for the Ceramic node to have the init event for the given StreamID available locally.
+   * More reliable than 'waitForEvent' when being called multiple times in the same test.
+   */
+  static async waitForInitEvent(ceramic: StreamReader, streamId: StreamID, timeoutMs = 1000 * 30) {
+    let now = new Date()
+    const expiration = new Date(now.getTime() + timeoutMs)
+
+    while (now < expiration) {
+      try {
+        await ceramic.loadStream(streamId)
+        return
+      } catch (err) {
+        if (!(err as Error).message.includes('block was not found locally')) {
+          throw err
+        }
+        // block not found error indicates the ceramic node has not yet synced the init event for
+        // this stream via recon
+        now = new Date()
+        await CommonTestUtils.delay(100) // poll every 100ms
+      }
+    }
+  }
+
   /**
    * Given a stream and a predicate that operates on the stream state, continuously waits for
    * changes to the stream until the predicate returns true.
@@ -75,11 +100,9 @@ export class CommonTestUtils {
       onFailure(stream.state)
     } else {
       throw new Error(
-        `Timeout while waiting for desired state to be reached.  Current state: ${JSON.stringify(
-          StreamUtils.serializeState(stream.state),
-          null,
-          2
-        )}`
+        `Timeout while waiting for desired state to be reached on stream ${
+          stream.id
+        }.  Current state: ${JSON.stringify(StreamUtils.serializeState(stream.state), null, 2)}`
       )
     }
   }
@@ -150,6 +173,10 @@ export class CommonTestUtils {
     )
   }
 
+  /**
+   * Waits for the given event CID to show up in the feed of events coming from Recon.
+   * Can miss events if called multiple times.
+   */
   static async waitForEvent(
     reconFeed: Observable<Events>,
     cid: CID,

@@ -32,10 +32,12 @@ const MODEL_DEFINITION: ModelDefinition = {
 // This test should only run with recon.
 const describeIfVPrime = process.env.CERAMIC_RECON_MODE ? describe : describe.skip
 describeIfVPrime('Tests that sync streams with many updates', () => {
-  jest.setTimeout(1000 * 60)
+  jest.setTimeout(1000 * 60 * 5)
 
   let ipfs0: IpfsApi
   let ceramic0: Ceramic
+  let ipfs1: IpfsApi
+  let ceramic1: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
@@ -53,38 +55,49 @@ describeIfVPrime('Tests that sync streams with many updates', () => {
   afterAll(async () => {
     await ceramic0.close()
     await ipfs0.stop()
+
+    await ceramic1?.close()
+    await ipfs1?.stop()
   })
 
-  const NUM_UPDATES = 101
+  const NUM_UPDATES_PER_STREAM = 101
+  const NUM_STREAMS = 101
 
-  test('sync large doc', async () => {
-    // Create a stream with many updates
-    const doc = await ModelInstanceDocument.create(ceramic0, { updates: 0 }, midMetadata, {
-      anchor: false,
-    })
-    for (let i = 1; i < NUM_UPDATES; i++) {
-      await doc.replace({ updates: i }, null, { anchor: false })
+  test('sync large docs', async () => {
+    // Create streams with many updates each
+    const streams = []
+    for (let i = 0; i < NUM_STREAMS; i++) {
+      const doc = await ModelInstanceDocument.create(ceramic0, { updates: 0 }, midMetadata, {
+        anchor: false,
+      })
+      for (let j = 1; j < NUM_UPDATES_PER_STREAM; j++) {
+        await doc.replace({ updates: j }, null, { anchor: false })
+      }
+      streams.push(doc)
     }
 
     // Start a second Ceramic node
-    const ipfs1 = await createIPFS()
-    const ceramic1 = await createCeramic(ipfs1)
+    ipfs1 = await createIPFS()
+    ceramic1 = await createCeramic(ipfs1)
     await swarmConnect(ipfs0, ipfs1)
 
     // Instruct the second node to sync the Model.
     await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
     await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
-    // Wait for all updates to the stream to be delivered
-    await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
-    const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
-    await TestUtils.waitForState(loaded, 1000 * 30, (state) => state.log.length == NUM_UPDATES)
+    // Wait for all updates to the streams to be delivered
+    for (let i = 0; i < NUM_STREAMS; i++) {
+      const doc = streams[i]
+      await TestUtils.waitForInitEvent(ceramic1, doc.id)
+      const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+      await TestUtils.waitForState(
+        loaded,
+        1000 * 30,
+        (state) => state.log.length == NUM_UPDATES_PER_STREAM
+      )
 
-    // Assert that the states are equal between the two nodes
-    expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(doc.state))
-
-    // Cleanup
-    await ceramic1.close()
-    await ipfs1.stop()
+      // Assert that the states are equal between the two nodes
+      expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(doc.state))
+    }
   })
 })
