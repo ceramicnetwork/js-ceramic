@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.6.0...@ceramicnetwork/common@5.7.0-rc.0) (2024-04-15)
+
+
+### Features
+
+* Add metrics for CACAO expirations ([#3198](https://github.com/ceramicnetwork/js-ceramic/issues/3198)) ([69204e0](https://github.com/ceramicnetwork/js-ceramic/commit/69204e0f64ee24e90d26581acac2b31132ece7c4))
+* Added WebAuthN support to SignatureUtils for Passkey support ([#3208](https://github.com/ceramicnetwork/js-ceramic/issues/3208)) ([fdcc5fd](https://github.com/ceramicnetwork/js-ceramic/commit/fdcc5fdc57c6d1e93e479bd26dbcf8c7b8102504)), closes [#3202](https://github.com/ceramicnetwork/js-ceramic/issues/3202)
+
+
+
+
+
 # [5.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.6.0-rc.0...@ceramicnetwork/common@5.6.0) (2024-04-15)
 
 **Note:** Version bump only for package @ceramicnetwork/common
