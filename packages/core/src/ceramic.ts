@@ -25,6 +25,7 @@ import {
   StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { ModelMetrics } from '@ceramicnetwork/model-metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -645,6 +646,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     } catch (err) {
       this._logger.err(`Error applying commit to stream ${streamId.toString()}: ${err}`)
       Metrics.count(ERROR_APPLYING_COMMIT, 1)
+      ModelMetrics.recordError(ERROR_APPLYING_COMMIT)
       throw err
     }
   }
@@ -714,6 +716,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       } catch (err) {
         this._logger.err(`Error loading stream ${streamId.toString()}: ${err}`)
         Metrics.count(ERROR_LOADING_STREAM, 1)
+        ModelMetrics.recordError(ERROR_LOADING_STREAM)
         if (opts.sync != SyncOptions.SYNC_ON_ERROR) {
           throw err
         }
@@ -801,6 +804,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
           )
         }
         Metrics.count(ERROR_LOADING_STREAM, 1)
+        ModelMetrics.recordError(ERROR_LOADING_STREAM)
         return Promise.resolve()
       }
       const streamRef = opts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
