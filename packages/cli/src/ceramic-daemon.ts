@@ -587,6 +587,7 @@ export class CeramicDaemon {
     } catch (err) {
       this.diagnosticsLogger.err(`Error running collection query: ${err}`)
       Metrics.count(ERROR_QUERYING_COLLECTION, 1)
+      ModelMetrics.recordError(ERROR_QUERYING_COLLECTION)
       throw err
     }
   }

@@ -43,6 +43,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/model-metrics": "^1.2.5",
     "@ceramicnetwork/observability": "^1.4.4",
     "@ceramicnetwork/streamid": "^5.0.0",
     "@didtools/cacao": "^3.0.0",
