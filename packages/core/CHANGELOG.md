@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.8.0...@ceramicnetwork/core@5.9.0-rc.0) (2024-04-22)
+
+
+### Features
+
+* Additional metrics on read and write failures ([#3210](https://github.com/ceramicnetwork/js-ceramic/issues/3210)) ([d8f3551](https://github.com/ceramicnetwork/js-ceramic/commit/d8f355132dad06a3ba9f1e3432b341287c4145d0))
+* Record important errors to ModelMetrics ([#3211](https://github.com/ceramicnetwork/js-ceramic/issues/3211)) ([18a397f](https://github.com/ceramicnetwork/js-ceramic/commit/18a397fdd90f355871c15b8d62e2cf8aa038e644))
+
+
+
+
+
 # [5.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.8.0-rc.0...@ceramicnetwork/core@5.8.0) (2024-04-22)
 
 **Note:** Version bump only for package @ceramicnetwork/core
