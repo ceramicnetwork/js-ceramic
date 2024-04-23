@@ -25,7 +25,8 @@ export type IndexingConfig = {
   enableHistoricalSync: boolean
 
   /**
-   * Setting this will increase the max connection pool size
+   * Setting this will adjust the max connection pool size for postgres, default is 10.
+   * Values lower than 1 will be set to 1
    */
   maxConnectionPoolSize?: number
 }
@@ -89,7 +90,10 @@ export function buildIndexing(
     }
     case 'postgres':
     case 'postgresql': {
-      const max = indexingConfig.maxConnectionPoolSize || 10
+      let max = indexingConfig.maxConnectionPoolSize || 10
+      if(max < 1) {
+        max = 1
+      }
       logger.imp(`Initializing PostgreSQL connection with ${max} max connections`)
       const dataSource = knex({
         client: 'pg',
