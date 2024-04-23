@@ -91,7 +91,7 @@ export function buildIndexing(
     case 'postgres':
     case 'postgresql': {
       let max = indexingConfig.maxConnectionPoolSize || 10
-      if(max < 1) {
+      if (max < 1) {
         max = 1
       }
       logger.imp(`Initializing PostgreSQL connection with ${max} max connections`)
