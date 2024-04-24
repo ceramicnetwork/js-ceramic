@@ -53,9 +53,11 @@ describe('Ceramic feed', () => {
       },
     })
     const abortController = new AbortController()
-    const doneStreaming = readable1.pipeTo(writable1, { signal: abortController.signal }).catch(() => {
-      // Ignore, as it is an Abort Signal
-    })
+    const doneStreaming = readable1
+      .pipeTo(writable1, { signal: abortController.signal })
+      .catch(() => {
+        // Ignore, as it is an Abort Signal
+      })
 
     // create model on different node
     const model = await Model.create(ceramic2, MODEL_DEFINITION)
