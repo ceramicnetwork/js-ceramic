@@ -1,5 +1,4 @@
 import { EventType, StreamMetadata, StreamState } from '@ceramicnetwork/common'
-import { Subject, type Observable } from 'rxjs'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '@ceramicnetwork/common'
 import type { FeedAggregationStore } from './store/feed-aggregation-store.js'
@@ -22,21 +21,16 @@ export class FeedDocument {
   }
 }
 
-class DocumentsSubject extends Subject<FeedDocument> {}
-
 /**
  * Read-only version of `Feed`.
  */
 export interface PublicFeed {
   aggregation: {
-    documents: Observable<FeedDocument>
-    documentsA: (gt?: string) => ReadableStream<FeedDocument>
+    documents: (gt?: string) => ReadableStream<FeedDocument>
   }
 }
 
 export class Feed implements PublicFeed {
-  readonly documentsSubject = new DocumentsSubject()
-
   constructor(
     private readonly feedStore: FeedAggregationStore,
     private readonly fromMemoryOrStore: (streamId: StreamID) => Promise<StreamState | undefined>
@@ -44,14 +38,11 @@ export class Feed implements PublicFeed {
 
   get aggregation() {
     return {
-      documents: this.documentsSubject,
-      documentsA: (gt?: string) => {
-        return this.documentsA(gt)
-      },
+      documents: this.documents.bind(this),
     }
   }
 
-  documentsA(gt?: string): ReadableStream<FeedDocument> {
+  documents(gt?: string): ReadableStream<FeedDocument> {
     const transformer = new StreamLoadTransformer(this.fromMemoryOrStore)
     return this.feedStore.streamIDs(gt).pipeThrough(new TransformStream(transformer))
   }

@@ -892,7 +892,7 @@ export class CeramicDaemon {
   }
 
   async documentsFeed(_: Request, res: Response): Promise<void> {
-    const readable = this.ceramic.feed.aggregation.documentsA()
+    const readable = this.ceramic.feed.aggregation.documents()
     const sink = new SSESink(res, JsonAsString.pipe(AggregationDocument).encode)
     await readable.pipeTo(new WritableStream(sink)).catch((error) => {
       if (error instanceof ExpectedCloseError) {

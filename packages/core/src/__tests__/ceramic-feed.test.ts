@@ -46,7 +46,7 @@ describe('Ceramic feed', () => {
     }
     const emissions: FeedDocument[] = []
 
-    const readable1 = ceramic1.feed.aggregation.documentsA()
+    const readable1 = ceramic1.feed.aggregation.documents()
     const writable1 = new WritableStream({
       write(chunk) {
         emissions.push(chunk)
@@ -89,7 +89,7 @@ describe('Ceramic feed', () => {
     const emissions: FeedDocument[] = []
 
     const abortController = new AbortController()
-    const readable = ceramic2.feed.aggregation.documentsA()
+    const readable = ceramic2.feed.aggregation.documents()
     const writable = new WritableStream({
       write(chunk) {
         emissions.push(chunk)
