@@ -1,15 +1,13 @@
 import type { Cacao } from '@didtools/cacao'
-import type { CommitData, StreamState } from '../stream.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
 import { getTezosVerifier } from '@didtools/pkh-tezos'
 import { WebauthnAuth } from '@didtools/key-webauthn'
-import { CeramicSigner } from '../ceramic-signer.js'
-import { StreamUtils } from './stream-utils.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { ModelMetrics } from '@ceramicnetwork/model-metrics'
+import { CeramicSigner, CommitData, StreamState, StreamUtils } from '@ceramicnetwork/common'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS = 24 * 60 * 60
 

@@ -10,7 +10,6 @@ import {
   CommitData,
   EventType,
   SignatureStatus,
-  SignatureUtils,
   StreamConstructor,
   StreamHandler,
   StreamReader,
@@ -22,7 +21,7 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { Model, ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
-import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
+import { applyAnchorCommit, SignatureUtils } from '@ceramicnetwork/stream-handler-common'
 import { toString } from 'uint8arrays'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package

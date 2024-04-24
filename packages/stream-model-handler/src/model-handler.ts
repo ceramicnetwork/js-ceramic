@@ -4,7 +4,6 @@ import {
   CommitData,
   EventType,
   SignatureStatus,
-  SignatureUtils,
   StreamConstructor,
   StreamHandler,
   StreamReaderWriter,
@@ -14,7 +13,7 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { ViewsValidation } from './views-utils.js'
-import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
+import { applyAnchorCommit, SignatureUtils } from '@ceramicnetwork/stream-handler-common'
 import { validateInterface, validateImplementedInterfaces } from './interfaces-utils.js'
 import { validateSetFields } from './account-relations-utils.js'
 
