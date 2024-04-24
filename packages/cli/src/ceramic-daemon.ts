@@ -47,7 +47,7 @@ import { LRUCache } from 'least-recent'
 import { S3KVFactory } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
-import { SSESink } from './daemon/sse-feed.js'
+import { ExpectedCloseError, SSESink } from './daemon/sse-feed.js'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
@@ -884,9 +884,16 @@ export class CeramicDaemon {
   }
 
   async documentsFeed(_: Request, res: Response): Promise<void> {
-    const readableStream = this.ceramic.feed.aggregation.documentsA()
+    const readable = this.ceramic.feed.aggregation.documentsA()
     const sink = new SSESink(res, JsonAsString.pipe(AggregationDocument).encode)
-    await readableStream.pipeTo(new WritableStream(sink))
+    await readable.pipeTo(new WritableStream(sink)).catch((error) => {
+      if (error instanceof ExpectedCloseError) {
+        // Do nothing, as it is an _expected_ situation
+      } else {
+        this.diagnosticsLogger.err(error)
+        throw error
+      }
+    })
   }
 
   async shutdownServer(req: Request, res: Response): Promise<void> {

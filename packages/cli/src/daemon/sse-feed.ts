@@ -2,13 +2,15 @@ import type { Observable } from 'rxjs'
 import type { Response } from 'express'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 
+// Not an error really.
+// A way to tell that a stream is over.
+export class ExpectedCloseError extends Error {}
+
 export class SSESink<T> implements UnderlyingSink<T> {
   constructor(
     private readonly res: Response,
     private readonly stringify: (value: T) => string = JSON.stringify
-  ) {
-    this.close = this.close.bind(this)
-  }
+  ) {}
 
   start(controller: WritableStreamDefaultController) {
     this.res.writeHead(200, {
@@ -17,8 +19,14 @@ export class SSESink<T> implements UnderlyingSink<T> {
       'Content-Type': 'text/event-stream',
     })
     this.res.once('error', controller.error.bind(controller))
-    this.res.once('close', this.close)
-    this.res.once('abort', this.close)
+    this.res.once('close', () => {
+      this.close()
+      controller.error(new ExpectedCloseError())
+    })
+    this.res.once('abort', () => {
+      this.abort()
+      controller.error(new ExpectedCloseError())
+    })
   }
 
   async write(element: T) {
@@ -29,6 +37,10 @@ export class SSESink<T> implements UnderlyingSink<T> {
         this.res.once('drain', resolve)
       })
     }
+  }
+
+  abort() {
+    this.res.end()
   }
 
   close() {

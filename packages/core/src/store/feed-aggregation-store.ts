@@ -2,6 +2,7 @@ import { ObjectStore } from './object-store.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { IKVFactory, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
+import { Observable, firstValueFrom, Subject } from 'rxjs'
 
 function serializeStreamID(streamID: StreamID): string {
   return streamID.toString()
@@ -25,6 +26,8 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
   readonly tasks: TaskQueue
   #interval: NodeJS.Timeout | undefined
 
+  private readonly onWrite: Subject<void>
+
   constructor(
     staleDuration: number = DEFAULT_STALE_DURATION,
     cleanupInterval: number | null = DEFAULT_CLEANUP_INTERVAL
@@ -35,6 +38,7 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     this.tasks = new TaskQueue()
     this.#interval = undefined
     this.find = this.find.bind(this)
+    this.onWrite = new Subject()
   }
 
   findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
@@ -57,8 +61,9 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     return keys.length
   }
 
-  put(streamId: StreamID, timestamp: number = Date.now()): Promise<void> {
-    return this.save(timestamp, streamId)
+  async put(streamId: StreamID, timestamp: number = Date.now()): Promise<void> {
+    await this.save(timestamp, streamId)
+    this.onWrite.next()
   }
 
   async open(factory: Pick<IKVFactory, 'open'>): Promise<void> {
@@ -75,8 +80,8 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
   }
 
   streamIDs(gt?: string): ReadableStream<StreamID> {
-    const source = new StreamIDFeedSource(this.find, gt)
-    return new ReadableStream()
+    const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), gt)
+    return new ReadableStream(source)
   }
 
   async close(): Promise<void> {
@@ -87,20 +92,25 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
 }
 
 class StreamIDFeedSource implements UnderlyingSource<StreamID> {
-  #gt: string | undefined
+  private gt: string | undefined
 
   constructor(
     private readonly find: FeedAggregationStore['find'],
+    private readonly onWrite: Observable<void>,
     gt: string | undefined = undefined
   ) {
-    this.#gt = gt
+    this.gt = gt
   }
 
-  async pull(controller: ReadableStreamController<StreamID>) {
-    const entries = await this.find({ limit: controller.desiredSize, gt: this.#gt })
-    if (entries.length === 0) return // Nothing to do here
+  async pull(controller: ReadableStreamController<StreamID | undefined>) {
+    const entries = await this.find({ limit: controller.desiredSize, gt: this.gt })
+    if (entries.length === 0) {
+      await firstValueFrom(this.onWrite)
+      return this.pull(controller)
+    }
     for (const entry of entries) {
       controller.enqueue(entry.value)
     }
+    this.gt = entries[entries.length - 1].key
   }
 }
