@@ -20,12 +20,10 @@ const DEFAULT_CLEANUP_INTERVAL = 600_000 // 10 minutes in ms
  */
 export class FeedAggregationStore extends ObjectStore<number, StreamID> {
   protected useCaseName = 'feed-aggregation'
-
   readonly staleDuration: number
   readonly cleanupInterval: number | null
   readonly tasks: TaskQueue
   #interval: NodeJS.Timeout | undefined
-
   private readonly onWrite: Subject<void>
 
   constructor(
