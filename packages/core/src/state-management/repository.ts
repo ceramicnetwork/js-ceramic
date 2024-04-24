@@ -14,9 +14,9 @@ import {
   SyncOptions,
   UnreachableCaseError,
   UpdateOpts,
-  SignatureUtils,
 } from '@ceramicnetwork/common'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
+import { SignatureUtils } from '@ceramicnetwork/stream-handler-common'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'

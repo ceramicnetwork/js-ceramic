@@ -1,13 +1,12 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
+import { applyAnchorCommit, SignatureUtils } from '@ceramicnetwork/stream-handler-common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
   CommitData,
   EventType,
   SignatureStatus,
-  SignatureUtils,
   StreamConstructor,
   StreamHandler,
   StreamReaderWriter,

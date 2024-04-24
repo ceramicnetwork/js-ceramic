@@ -57,6 +57,7 @@
     "@ceramicnetwork/pinning-ipfs-backend": "^5.8.0-rc.0",
     "@ceramicnetwork/stream-caip10-link": "^5.8.0-rc.0",
     "@ceramicnetwork/stream-caip10-link-handler": "^5.9.0-rc.0",
+    "@ceramicnetwork/stream-handler-common": "^4.8.0-rc.0",
     "@ceramicnetwork/stream-model": "^4.8.0-rc.0",
     "@ceramicnetwork/stream-model-handler": "^4.9.0-rc.0",
     "@ceramicnetwork/stream-model-instance": "^4.9.0-rc.0",
