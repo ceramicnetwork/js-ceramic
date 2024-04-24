@@ -25,6 +25,7 @@ import {
   StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { ModelMetrics } from '@ceramicnetwork/model-metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -91,6 +92,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const ERROR_LOADING_STREAM = 'error_loading_stream'
+const ERROR_APPLYING_COMMIT = 'error_applying_commit'
 
 /**
  * Ceramic configuration
@@ -629,10 +631,17 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const id = normalizeStreamID(streamId)
 
     this._logger.verbose(`Apply commit to stream ${id.toString()}`)
-    const state$ = await this.repository.applyCommit(id, commit, opts)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+    try {
+      const state$ = await this.repository.applyCommit(id, commit, opts)
+      this._logger.verbose(`Applied commit to stream ${id.toString()}`)
 
-    return streamFromState<T>(this, this._streamHandlers, state$.value, this.repository.updates$)
+      return streamFromState<T>(this, this._streamHandlers, state$.value, this.repository.updates$)
+    } catch (err) {
+      this._logger.err(`Error applying commit to stream ${streamId.toString()}: ${err}`)
+      Metrics.count(ERROR_APPLYING_COMMIT, 1)
+      ModelMetrics.recordError(ERROR_APPLYING_COMMIT)
+      throw err
+    }
   }
 
   /**
@@ -698,6 +707,9 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         const base$ = await this.repository.load(streamRef.baseID, opts)
         return streamFromState<T>(this, this._streamHandlers, base$.value, this.repository.updates$)
       } catch (err) {
+        this._logger.err(`Error loading stream ${streamId.toString()}: ${err}`)
+        Metrics.count(ERROR_LOADING_STREAM, 1)
+        ModelMetrics.recordError(ERROR_LOADING_STREAM)
         if (opts.sync != SyncOptions.SYNC_ON_ERROR) {
           throw err
         }
@@ -785,6 +797,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
           )
         }
         Metrics.count(ERROR_LOADING_STREAM, 1)
+        ModelMetrics.recordError(ERROR_LOADING_STREAM)
         return Promise.resolve()
       }
       const streamRef = opts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId

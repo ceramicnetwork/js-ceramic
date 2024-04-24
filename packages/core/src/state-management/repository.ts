@@ -296,6 +296,21 @@ export class Repository {
       SignatureUtils.checkForCacaoExpiration(state$.state)
     }
 
+    if (process.env.CERAMIC_AUDIT_EVENT_PERSISTENCE == 'true') {
+      for (const logEntry of state$.state.log) {
+        try {
+          await Utils.getCommitData(this.dispatcher, logEntry.cid, state$.id)
+        } catch (err) {
+          this.logger.err(
+            `DATA MISSING: Ceramic event persistence auditing found missing data for commit ${logEntry.cid} of stream ${state$.id}: ${err}`
+          )
+          // Wait 1 second for the log to flush before crashing the process
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          process.exit(1)
+        }
+      }
+    }
+
     if (syncStatus != SyncStatus.ALREADY_SYNCED) {
       // Only update the pinned state if we actually did anything that might change it. If we just
       // loaded from the cache and didn't even query the network, there's no reason to bother
@@ -477,7 +492,8 @@ export class Repository {
     return this.executionQ.forStream(commitId).run(async () => {
       const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
 
-      // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
+      // Since we skipped CACAO expiration checking earlier when we loaded the current stream state,
+      // we need to make sure to do it here.
       SignatureUtils.checkForCacaoExpiration(stateAtCommit)
 
       // If the provided CommitID is ahead of what we have in the cache and state store, then we

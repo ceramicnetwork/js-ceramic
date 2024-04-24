@@ -60,6 +60,7 @@ const ADMIN_CODE_CACHE_CAPACITY = 50
 
 const STREAM_PINNED = 'stream_pinned'
 const STREAM_UNPINNED = 'stream_unpinned'
+const ERROR_QUERYING_COLLECTION = 'error_querying_collection'
 
 type AdminCode = string
 type Timestamp = number
@@ -579,8 +580,15 @@ export class CeramicDaemon {
    */
   async getCollection_post(req: Request, res: Response): Promise<void> {
     const httpQuery = req.body
-    const response = await this._getCollection(httpQuery)
-    res.json(response)
+    try {
+      const response = await this._getCollection(httpQuery)
+      res.json(response)
+    } catch (err) {
+      this.diagnosticsLogger.err(`Error running collection query: ${err}`)
+      Metrics.count(ERROR_QUERYING_COLLECTION, 1)
+      ModelMetrics.recordError(ERROR_QUERYING_COLLECTION)
+      throw err
+    }
   }
 
   /**

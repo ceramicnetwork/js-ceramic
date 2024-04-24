@@ -268,6 +268,15 @@ export class IndexingConfig {
     name: 'enable-historical-sync',
   })
   enableHistoricalSync = false
+
+  /**
+   * Setting this will adjust the max connection pool size for postgres, default is 10.
+   * Values lower than 1 will be set to 1
+   */
+  @jsonMember(Boolean, {
+    name: 'max-connection-pool-size',
+  })
+  maxConnectionPoolSize?: number
 }
 
 /**

@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.8.0...@ceramicnetwork/core@5.9.0-rc.0) (2024-04-22)
+
+
+### Features
+
+* Additional metrics on read and write failures ([#3210](https://github.com/ceramicnetwork/js-ceramic/issues/3210)) ([d8f3551](https://github.com/ceramicnetwork/js-ceramic/commit/d8f355132dad06a3ba9f1e3432b341287c4145d0))
+* Record important errors to ModelMetrics ([#3211](https://github.com/ceramicnetwork/js-ceramic/issues/3211)) ([18a397f](https://github.com/ceramicnetwork/js-ceramic/commit/18a397fdd90f355871c15b8d62e2cf8aa038e644))
+
+
+
+
+
+# [5.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.8.0-rc.0...@ceramicnetwork/core@5.8.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.7.0...@ceramicnetwork/core@5.8.0-rc.0) (2024-04-15)
+
+
+### Bug Fixes
+
+* disable recon feed in test where it is causing flaky behavior ([#3206](https://github.com/ceramicnetwork/js-ceramic/issues/3206)) ([4b15ada](https://github.com/ceramicnetwork/js-ceramic/commit/4b15ada431b6cb2b5d000d4e72ab977b404578d3))
+
+
+### Features
+
+* add an entry to the feedstore, when adding to the state store ([#3201](https://github.com/ceramicnetwork/js-ceramic/issues/3201)) ([271bf8b](https://github.com/ceramicnetwork/js-ceramic/commit/271bf8b4e566c12e6a8db0fd1af790d279b8fc2a))
+* Add CERAMIC_AUDIT_EVENT_PERSISTENCE that crashes process if data loss detected ([#3204](https://github.com/ceramicnetwork/js-ceramic/issues/3204)) ([e7f1464](https://github.com/ceramicnetwork/js-ceramic/commit/e7f1464de61aaf30a00dc800b69f7c329cd5ab26))
+* Add metrics for CACAO expirations ([#3198](https://github.com/ceramicnetwork/js-ceramic/issues/3198)) ([69204e0](https://github.com/ceramicnetwork/js-ceramic/commit/69204e0f64ee24e90d26581acac2b31132ece7c4))
+
+
+
+
+
+# [5.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.7.0-rc.0...@ceramicnetwork/core@5.7.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
 # [5.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.6.0...@ceramicnetwork/core@5.7.0-rc.0) (2024-04-03)
 
 

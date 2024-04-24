@@ -33,6 +33,7 @@ import all from 'it-all'
 import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
 import { IReconApi } from './recon.js'
 import { type CeramicNetworkOptions } from './initialization/network-options.js'
+import { ModelMetrics } from '@ceramicnetwork/model-metrics'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -42,7 +43,7 @@ const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
-const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
+const IPFS_CACHE_SIZE = process.env.CERAMIC_AUDIT_EVENT_PERSISTENCE == 'true' ? 1 : 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 const PUBSUB_CACHE_SIZE = 500
 
@@ -329,6 +330,7 @@ export class Dispatcher {
         this._logger.err(`Error while storing commit to IPFS: ${e}`)
       }
       Metrics.count(ERROR_STORING_COMMIT, 1)
+      ModelMetrics.recordError(ERROR_STORING_COMMIT)
       throw e
     }
   }
@@ -369,6 +371,7 @@ export class Dispatcher {
     } catch (e) {
       this._logger.err(`Error while storing commit to IPFS: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
+      ModelMetrics.recordError(ERROR_STORING_COMMIT)
       throw e
     }
   }
@@ -411,6 +414,7 @@ export class Dispatcher {
     } catch (e) {
       this._logger.err(`Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
+      ModelMetrics.recordError(ERROR_STORING_COMMIT)
       throw e
     }
   }
@@ -543,6 +547,7 @@ export class Dispatcher {
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           Metrics.count(ERROR_IPFS_TIMEOUT, 1)
+          ModelMetrics.recordError(ERROR_IPFS_TIMEOUT)
 
           if (retries > 0) {
             continue

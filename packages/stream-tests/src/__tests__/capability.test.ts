@@ -596,8 +596,11 @@ describe('CACAO Integration test', () => {
           {
             controllers: [PARENT_WALLET_ADDRESS],
           },
-          opts
+          { ...opts, anchor: true }
         )
+
+        // Anchor genesis commit so that the CACAO for the genesis commit stays valid.
+        await CoreUtils.anchorUpdate(ceramic, doc)
 
         // Make the commit before the CACAO has expired
         const commit = await doc.makeCommit(CeramicSigner.fromDID(didKeyWithCapability), CONTENT1)
@@ -605,7 +608,9 @@ describe('CACAO Integration test', () => {
         expireCacao()
 
         // Now attempt to apply the commit after the CACAO has expired
-        await expect(ceramic.applyCommit(doc.id, commit, opts)).rejects.toThrow(/CACAO expired/)
+        await expect(ceramic.applyCommit(doc.id, commit, opts)).rejects.toThrow(
+          /Can not verify signature for commit .* CACAO has expired/
+        )
       },
       1000 * 60
     )
