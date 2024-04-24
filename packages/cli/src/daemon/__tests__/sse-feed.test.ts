@@ -32,7 +32,7 @@ function readableStreamFromIterable<T>(source: Iterable<T>) {
   })
 }
 
-test('send events 2', async () => {
+test('send events', async () => {
   const source = [10, 20, 30]
   const readable = readableStreamFromIterable(source)
   const fauxResponse = new FauxResponse()
