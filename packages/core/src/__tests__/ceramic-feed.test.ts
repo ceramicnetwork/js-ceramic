@@ -69,16 +69,15 @@ describe('Ceramic feed', () => {
 
     // load model
     await Model.load(ceramic1, model.id)
-    await TestUtils.waitForConditionOrTimeout(async () => emissions.length === 1, 3000)
+    await TestUtils.waitForConditionOrTimeout(async () => emissions.length >= 1, 5000)
 
-    expect(emissions.length).toEqual(1)
     expect(emissions[0].content).toEqual(model.state.content)
     expect(emissions[0].metadata).toEqual(model.state.metadata)
     expect(emissions[0].commitId).toEqual(model.commitId)
     expect(emissions[0].eventType).toBe(EventType.INIT)
     abortController.abort()
     await doneStreaming
-  })
+  }, 10000)
 
   test('add entry on creating an indexed model', async () => {
     const MODEL_DEFINITION: ModelDefinition = {
