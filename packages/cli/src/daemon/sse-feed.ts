@@ -32,7 +32,7 @@ export class SSESink<T> implements UnderlyingSink<T> {
   async write(element: T) {
     const canWriteMore = this.res.write(`data: ${this.stringify(element)}\n\n`)
     if (!canWriteMore) {
-      // Wait till data are drained
+      // Wait until data are drained
       await new Promise((resolve) => {
         this.res.once('drain', resolve)
       })
