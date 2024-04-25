@@ -104,7 +104,7 @@ class StreamIDFeedSource implements UnderlyingSource<StreamID> {
   }
 
   async pull(controller: ReadableStreamController<StreamID | undefined>) {
-    const entries = await this.find({ limit: controller.desiredSize, gt: this.token })
+    const entries = await this.find({ limit: controller.desiredSize, gte: this.token })
     if (entries.length === 0) {
       await firstValueFrom(this.onWrite)
       return this.pull(controller)
