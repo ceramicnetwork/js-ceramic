@@ -578,7 +578,6 @@ export class Repository {
 
         const streamId = new StreamID(type, genesisCid)
         await this.handleUpdateFromNetwork(streamId, eventId.event, model)
-        await this.feedAggregationStore.put(streamId, Date.now())
       } catch (e) {
         this.logger.err(`Error handling recon event with eventID ${eventId}: ${e}`)
       }
