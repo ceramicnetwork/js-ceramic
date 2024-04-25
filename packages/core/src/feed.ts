@@ -26,7 +26,7 @@ export class FeedDocument {
  */
 export interface PublicFeed {
   aggregation: {
-    documents: (gt?: string) => ReadableStream<FeedDocument>
+    documents: (after?: string) => ReadableStream<FeedDocument>
   }
 }
 
@@ -42,9 +42,9 @@ export class Feed implements PublicFeed {
     }
   }
 
-  documents(gt?: string): ReadableStream<FeedDocument> {
+  documents(after?: string): ReadableStream<FeedDocument> {
     const transformer = new StreamLoadTransformer(this.fromMemoryOrStore)
-    return this.feedStore.streamIDs(gt).pipeThrough(new TransformStream(transformer))
+    return this.feedStore.streamIDs(after).pipeThrough(new TransformStream(transformer))
   }
 }
 
