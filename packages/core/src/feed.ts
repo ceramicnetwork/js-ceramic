@@ -33,7 +33,7 @@ export interface PublicFeed {
 export class Feed implements PublicFeed {
   constructor(
     private readonly feedStore: FeedAggregationStore,
-    private readonly fromMemoryOrStore: (streamId: StreamID) => Promise<StreamState | undefined>
+    private readonly streamState: (streamId: StreamID) => Promise<StreamState | undefined>
   ) {}
 
   get aggregation() {
@@ -43,18 +43,18 @@ export class Feed implements PublicFeed {
   }
 
   documents(after?: string): ReadableStream<FeedDocument> {
-    const transformer = new StreamLoadTransformer(this.fromMemoryOrStore)
+    const transformer = new StreamLoadTransformer(this.streamState)
     return this.feedStore.streamIDs(after).pipeThrough(new TransformStream(transformer))
   }
 }
 
 export class StreamLoadTransformer implements Transformer<StreamID, FeedDocument> {
   constructor(
-    private readonly fromMemoryOrStore: (streamId: StreamID) => Promise<StreamState | undefined>
+    private readonly streamState: (streamId: StreamID) => Promise<StreamState | undefined>
   ) {}
 
   async transform(streamId: StreamID, controller: TransformStreamDefaultController<FeedDocument>) {
-    const found = await this.fromMemoryOrStore(streamId)
+    const found = await this.streamState(streamId)
     if (found) {
       const feedDocument = FeedDocument.fromStreamState(found)
       controller.enqueue(feedDocument)
