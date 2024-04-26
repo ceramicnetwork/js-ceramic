@@ -15,6 +15,7 @@
  */
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { TaskQueue } from '../ancillary/task-queue.js'
+import { abortSignalToPromise } from '../utils'
 
 export class Deferred<T = void> implements PromiseLike<T> {
   /**
@@ -102,16 +103,7 @@ export class ProcessingLoop<T> {
    * Start the loop processing.  Returns a promise that resolves when the loop completes.
    */
   start(): Promise<void> {
-    const waitForAbortSignal = new Promise<void>((resolve) => {
-      if (this.#abortController.signal.aborted) {
-        return resolve()
-      }
-      const done = () => {
-        this.#abortController.signal.removeEventListener('abort', done)
-        resolve()
-      }
-      this.#abortController.signal.addEventListener('abort', done)
-    })
+    const waitForAbortSignal = abortSignalToPromise(this.#abortController.signal)
     const doneOnAbortSignal = waitForAbortSignal.then(() => {
       return { done: true, value: undefined }
     })

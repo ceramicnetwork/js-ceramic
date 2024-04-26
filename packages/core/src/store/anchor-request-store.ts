@@ -3,6 +3,7 @@ import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
 import { StreamUtils, type DiagnosticsLogger, type GenesisCommit } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { abortSignalToPromise } from '../utils'
 
 // How long to wait for the store to return a batch from a find request.
 const DEFAULT_BATCH_TIMEOUT_MS = 60 * 1000 // 1 minute
@@ -55,6 +56,7 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
 export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
   readonly useCaseName = 'anchor-requests'
   #shouldStop: boolean
+  #abortController: AbortController
   #logger: DiagnosticsLogger
   // This timeout currently only applies to batches within the infiniteList() function
   // TODO: Add a timeout to regular find() calls as well.
@@ -64,6 +66,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.#logger = logger
     this.#infiniteListBatchTimeoutMs = infiniteListBatchTimeoutMs
+    this.#abortController = new AbortController()
   }
 
   exists(key: StreamID): Promise<boolean> {
@@ -139,7 +142,10 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           const loopDurationMs = loopEndTime.getTime() - loopStartTime.getTime()
           if (loopDurationMs < minLoopDurationMs) {
             const remainingLoopDuration = minLoopDurationMs - loopDurationMs
-            await new Promise((resolve) => setTimeout(resolve, remainingLoopDuration))
+            const sleepPromise = new Promise((resolve) =>
+              setTimeout(resolve, remainingLoopDuration)
+            )
+            await Promise.race([sleepPromise, abortSignalToPromise(this.#abortController.signal)])
           }
 
           gt = undefined
@@ -156,6 +162,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   async close() {
     this.#logger.debug(`Closing AnchorRequestStore`)
     this.#shouldStop = true
+    this.#abortController.abort('STOP')
     await super.close()
   }
 }
