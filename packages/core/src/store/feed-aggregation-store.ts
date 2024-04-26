@@ -81,7 +81,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
     }
   }
 
-  streamIDs(gt?: string): ReadableStream<StreamID> {
+  streamIDs(gt?: string): ReadableStream<[string, StreamID]> {
     const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), gt)
     return new ReadableStream(source)
   }
@@ -93,7 +93,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 }
 
-class StreamIDFeedSource implements UnderlyingSource<StreamID> {
+class StreamIDFeedSource implements UnderlyingSource<[string, StreamID]> {
   /**
    * Opaque token that stores current position in the feed. Used as a resumability token.
    */
@@ -107,14 +107,14 @@ class StreamIDFeedSource implements UnderlyingSource<StreamID> {
     this.token = token
   }
 
-  async pull(controller: ReadableStreamController<StreamID | undefined>) {
+  async pull(controller: ReadableStreamController<[string, StreamID]>) {
     const entries = await this.find({ limit: controller.desiredSize, gt: this.token })
     if (entries.length === 0) {
       await firstValueFrom(this.onWrite)
       return this.pull(controller)
     }
     for (const entry of entries) {
-      controller.enqueue(entry.value)
+      controller.enqueue([entry.key, entry.value])
     }
     this.token = entries[entries.length - 1].key
   }

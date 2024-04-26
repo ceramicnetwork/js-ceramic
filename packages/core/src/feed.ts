@@ -5,19 +5,21 @@ import type { FeedAggregationStore } from './store/feed-aggregation-store.js'
 
 export class FeedDocument {
   constructor(
+    readonly token: string,
     readonly commitId: CommitID,
     readonly content: any,
     readonly metadata: StreamMetadata,
     readonly eventType: EventType
   ) {}
 
-  static fromStreamState(streamState: StreamState): FeedDocument {
-    return {
-      commitId: StreamUtils.commitIdFromStreamState(streamState),
-      content: streamState.next ? streamState.next.content : streamState.content,
-      metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
-      eventType: streamState.log[streamState.log.length - 1].type,
-    }
+  static fromStreamState(token: string, streamState: StreamState): FeedDocument {
+    return new FeedDocument(
+      token,
+      StreamUtils.commitIdFromStreamState(streamState),
+      streamState.next ? streamState.next.content : streamState.content,
+      streamState.next ? streamState.next.metadata : streamState.metadata,
+      streamState.log[streamState.log.length - 1].type
+    )
   }
 }
 
@@ -48,15 +50,20 @@ export class Feed implements PublicFeed {
   }
 }
 
-export class StreamLoadTransformer implements Transformer<StreamID, FeedDocument> {
+export class StreamLoadTransformer implements Transformer<[string, StreamID], FeedDocument> {
   constructor(
     private readonly streamState: (streamId: StreamID) => Promise<StreamState | undefined>
   ) {}
 
-  async transform(streamId: StreamID, controller: TransformStreamDefaultController<FeedDocument>) {
+  async transform(
+    input: [string, StreamID],
+    controller: TransformStreamDefaultController<FeedDocument>
+  ) {
+    const token = input[0]
+    const streamId = input[1]
     const found = await this.streamState(streamId)
     if (found) {
-      const feedDocument = FeedDocument.fromStreamState(found)
+      const feedDocument = FeedDocument.fromStreamState(token, found)
       controller.enqueue(feedDocument)
     }
   }
