@@ -62,12 +62,23 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   // This timeout currently only applies to batches within the infiniteList() function
   // TODO: Add a timeout to regular find() calls as well.
   readonly #infiniteListBatchTimeoutMs: number
+  /**
+   * If the number of entries in the store is small, iterating over all of them could happen very
+   * quickly.  We don't want to spam the CAS too much, so we enforce a minimum amount of time a loop
+   * must take before we restart iterating from the beginning.
+   */
+  readonly #minLoopDurationMs: number
 
-  constructor(logger: DiagnosticsLogger, infiniteListBatchTimeoutMs = DEFAULT_BATCH_TIMEOUT_MS) {
+  constructor(
+    logger: DiagnosticsLogger,
+    minLoopDurationMs,
+    infiniteListBatchTimeoutMs = DEFAULT_BATCH_TIMEOUT_MS
+  ) {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.#logger = logger
     this.#infiniteListBatchTimeoutMs = infiniteListBatchTimeoutMs
     this.#abortController = new AbortController()
+    this.#minLoopDurationMs = minLoopDurationMs
   }
 
   exists(key: StreamID): Promise<boolean> {
@@ -100,12 +111,9 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
    * Continuously emit entries of AnchorRequestStore in an infinite loop.
    *
    * @param batchSize - The number of items per batch.
-   * @param minLoopDurationMs - If the number of entries in the store is small, iterating over all
-   *   of them could happen very quickly.  We don't want to spam the CAS too much, so we enforce
-   *   a minimum amount of time a loop must take before we restart iterating from the beginning.
    * @returns An async generator that yields entries.
    */
-  async *infiniteList(batchSize = 1, minLoopDurationMs = 60 * 1000): AsyncGenerator<StreamID> {
+  async *infiniteList(batchSize = 1): AsyncGenerator<StreamID> {
     let gt: StreamID | undefined = undefined
     let numEntries = 0
     let loopStartTime = new Date()
@@ -142,8 +150,8 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           // sleep to avoid spamming the CAS.
           const loopEndTime = new Date()
           const loopDurationMs = loopEndTime.getTime() - loopStartTime.getTime()
-          if (loopDurationMs < minLoopDurationMs) {
-            const remainingLoopDuration = minLoopDurationMs - loopDurationMs
+          if (loopDurationMs < this.#minLoopDurationMs) {
+            const remainingLoopDuration = this.#minLoopDurationMs - loopDurationMs
             const sleepPromise = new Promise((resolve) =>
               setTimeout(resolve, remainingLoopDuration)
             )

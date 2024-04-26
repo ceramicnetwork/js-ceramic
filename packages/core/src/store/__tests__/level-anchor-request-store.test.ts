@@ -34,6 +34,7 @@ import { LevelKVFactory, ELP_NETWORK } from '../level-kv-factory.js'
 import type { Ceramic } from '../../ceramic.js'
 
 const BATCH_TIMEOUT = 100
+const MIN_LOOP_DURATION = 1
 
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
@@ -142,7 +143,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     kvFactory = new LevelKVFactory(tmpFolder.path, 'fakeNetwork', logger)
-    anchorRequestStore = new AnchorRequestStore(logger, BATCH_TIMEOUT)
+    anchorRequestStore = new AnchorRequestStore(logger, BATCH_TIMEOUT, MIN_LOOP_DURATION)
     await anchorRequestStore.open(kvFactory)
 
     // add a small delay after creating the leveldb instance before trying to use it.
@@ -294,7 +295,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const sortedStreamIds = sortedParams.map((param) => param.key.toString())
 
     // Create infinite iterator over the AnchorRequestStore
-    const generator = anchorRequestStore.infiniteList(1, 1)
+    const generator = anchorRequestStore.infiniteList(1)
 
     // List should repeat indefinitely
     expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
@@ -359,7 +360,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     })
 
     // Create infinite iterator over the AnchorRequestStore
-    const generator = anchorRequestStore.infiniteList(1, 1)
+    const generator = anchorRequestStore.infiniteList(1)
 
     expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
     expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
