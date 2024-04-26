@@ -109,6 +109,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     let gt: StreamID | undefined = undefined
     let numEntries = 0
     let loopStartTime = new Date()
+    const abortPromise = abortSignalToPromise(this.#abortController.signal)
     do {
       try {
         let timeout
@@ -146,7 +147,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
             const sleepPromise = new Promise((resolve) =>
               setTimeout(resolve, remainingLoopDuration)
             )
-            await Promise.race([sleepPromise, abortSignalToPromise(this.#abortController.signal)])
+            await Promise.race([sleepPromise, abortPromise])
           }
 
           gt = undefined
