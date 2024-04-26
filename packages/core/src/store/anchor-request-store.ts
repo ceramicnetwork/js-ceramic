@@ -3,7 +3,8 @@ import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
 import { StreamUtils, type DiagnosticsLogger, type GenesisCommit } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { abortSignalToPromise } from '../utils'
+import type { StoreSearchParams } from './ikv-store.js'
+import { abortSignalToPromise } from '../utils.js'
 
 // How long to wait for the store to return a batch from a find request.
 const DEFAULT_BATCH_TIMEOUT_MS = 60 * 1000 // 1 minute

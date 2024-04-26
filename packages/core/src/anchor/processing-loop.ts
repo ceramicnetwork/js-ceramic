@@ -15,7 +15,7 @@
  */
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { TaskQueue } from '../ancillary/task-queue.js'
-import { abortSignalToPromise } from '../utils'
+import { abortSignalToPromise } from '../utils.js'
 
 export class Deferred<T = void> implements PromiseLike<T> {
   /**
