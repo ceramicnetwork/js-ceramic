@@ -1,4 +1,4 @@
-import { expect, describe, test, beforeAll, afterAll } from '@jest/globals'
+import { expect, describe, test, beforeEach, afterEach } from '@jest/globals'
 import { EventType, type IpfsApi, Networks } from '@ceramicnetwork/common'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
@@ -6,13 +6,40 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { FeedDocument } from '../feed.js'
 import { createCeramic } from './create-ceramic.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { Utils } from '../utils.js'
+
+let n = 0
+function modelDefinition(): ModelDefinition {
+  n += 1
+  return {
+    name: `INT-MODEL-${n}`,
+    version: '1.0',
+    accountRelation: { type: 'list' },
+    schema: {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        myData: {
+          type: 'integer',
+          maximum: 10000,
+          minimum: 0,
+        },
+      },
+      required: ['myData'],
+    },
+  }
+}
+
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describe('Ceramic feed', () => {
   let ipfs1: IpfsApi
   let ipfs2: IpfsApi
   let ceramic1: Ceramic
   let ceramic2: Ceramic
-  beforeAll(async () => {
+  beforeEach(async () => {
     ipfs1 = await createIPFS({
       rust: {
         type: 'binary',
@@ -30,22 +57,15 @@ describe('Ceramic feed', () => {
     await swarmConnect(ipfs2, ipfs1)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await ceramic1.close()
     await ceramic2.close()
     await ipfs1.stop()
     await ipfs2.stop()
   })
 
-  test('add entry after loading indexed model', async () => {
-    const MODEL_DEFINITION: ModelDefinition = {
-      name: 'myModel',
-      version: '1.0',
-      schema: { type: 'object', additionalProperties: false },
-      accountRelation: { type: 'list' },
-    }
+  test('add entry after creating/updating stream', async () => {
     const emissions: FeedDocument[] = []
-
     const readable1 = ceramic1.feed.aggregation.documents()
     const writable1 = new WritableStream({
       write(chunk) {
@@ -58,34 +78,66 @@ describe('Ceramic feed', () => {
       .catch(() => {
         // Ignore, as it is an Abort Signal
       })
+    const model = await Model.create(ceramic1, modelDefinition())
+    const document = await ModelInstanceDocument.create(
+      ceramic1,
+      { myData: 0 },
+      { model: model.id }
+    )
+    await document.replace({ myData: 1 }, undefined, { anchor: false })
 
-    // create model on different node
-    const model = await Model.create(ceramic2, MODEL_DEFINITION)
+    await TestUtils.waitForConditionOrTimeout(async () => emissions.length === 3, 5000)
 
-    // wait for model to be received
-    if (process.env.CERAMIC_RECON_MODE) {
-      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
-    }
-
-    // load model
-    await Model.load(ceramic1, model.id)
-    await TestUtils.waitForConditionOrTimeout(async () => emissions.length >= 1, 5000)
-
-    expect(emissions[0].content).toEqual(model.state.content)
-    expect(emissions[0].metadata).toEqual(model.state.metadata)
+    // Model.create
     expect(emissions[0].commitId).toEqual(model.commitId)
-    expect(emissions[0].eventType).toBe(EventType.INIT)
+    // document.create
+    expect(emissions[1].commitId).toEqual(document.allCommitIds[0])
+    // document.replace
+    expect(emissions[2].commitId).toEqual(document.allCommitIds[1])
     abortController.abort()
     await doneStreaming
-  }, 10000)
+  })
+
+  testIfV3('add entry after anchoring stream', async () => {
+    const emissions: FeedDocument[] = []
+    const readable1 = ceramic1.feed.aggregation.documents()
+    const writable1 = new WritableStream({
+      write(chunk) {
+        emissions.push(chunk)
+      },
+    })
+    const abortController = new AbortController()
+    const doneStreaming = readable1
+      .pipeTo(writable1, { signal: abortController.signal })
+      .catch(() => {
+        // Ignore, as it is an Abort Signal
+      })
+    const model = await Model.create(ceramic1, modelDefinition())
+    const document = await ModelInstanceDocument.create(
+      ceramic1,
+      { myData: 0 },
+      { model: model.id },
+      { anchor: true }
+    )
+    await Utils.anchorUpdate(ceramic1, document)
+
+    await TestUtils.waitForConditionOrTimeout(async () => {
+      return emissions.length >= 4 // Recon gives you more events :(
+    }, 5000)
+    // model.create
+    expect(emissions[0].commitId).toEqual(model.allCommitIds[0])
+    // document.create
+    expect(emissions[1].commitId).toEqual(document.allCommitIds[0])
+    // model.anchor
+    expect(emissions[2].commitId.baseID).toEqual(model.id)
+    expect(emissions[2].eventType).toEqual(EventType.TIME)
+    // document.anchor
+    expect(emissions[3].commitId).toEqual(document.allCommitIds[1])
+    abortController.abort()
+    await doneStreaming
+  })
 
   test('add entry on creating an indexed model', async () => {
-    const MODEL_DEFINITION: ModelDefinition = {
-      name: 'myModel',
-      version: '1.0',
-      schema: { type: 'object', additionalProperties: false },
-      accountRelation: { type: 'list' },
-    }
     const emissions: FeedDocument[] = []
 
     const abortController = new AbortController()
@@ -103,7 +155,7 @@ describe('Ceramic feed', () => {
       })
 
     // create model on different node
-    const model = await Model.create(ceramic2, MODEL_DEFINITION)
+    const model = await Model.create(ceramic2, modelDefinition())
     await doneStreaming
     expect(emissions.length).toEqual(1)
     expect(emissions[0].content).toEqual(model.state.content)

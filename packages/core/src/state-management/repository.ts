@@ -960,21 +960,6 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    state$
-      .pipe(
-        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
-          // Consider distinct if proposed log length differs
-          if (proposedLog.length !== currentLog.length) return false
-          // Or let's see if the tip is different
-          const currentTip = currentLog[currentLog.length - 1].cid
-          const proposedTip = proposedLog[proposedLog.length - 1].cid
-          return currentTip.equals(proposedTip)
-        }),
-        map(() => Date.now())
-      )
-      .subscribe(async (timestamp) => {
-        await this.feedAggregationStore.put(state$.id, timestamp)
-      })
     this.inmemory.set(state$.id.toString(), state$)
   }
 

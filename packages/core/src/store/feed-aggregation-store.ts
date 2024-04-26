@@ -3,6 +3,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import type { IKVFactory, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
 import { Observable, firstValueFrom, Subject } from 'rxjs'
+import * as process from 'node:process'
 
 function serializeStreamID(streamID: StreamID): string {
   return streamID.toString()
@@ -18,7 +19,7 @@ const DEFAULT_CLEANUP_INTERVAL = 600_000 // 10 minutes in ms
 /**
  * A storage for feed aggregation queue: key is a timestamp, value is StreamID.
  */
-export class FeedAggregationStore extends ObjectStore<number, StreamID> {
+export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   protected useCaseName = 'feed-aggregation'
   readonly staleDuration: number
   readonly cleanupInterval: number | null
@@ -48,7 +49,7 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
   }
 
   async deleteStale(lessThan: number): Promise<number> {
-    const keys = await this.store.findKeys({ lt: String(lessThan) })
+    const keys = await this.store.findKeys({ lt: String(lessThan * 1000) })
     if (keys.length > 0) {
       let batch = this.store.batch()
       for (const k of keys) {
@@ -59,7 +60,10 @@ export class FeedAggregationStore extends ObjectStore<number, StreamID> {
     return keys.length
   }
 
-  async put(streamId: StreamID, timestamp: number = Date.now()): Promise<void> {
+  async put(
+    streamId: StreamID,
+    timestamp: string = process.hrtime.bigint().toString()
+  ): Promise<void> {
     await this.save(timestamp, streamId)
     this.onWrite.next()
   }
@@ -93,18 +97,18 @@ class StreamIDFeedSource implements UnderlyingSource<StreamID> {
   /**
    * Opaque token that stores current position in the feed. Used as a resumability token.
    */
-  private token: string | undefined
+  private token: string
 
   constructor(
     private readonly find: FeedAggregationStore['find'],
     private readonly onWrite: Observable<void>,
-    token: string | undefined = undefined
+    token: string = process.hrtime.bigint().toString()
   ) {
     this.token = token
   }
 
   async pull(controller: ReadableStreamController<StreamID | undefined>) {
-    const entries = await this.find({ limit: controller.desiredSize, gte: this.token })
+    const entries = await this.find({ limit: controller.desiredSize, gt: this.token })
     if (entries.length === 0) {
       await firstValueFrom(this.onWrite)
       return this.pull(controller)

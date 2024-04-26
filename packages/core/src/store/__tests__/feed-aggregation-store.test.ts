@@ -15,7 +15,6 @@ import { FeedAggregationStore } from '../feed-aggregation-store.js'
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 import { IKVStore } from '../ikv-store.js'
 import { Deferred } from '../../anchor/processing-loop.js'
-import MockDate from 'mockdate'
 
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -37,7 +36,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   const keys = await feedAggregationStore.findKeys()
-  const removeAll = keys.map((k) => feedAggregationStore.remove(Number(k)))
+  const removeAll = keys.map((k) => feedAggregationStore.remove(k))
   await Promise.all(removeAll)
 })
 
@@ -48,13 +47,13 @@ afterAll(async () => {
 })
 
 describe('deleteStale', () => {
-  const TIMESTAMPS = [1000, 2000, 3000, 4000, 5000]
+  const TIMESTAMPS = [1000, 2000, 3000, 4000, 5000] // ns
 
   test('delete old entries', async () => {
-    const threshold = 3000
-    const freshEnough = TIMESTAMPS.filter((t) => t >= threshold)
+    const threshold = 3 // ms, while TIMESTAMPS are in ns
+    const freshEnough = TIMESTAMPS.filter((t) => t >= threshold * 1000)
     for (const t of TIMESTAMPS) {
-      await feedAggregationStore.save(t, CommonTestUtils.randomStreamID())
+      await feedAggregationStore.save(t.toString(), CommonTestUtils.randomStreamID())
     }
     const keysA = await feedAggregationStore.findKeys()
     expect(keysA.length).toEqual(TIMESTAMPS.length)
@@ -69,9 +68,9 @@ describe('deleteStale', () => {
 
   test('do nothing if no old entries', async () => {
     for (const t of TIMESTAMPS) {
-      await feedAggregationStore.save(t, CommonTestUtils.randomStreamID())
+      await feedAggregationStore.save(t.toString(), CommonTestUtils.randomStreamID())
     }
-    const threshold = 1000 // No entries before that
+    const threshold = 1 // No entries before that
     const keysA = await feedAggregationStore.findKeys()
     expect(keysA.length).toEqual(TIMESTAMPS.length)
     const batchSpy = jest.spyOn(feedKVStore, 'batch')
@@ -86,17 +85,19 @@ describe('deleteStale', () => {
 
 describe('put', () => {
   test('use current timestamp', async () => {
-    const fauxNow = new Date()
-    MockDate.set(fauxNow) // "Freeze" Date.now to `fauxNow`
+    const fauxNow = process.hrtime.bigint()
+    const mockTime = jest.spyOn(process.hrtime, 'bigint').mockImplementation(() => {
+      return fauxNow
+    })
     const streamId = CommonTestUtils.randomStreamID()
     await feedAggregationStore.put(streamId)
     const keys = await feedAggregationStore.findKeys()
     expect(keys.length).toEqual(1)
-    const first = Number(keys[0])
-    expect(first).toEqual(fauxNow.valueOf())
+    const first = keys[0]
+    expect(first).toEqual(fauxNow.toString())
     const stored = await feedAggregationStore.load(first)
     expect(stored).toEqual(streamId)
-    MockDate.reset() // Unfreeze Date.now
+    mockTime.mockRestore()
   })
 
   test('use explicit timestamp', async () => {
