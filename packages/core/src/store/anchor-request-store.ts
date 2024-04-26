@@ -96,15 +96,15 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
    * Continuously emit entries of AnchorRequestStore in an infinite loop.
    *
    * @param batchSize - The number of items per batch.
-   * @param restartDelay - The delay in milliseconds before restarting the loop when it reaches the end.
+   * @param minLoopDurationMs - If the number of entries in the store is small, iterating over all
+   *   of them could happen very quickly.  We don't want to spam the CAS too much, so we enforce
+   *   a minimum amount of time a loop must take before we restart iterating from the beginning.
    * @returns An async generator that yields entries.
    */
-  async *infiniteList(
-    batchSize = 1,
-    restartDelay = 1000 // Milliseconds
-  ): AsyncGenerator<StreamID> {
+  async *infiniteList(batchSize = 1, minLoopDurationMs = 60 * 1000): AsyncGenerator<StreamID> {
     let gt: StreamID | undefined = undefined
     let numEntries = 0
+    let loopStartTime = new Date()
     do {
       try {
         let timeout
@@ -132,9 +132,19 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
             `Anchor polling loop processed ${numEntries} entries from the AnchorRequestStore. Restarting loop.`
           )
           Metrics.observe(ANCHOR_POLLING_PROCESSED, numEntries)
-          await new Promise((resolve) => setTimeout(resolve, restartDelay))
+
+          // If we iterated over all entries in the store in less time than the minLoopDuration,
+          // sleep to avoid spamming the CAS.
+          const loopEndTime = new Date()
+          const loopDurationMs = loopEndTime.getTime() - loopStartTime.getTime()
+          if (loopDurationMs < minLoopDurationMs) {
+            const remainingLoopDuration = minLoopDurationMs - loopDurationMs
+            await new Promise((resolve) => setTimeout(resolve, remainingLoopDuration))
+          }
+
           gt = undefined
           numEntries = 0
+          loopStartTime = loopEndTime
         }
       } catch (err) {
         this.#logger.err(`Error querying the AnchorRequestStore: ${err}`)

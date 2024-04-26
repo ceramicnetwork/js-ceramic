@@ -294,7 +294,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const sortedStreamIds = sortedParams.map((param) => param.key.toString())
 
     // Create infinite iterator over the AnchorRequestStore
-    const generator = anchorRequestStore.infiniteList(1, 10)
+    const generator = anchorRequestStore.infiniteList(1, 1)
 
     // List should repeat indefinitely
     expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
@@ -359,7 +359,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     })
 
     // Create infinite iterator over the AnchorRequestStore
-    const generator = anchorRequestStore.infiniteList(1, 10)
+    const generator = anchorRequestStore.infiniteList(1, 1)
 
     expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
     expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
