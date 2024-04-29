@@ -153,6 +153,7 @@ export class RemoteCAS implements CASClient {
         body: carFileReader.carFile.bytes,
         signal: signal,
       })
+      Metrics.count('cas_request_created', 1)
 
       // We successfully contacted the CAS
       this._recordCASContactSuccess('created')
@@ -164,7 +165,7 @@ export class RemoteCAS implements CASClient {
       catchError((error) => {
         // Record the fact that we failed to contact the CAS
         this._recordCASContactFailure()
-
+        Metrics.count('cas_request_create_failed', 1)
         // clean up the error message to have more context
         throw new Error(
           `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${
@@ -185,7 +186,7 @@ export class RemoteCAS implements CASClient {
 
       // We successfully contacted the CAS
       this._recordCASContactSuccess('polled')
-
+      Metrics.count('cas_request_polled', 1)
       return response
     })
     const response = await firstValueFrom(
@@ -193,6 +194,7 @@ export class RemoteCAS implements CASClient {
         catchError((error) => {
           // Record the fact that we failed to contact the CAS
           this._recordCASContactFailure()
+          Metrics.count('cas_request_poll_failed', 1)
 
           // clean up the error message to have more context
           throw new Error(

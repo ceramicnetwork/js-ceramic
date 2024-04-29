@@ -19,5 +19,8 @@ export function instrumentRequests(req, res, next) {
     agent: agent,
     package: 'cli.daemon',
   })
+  if (req.method === 'POST' && req.url.includes('api/v0/streams')) {
+    Metrics.count('http_request_create_stream', 1)
+  }
   next()
 }
