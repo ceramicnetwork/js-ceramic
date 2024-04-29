@@ -518,13 +518,13 @@ describe('Ceramic interop: core <> http-client', () => {
       source.addEventListener('message', handler)
     })
     // this will trigger a feed event
-    const MODEL_DEFINITION: ModelDefinition = {
+    const modelDefinition: ModelDefinition = {
       name: 'myModel',
       version: '1.0',
       schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
     }
-    const model = await Model.create(client, MODEL_DEFINITION)
+    const model = await Model.create(client, modelDefinition)
 
     const messageEvent = await messageEventP
     expect(messageEvent).toBeDefined()
