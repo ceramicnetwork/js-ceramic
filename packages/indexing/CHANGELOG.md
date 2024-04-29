@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.9.0...@ceramicnetwork/indexing@4.10.0-rc.0) (2024-04-29)
+
+
+### Bug Fixes
+
+* expose indexing options in daemon config ([#3212](https://github.com/ceramicnetwork/js-ceramic/issues/3212)) ([53a0887](https://github.com/ceramicnetwork/js-ceramic/commit/53a0887b1abfc9164e924b3bfec0c680929192d9))
+
+
+
+
+
 # [4.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.9.0-rc.0...@ceramicnetwork/indexing@4.9.0) (2024-04-29)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing
