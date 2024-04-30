@@ -306,18 +306,18 @@ export class CeramicDaemon {
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic) }
     let provider: DIDProvider
 
-    if (opts.node.sensitive_privateSeedUrl()) {
-      let seed: Uint8Array
-      try {
-        const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl())
-        seed = parseSeedUrl(privateSeedUrl)
-      } catch (err) {
-        // Do not log URL errors here to prevent leaking seed
-        throw Error('Invalid format for node.private-seed-url in daemon.config.json')
-      }
-      provider = makeNodeDIDProvider(seed)
-      didOptions = { ...didOptions, provider }
-    }
+    // if (opts.node.sensitive_privateSeedUrl()) {
+    //   let seed: Uint8Array
+    //   try {
+    //     const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl())
+    //     seed = parseSeedUrl(privateSeedUrl)
+    //   } catch (err) {
+    //     // Do not log URL errors here to prevent leaking seed
+    //     throw Error('Invalid format for node.private-seed-url in daemon.config.json')
+    //   }
+    //   provider = makeNodeDIDProvider(seed)
+    //   didOptions = { ...didOptions, provider }
+    // }
 
     const did = new DID(didOptions)
     if (provider) {
