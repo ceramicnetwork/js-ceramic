@@ -1,5 +1,5 @@
 import { EventType, StreamMetadata, StreamState } from '@ceramicnetwork/common'
-import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import type { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '@ceramicnetwork/common'
 import type { FeedAggregationStore, AggregationStoreEntry } from './store/feed-aggregation-store.js'
 
