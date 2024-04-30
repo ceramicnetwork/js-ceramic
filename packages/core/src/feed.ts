@@ -5,16 +5,16 @@ import type { FeedAggregationStore } from './store/feed-aggregation-store.js'
 
 export class FeedDocument {
   constructor(
-    readonly token: string,
+    readonly resumeToken: string,
     readonly commitId: CommitID,
     readonly content: any,
     readonly metadata: StreamMetadata,
     readonly eventType: EventType
   ) {}
 
-  static fromStreamState(token: string, streamState: StreamState): FeedDocument {
+  static fromStreamState(resumeToken: string, streamState: StreamState): FeedDocument {
     return new FeedDocument(
-      token,
+      resumeToken,
       StreamUtils.commitIdFromStreamState(streamState),
       streamState.next ? streamState.next.content : streamState.content,
       streamState.next ? streamState.next.metadata : streamState.metadata,

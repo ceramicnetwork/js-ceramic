@@ -15,7 +15,7 @@ export const JsonAsString = new Type<unknown, string, string>(
 )
 
 export const AggregationDocument = type({
-  token: string,
+  resumeToken: string,
   commitId: commitIdAsString,
   content: JsonAsString,
   metadata: StreamMetadata,
