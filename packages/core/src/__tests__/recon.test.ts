@@ -4,6 +4,7 @@ import { FetchRequest, LoggerProvider } from '@ceramicnetwork/common'
 import { jest } from '@jest/globals'
 import { CARFactory, type CAR } from 'cartonne'
 import { toArray, take, lastValueFrom, firstValueFrom, race, timer } from 'rxjs'
+import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 
 const RECON_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
@@ -25,7 +26,7 @@ describe('ReconApi', () => {
       url = url.toString()
       if (url.includes('/ceramic/feed/events')) {
         return Promise.resolve({
-          events: [{ data: createRandomCar().bytes }],
+          events: [{ id: CommonTestUtils.randomCID().toString() }],
           resumeToken: 'test',
         })
       }
@@ -37,7 +38,6 @@ describe('ReconApi', () => {
         enabled: true,
         url: RECON_URL,
         feedEnabled: true,
-        codecs: [],
       },
       LOGGER,
       mockSendRequest
@@ -54,7 +54,7 @@ describe('ReconApi', () => {
     test('should not init if recon is disabled', async () => {
       const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
-        { enabled: false, url: RECON_URL, feedEnabled: true, codecs: [] },
+        { enabled: false, url: RECON_URL, feedEnabled: true },
         LOGGER,
         mockSendRequest
       )
@@ -72,7 +72,7 @@ describe('ReconApi', () => {
     test('should not start polling if feed is disabled', async () => {
       const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
-        { enabled: true, url: RECON_URL, feedEnabled: false, codecs: [] },
+        { enabled: true, url: RECON_URL, feedEnabled: false },
         LOGGER,
         mockSendRequest
       )
@@ -85,7 +85,7 @@ describe('ReconApi', () => {
   describe('registerInterest', () => {
     test('should throw if recon is disabled', async () => {
       const reconApi = new ReconApi(
-        { enabled: false, url: RECON_URL, feedEnabled: true, codecs: [] },
+        { enabled: false, url: RECON_URL, feedEnabled: true },
         LOGGER,
         mockSendRequest
       )
@@ -107,21 +107,21 @@ describe('ReconApi', () => {
     test('should do nothing if recon is disabled', async () => {
       const mockSendRequest = jest.fn(() => Promise.resolve())
       const reconApi = new ReconApi(
-        { enabled: false, url: RECON_URL, feedEnabled: true, codecs: [] },
+        { enabled: false, url: RECON_URL, feedEnabled: true },
         LOGGER,
         mockSendRequest
       )
-      await expect(reconApi.put({ data: createRandomCar() })).resolves
+      await expect(reconApi.put(createRandomCar())).resolves
       expect(mockSendRequest).not.toHaveBeenCalled()
     })
 
     test('put should put an event to the Recon API', async () => {
-      const fakeEvent = { data: createRandomCar() }
-      await reconApi.put(fakeEvent)
+      const fakeCar = createRandomCar()
+      await reconApi.put(fakeCar)
 
       expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/events`, {
         method: 'POST',
-        body: { data: fakeEvent.data.toString() },
+        body: { data: fakeCar.toString() },
       })
     })
   })
@@ -132,7 +132,7 @@ describe('ReconApi', () => {
       mockSendRequest.mockImplementation(async () => {
         resumeToken = resumeToken + 1
         return {
-          events: [{ data: createRandomCar().bytes }],
+          events: [{ id: CommonTestUtils.randomCID().toString() }],
           resumeToken: resumeToken.toString(),
         }
       })
@@ -152,7 +152,7 @@ describe('ReconApi', () => {
         if (resumeToken == 102) throw Error('transient error')
 
         return {
-          events: [{ data: createRandomCar().bytes }],
+          events: [{ id: CommonTestUtils.randomCID().toString() }],
           resumeToken: resumeToken.toString(),
         }
       })

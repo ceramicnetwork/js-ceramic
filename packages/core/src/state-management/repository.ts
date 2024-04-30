@@ -568,8 +568,7 @@ export class Repository {
     const { events, cursor } = response
 
     for (const event of events) {
-      const { data } = event
-      const cid = data.roots[0]
+      const { cid } = event
 
       try {
         const commitData = await Utils.getCommitData(this.dispatcher, cid)

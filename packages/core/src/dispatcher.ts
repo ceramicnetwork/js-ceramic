@@ -217,14 +217,14 @@ export class Dispatcher {
   /**
    * Stores all the blocks in the given CAR file into the local IPFS node or recon node
    * @param car
-   * @param eventId eventId needed to store blocks in recon mode
+   * @param streamId
    */
   importCAR(car: CAR, streamId: StreamID): Promise<void> {
     const useRecon = process.env.CERAMIC_RECON_MODE && (streamId.type === 2 || streamId.type === 3)
     if (useRecon) {
       return this._shutdownSignal
         .abortable(async (signal) => {
-          await this.recon.put({ data: car }, { signal })
+          await this.recon.put(car, { signal })
         })
         .catch((e) => {
           throw new Error(
@@ -302,6 +302,7 @@ export class Dispatcher {
       this._logger.err(`Error while storing init event: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
       ModelMetrics.recordError(ERROR_STORING_COMMIT)
+      throw e
     }
   }
 
@@ -321,6 +322,7 @@ export class Dispatcher {
       this._logger.err(`Error while storing event for stream ${streamId.toString()}: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
       ModelMetrics.recordError(ERROR_STORING_COMMIT)
+      throw e
     }
   }
 
