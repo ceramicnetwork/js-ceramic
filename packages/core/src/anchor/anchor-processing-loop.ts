@@ -44,6 +44,26 @@ export class AnchorProcessingLoop {
     { 'trailing': false }
   );
 
+  // Call this periodically with a separate timer in the polling loop.
+  // TODO :  
+  private adjustPollingInterval(): void {
+    // Get this metric from the ModelMetrics
+    const currentRate = ModelMetrics.getCreationRequestRate();
+    const maxInterval = 2000; // maximum interval in ms
+    const minInterval = 166; // minimum interval in ms (equivalent to 1000/6)
+  
+    let newInterval = 1000 / Math.sqrt(currentRate + 1); // Example adjustment logic
+  
+    // Ensure the interval is within bounds
+    newInterval = Math.min(Math.max(newInterval, minInterval), maxInterval);
+  
+    this.throttledGetStatusForRequest = throttle(
+      this.throttledGetStatusForRequest,
+      newInterval,
+      { 'trailing': false }
+    );
+  }
+
   constructor(
     batchSize: number,
     cas: CASClient,
