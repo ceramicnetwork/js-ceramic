@@ -8,10 +8,14 @@ import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
 import { ModelMetrics, Observable, Counter } from '@ceramicnetwork/model-metrics'
+import { throttle } from 'lodash';
+import { CID, Version } from 'multiformats'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
 const DEFAULT_CONCURRENCY = 25
+
+const CAS_REQUEST_POLLING_INTERVAL_MS = 1000 / 6 // 1000 ms divided by 6 calls
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -27,6 +31,18 @@ export class AnchorProcessingLoop {
    */
   readonly #anchorStoreQueue: NamedTaskQueue
   readonly #anchorPollingMetrics: TimeableMetric
+
+  throttledGetStatusForRequest = throttle(
+    async (streamId: StreamID, cid: CID<unknown, number, number, Version>, cas: CASClient, logger: DiagnosticsLogger, eventHandler: AnchorLoopHandler) => {
+      return cas.getStatusForRequest(streamId, cid).catch(async (error) => {
+        logger.warn(`No request present on CAS for ${cid} of ${streamId}: ${error}`)
+        const requestCAR = await eventHandler.buildRequestCar(streamId, cid)
+        return cas.create(new AnchorRequestCarFileReader(requestCAR))
+      });
+    },
+    CAS_REQUEST_POLLING_INTERVAL_MS, 
+    { 'trailing': false }
+  );
 
   constructor(
     batchSize: number,
@@ -55,11 +71,7 @@ export class AnchorProcessingLoop {
             `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
           )
           const entry = await store.load(streamId)
-          const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
-            logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
-            const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
-            return cas.create(new AnchorRequestCarFileReader(requestCAR))
-          })
+          const event = await this.throttledGetStatusForRequest(streamId, entry.cid, cas, logger, eventHandler)
           const isTerminal = await eventHandler.handle(event)
           logger.verbose(
             `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
