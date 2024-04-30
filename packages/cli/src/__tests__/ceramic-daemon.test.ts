@@ -580,7 +580,7 @@ describe('Ceramic interop: core <> http-client', () => {
       // default timeout
       await client.multiQuery(queries)
       expect(loadLinkedStreamsSpy).toBeCalledTimes(2)
-      expect(loadLinkedStreamsSpy.mock.calls[1][1]).toEqual(7000) // default timeout
+      expect(loadLinkedStreamsSpy.mock.calls[1][1]).toEqual(30000) // default timeout
 
       loadLinkedStreamsSpy.mockRestore()
     })

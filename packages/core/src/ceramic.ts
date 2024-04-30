@@ -25,6 +25,7 @@ import {
   StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { ModelMetrics } from '@ceramicnetwork/model-metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -61,6 +62,7 @@ import { LevelKVFactory } from './store/level-kv-factory.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
+const DEFAULT_MULTIQUERY_TIMEOUT_MS = 30 * 1000
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**
@@ -91,6 +93,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const ERROR_LOADING_STREAM = 'error_loading_stream'
+const ERROR_APPLYING_COMMIT = 'error_applying_commit'
 
 /**
  * Ceramic configuration
@@ -637,10 +640,17 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const id = normalizeStreamID(streamId)
 
     this._logger.verbose(`Apply commit to stream ${id.toString()}`)
-    const state$ = await this.repository.applyCommit(id, commit, opts)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+    try {
+      const state$ = await this.repository.applyCommit(id, commit, opts)
+      this._logger.verbose(`Applied commit to stream ${id.toString()}`)
 
-    return streamFromState<T>(this, this._streamHandlers, state$.value, this.repository.updates$)
+      return streamFromState<T>(this, this._streamHandlers, state$.value, this.repository.updates$)
+    } catch (err) {
+      this._logger.err(`Error applying commit to stream ${streamId.toString()}: ${err}`)
+      Metrics.count(ERROR_APPLYING_COMMIT, 1)
+      ModelMetrics.recordError(ERROR_APPLYING_COMMIT)
+      throw err
+    }
   }
 
   /**
@@ -706,6 +716,9 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         const base$ = await this.repository.load(streamRef.baseID, opts)
         return streamFromState<T>(this, this._streamHandlers, base$.value, this.repository.updates$)
       } catch (err) {
+        this._logger.err(`Error loading stream ${streamId.toString()}: ${err}`)
+        Metrics.count(ERROR_LOADING_STREAM, 1)
+        ModelMetrics.recordError(ERROR_LOADING_STREAM)
         if (opts.sync != SyncOptions.SYNC_ON_ERROR) {
           throw err
         }
@@ -793,6 +806,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
           )
         }
         Metrics.count(ERROR_LOADING_STREAM, 1)
+        ModelMetrics.recordError(ERROR_LOADING_STREAM)
         return Promise.resolve()
       }
       const streamRef = opts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
@@ -817,7 +831,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * @param queries - Array of MultiQueries
    * @param timeout - Timeout in milliseconds
    */
-  async multiQuery(queries: Array<MultiQuery>, timeout = 7000): Promise<Record<string, Stream>> {
+  async multiQuery(
+    queries: Array<MultiQuery>,
+    timeout = DEFAULT_MULTIQUERY_TIMEOUT_MS
+  ): Promise<Record<string, Stream>> {
     const queryResults = await Promise.all(
       queries.map((query) => {
         return this._loadLinkedStreams(query, timeout).catch((e) => {

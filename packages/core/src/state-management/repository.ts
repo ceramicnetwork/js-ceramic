@@ -14,9 +14,9 @@ import {
   SyncOptions,
   UnreachableCaseError,
   UpdateOpts,
-  SignatureUtils,
 } from '@ceramicnetwork/common'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
+import { SignatureUtils } from '@ceramicnetwork/stream-handler-common'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
@@ -308,6 +308,21 @@ export class Repository {
 
     if (checkCacaoExpiration) {
       SignatureUtils.checkForCacaoExpiration(state$.state)
+    }
+
+    if (process.env.CERAMIC_AUDIT_EVENT_PERSISTENCE == 'true') {
+      for (const logEntry of state$.state.log) {
+        try {
+          await Utils.getCommitData(this.dispatcher, logEntry.cid, state$.id)
+        } catch (err) {
+          this.logger.err(
+            `DATA MISSING: Ceramic event persistence auditing found missing data for commit ${logEntry.cid} of stream ${state$.id}: ${err}`
+          )
+          // Wait 1 second for the log to flush before crashing the process
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          process.exit(1)
+        }
+      }
     }
 
     if (syncStatus != SyncStatus.ALREADY_SYNCED) {
