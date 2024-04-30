@@ -16,6 +16,11 @@ function deserializeStreamID(input: string): StreamID {
 const DEFAULT_STALE_DURATION = 604_800_000 // 7 days in ms
 const DEFAULT_CLEANUP_INTERVAL = 600_000 // 10 minutes in ms
 
+export type AggregationStoreEntry = {
+  resumeToken: string
+  streamID: StreamID
+}
+
 /**
  * A storage for feed aggregation queue: key is a timestamp, value is StreamID.
  */
@@ -81,7 +86,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
     }
   }
 
-  streamIDs(gt?: string): ReadableStream<[string, StreamID]> {
+  streamIDs(gt?: string): ReadableStream<AggregationStoreEntry> {
     const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), gt)
     return new ReadableStream(source)
   }
@@ -93,7 +98,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 }
 
-class StreamIDFeedSource implements UnderlyingSource<[string, StreamID]> {
+class StreamIDFeedSource implements UnderlyingSource<AggregationStoreEntry> {
   /**
    * Opaque token that stores current position in the feed. Used as a resumability token.
    */
@@ -107,14 +112,17 @@ class StreamIDFeedSource implements UnderlyingSource<[string, StreamID]> {
     this.token = token
   }
 
-  async pull(controller: ReadableStreamController<[string, StreamID]>) {
+  async pull(controller: ReadableStreamController<AggregationStoreEntry>) {
     const entries = await this.find({ limit: controller.desiredSize, gt: this.token })
     if (entries.length === 0) {
       await firstValueFrom(this.onWrite)
       return this.pull(controller)
     }
     for (const entry of entries) {
-      controller.enqueue([entry.key, entry.value])
+      controller.enqueue({
+        resumeToken: entry.key,
+        streamID: entry.value,
+      })
     }
     this.token = entries[entries.length - 1].key
   }

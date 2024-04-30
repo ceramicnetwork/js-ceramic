@@ -1,7 +1,7 @@
 import { EventType, StreamMetadata, StreamState } from '@ceramicnetwork/common'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '@ceramicnetwork/common'
-import type { FeedAggregationStore } from './store/feed-aggregation-store.js'
+import type { FeedAggregationStore, AggregationStoreEntry } from './store/feed-aggregation-store.js'
 
 export class FeedDocument {
   constructor(
@@ -50,20 +50,18 @@ export class Feed implements PublicFeed {
   }
 }
 
-export class StreamLoadTransformer implements Transformer<[string, StreamID], FeedDocument> {
+export class StreamLoadTransformer implements Transformer<AggregationStoreEntry, FeedDocument> {
   constructor(
     private readonly streamState: (streamId: StreamID) => Promise<StreamState | undefined>
   ) {}
 
   async transform(
-    input: [string, StreamID],
+    entry: AggregationStoreEntry,
     controller: TransformStreamDefaultController<FeedDocument>
   ) {
-    const token = input[0]
-    const streamId = input[1]
-    const found = await this.streamState(streamId)
+    const found = await this.streamState(entry.streamID)
     if (found) {
-      const feedDocument = FeedDocument.fromStreamState(token, found)
+      const feedDocument = FeedDocument.fromStreamState(entry.resumeToken, found)
       controller.enqueue(feedDocument)
     }
   }
