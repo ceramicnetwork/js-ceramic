@@ -14,6 +14,9 @@ class NotFoundError extends Error {
   readonly notFound = true
 }
 
+/**
+ * **Remove** `undefined` fields from a LevelDB search params.
+ */
 function definiteSearchParams<T extends IteratorOptions<string, string>>(
   obj: T
 ): DeepNonNullable<T> {

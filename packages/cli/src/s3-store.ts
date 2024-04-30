@@ -14,6 +14,9 @@ import AWSSDK from 'aws-sdk'
 import { Mutex } from 'await-semaphore'
 import type { DeepNonNullable } from 'ts-essentials'
 
+/**
+ * **Remove** `undefined` fields from an S3 Level search params.
+ */
 function definiteSearchParams<T extends Partial<StoreSearchParams>>(obj: T): DeepNonNullable<T> {
   return Object.keys(obj).reduce(
     (acc, key) =>
