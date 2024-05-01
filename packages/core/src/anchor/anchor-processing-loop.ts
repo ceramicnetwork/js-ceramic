@@ -27,6 +27,10 @@ export class AnchorProcessingLoop {
    */
   readonly #anchorStoreQueue: NamedTaskQueue
   readonly #anchorPollingMetrics: TimeableMetric
+  /**
+   * Cache for the last time we polled a stream. Used to prevent polling the same stream more than once per minute.
+   */
+  readonly #pollCache: Map<string, number> = new Map()
 
   constructor(
     batchSize: number,
@@ -50,6 +54,10 @@ export class AnchorProcessingLoop {
       concurrency,
       store.infiniteList(batchSize),
       async (streamId) => {
+        // Exit early if we've already polled this stream in the last minute
+        if (!this.checkPollTime(streamId.toString())) {
+          return
+        }
         try {
           logger.verbose(
             `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
@@ -78,6 +86,7 @@ export class AnchorProcessingLoop {
             await this.#anchorStoreQueue.run(streamId.toString(), async () => {
               const loaded = await store.load(streamId)
               if (loaded.cid.equals(entry.cid)) {
+                this.#pollCache.delete(streamId.toString())
                 await store.remove(streamId)
                 logger.verbose(
                   `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
@@ -110,5 +119,18 @@ export class AnchorProcessingLoop {
   async stop(): Promise<void> {
     this.#anchorPollingMetrics.stopPublishingStats()
     return this.#loop.stop()
+  }
+
+  /**
+   * Check the poll time for a stream. Updates the poll time and returns true if the stream has not been polled in the
+   * last minute.
+   */
+  checkPollTime(streamId: string): boolean {
+    if (this.#pollCache.has(streamId) && (Date.now() < this.#pollCache.get(streamId))) {
+      return false
+    }
+    // Add ±10 seconds of jitter to prevent all streams from being polled at the same time every minute after a restart
+    this.#pollCache.set(streamId, 50_000 + Math.floor(Math.random() * 20_000))
+    return true
   }
 }
