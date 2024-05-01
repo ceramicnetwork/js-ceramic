@@ -8,10 +8,11 @@ import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
 import { ModelMetrics, Counter } from '@ceramicnetwork/model-metrics'
-import { throttle } from 'lodash'
+import throttle from 'lodash-es/throttle'
 import { CID, Version } from 'multiformats'
 import { interval } from 'rxjs'
 import { startWith } from 'rxjs/operators'
+import { RemoteCAS } from './ethereum/remote-cas.js'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
@@ -67,19 +68,24 @@ export class AnchorProcessingLoop {
   // the `throttledGetStatusForRequest` function, which controls the frequency of status checks and request submissions
   // to the CAS, enhancing system responsiveness and stability.
   private adjustPollingInterval(): void {
-    const currentRate = this.#cas.getCreateRequestRate()
+    const maxInterval = 200 // maximum interval in ms
+    const minInterval = 5 // minimum interval in ms
+    if (this.#cas instanceof RemoteCAS) {
+      const currentRate = this.#cas.getCreateRequestRate()
+      let newInterval = 1000 / Math.sqrt(currentRate + 1)
+      newInterval = Math.min(Math.max(newInterval, minInterval), maxInterval)
 
-    const maxInterval = 200 // maximum interval in ms (equivalent to 1000/5) ~ 5 tps
-    const minInterval = 5 // minimum interval in ms (equivalent to 1000 / 200 ) ~ 200 tps
-
-    let newInterval = 1000 / Math.sqrt(currentRate + 1)
-
-    // Ensure the interval is within bounds
-    newInterval = Math.min(Math.max(newInterval, minInterval), maxInterval)
-
-    this.throttledGetStatusForRequest = throttle(this.throttledGetStatusForRequest, newInterval, {
-      trailing: false,
-    })
+      this.throttledGetStatusForRequest = throttle(this.throttledGetStatusForRequest, newInterval, {
+        trailing: false,
+      })
+    } else {
+      // Handle the case where #cas is not an instance of RemoteCAS
+      console.warn('CAS client does not support dynamic rate adjustment.')
+      // Using minimum interval
+      this.throttledGetStatusForRequest = throttle(this.throttledGetStatusForRequest, minInterval, {
+        trailing: false,
+      })
+    }
   }
 
   constructor(
