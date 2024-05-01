@@ -139,6 +139,13 @@ export interface CASClient {
    * Abort any fetch requests to CAS.
    */
   close(): Promise<void>
+
+  /**
+   * Calculates the rate of anchor request creations over the last 15 minutes.
+   * This rate is computed as the total number of requests created divided by 15,
+   * providing the average number of requests per minute within this time frame.
+   */
+  getCreateRequestRate?(): number
 }
 
 export class NotSingleChainError extends Error {

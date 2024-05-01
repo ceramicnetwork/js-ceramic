@@ -7,9 +7,11 @@ import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
-import { ModelMetrics, Observable, Counter } from '@ceramicnetwork/model-metrics'
-import { throttle } from 'lodash';
+import { ModelMetrics, Counter } from '@ceramicnetwork/model-metrics'
+import { throttle } from 'lodash'
 import { CID, Version } from 'multiformats'
+import { interval } from 'rxjs'
+import { startWith } from 'rxjs/operators'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
@@ -32,36 +34,52 @@ export class AnchorProcessingLoop {
   readonly #anchorStoreQueue: NamedTaskQueue
   readonly #anchorPollingMetrics: TimeableMetric
 
+  readonly #cas: CASClient
+  // This function is throttled to limit its execution frequency to no more than once every CAS_REQUEST_POLLING_INTERVAL_MS.
+  // It attempts to get the status of an anchor request from the CAS. If the request is not found, it logs a warning,
+  // builds a new CAR file for the request, and submits a new request to the CAS.
+  // The function is configured to execute only at the leading edge of the interval,
+  // meaning it will execute immediately when called, but subsequent calls
+  // within the CAS_REQUEST_POLLING_INTERVAL_MS will be ignored, ensuring that the CAS is not overwhelmed with too many
+  // frequent requests and helping to manage system resources efficiently.
   throttledGetStatusForRequest = throttle(
-    async (streamId: StreamID, cid: CID<unknown, number, number, Version>, cas: CASClient, logger: DiagnosticsLogger, eventHandler: AnchorLoopHandler) => {
+    async (
+      streamId: StreamID,
+      cid: CID<unknown, number, number, Version>,
+      cas: CASClient,
+      logger: DiagnosticsLogger,
+      eventHandler: AnchorLoopHandler
+    ) => {
       return cas.getStatusForRequest(streamId, cid).catch(async (error) => {
         logger.warn(`No request present on CAS for ${cid} of ${streamId}: ${error}`)
         const requestCAR = await eventHandler.buildRequestCar(streamId, cid)
         return cas.create(new AnchorRequestCarFileReader(requestCAR))
-      });
+      })
     },
-    CAS_REQUEST_POLLING_INTERVAL_MS, 
-    { 'trailing': false }
-  );
+    CAS_REQUEST_POLLING_INTERVAL_MS, // Set the maximum frequency of function execution
+    { trailing: false } // Execute only at the leading edge of the interval
+  )
+  intervalSubscription: any
 
-  // Call this periodically with a separate timer in the polling loop.
-  // TODO :  
+  // This method dynamically adjusts the polling interval based on the current rate of create requests.
+  // It calculates a new interval using a square root function to moderate the change rate, ensuring the interval
+  // remains within predefined maximum and minimum bounds. The adjusted interval is then applied to throttle
+  // the `throttledGetStatusForRequest` function, which controls the frequency of status checks and request submissions
+  // to the CAS, enhancing system responsiveness and stability.
   private adjustPollingInterval(): void {
-    // Get this metric from the ModelMetrics
-    const currentRate = ModelMetrics.getCreationRequestRate();
-    const maxInterval = 2000; // maximum interval in ms
-    const minInterval = 166; // minimum interval in ms (equivalent to 1000/6)
-  
-    let newInterval = 1000 / Math.sqrt(currentRate + 1); // Example adjustment logic
-  
+    const currentRate = this.#cas.getCreateRequestRate()
+
+    const maxInterval = 200 // maximum interval in ms (equivalent to 1000/5) ~ 5 tps
+    const minInterval = 5 // minimum interval in ms (equivalent to 1000 / 200 ) ~ 200 tps
+
+    let newInterval = 1000 / Math.sqrt(currentRate + 1)
+
     // Ensure the interval is within bounds
-    newInterval = Math.min(Math.max(newInterval, minInterval), maxInterval);
-  
-    this.throttledGetStatusForRequest = throttle(
-      this.throttledGetStatusForRequest,
-      newInterval,
-      { 'trailing': false }
-    );
+    newInterval = Math.min(Math.max(newInterval, minInterval), maxInterval)
+
+    this.throttledGetStatusForRequest = throttle(this.throttledGetStatusForRequest, newInterval, {
+      trailing: false,
+    })
   }
 
   constructor(
@@ -78,7 +96,7 @@ export class AnchorProcessingLoop {
       'anchorRequestAge',
       METRICS_REPORTING_INTERVAL_MS
     )
-
+    this.#cas = cas
     const concurrency =
       Number(process.env.CERAMIC_ANCHOR_POLLING_CONCURRENCY) || DEFAULT_CONCURRENCY
     this.#loop = new ProcessingLoop(
@@ -91,7 +109,13 @@ export class AnchorProcessingLoop {
             `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
           )
           const entry = await store.load(streamId)
-          const event = await this.throttledGetStatusForRequest(streamId, entry.cid, cas, logger, eventHandler)
+          const event = await this.throttledGetStatusForRequest(
+            streamId,
+            entry.cid,
+            this.#cas,
+            logger,
+            eventHandler
+          )
           const isTerminal = await eventHandler.handle(event)
           logger.verbose(
             `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
@@ -134,6 +158,17 @@ export class AnchorProcessingLoop {
   start(): void {
     this.#anchorPollingMetrics.startPublishingStats()
     void this.#loop.start()
+
+    // Set up an interval to adjust the polling interval every 10 minutes (600000 milliseconds)
+    const subscription = interval(600000)
+      .pipe(
+        startWith(0) // to start immediately
+      )
+      .subscribe(() => {
+        this.adjustPollingInterval()
+      })
+
+    this.intervalSubscription = subscription
   }
 
   /**
@@ -141,6 +176,7 @@ export class AnchorProcessingLoop {
    */
   async stop(): Promise<void> {
     this.#anchorPollingMetrics.stopPublishingStats()
+    this.intervalSubscription?.unsubscribe()
     return this.#loop.stop()
   }
 }
