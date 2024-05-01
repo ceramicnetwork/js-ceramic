@@ -651,10 +651,10 @@ export class Repository {
       return
     }
 
-    const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
-    const anchorEvent = await this.anchorService.requestAnchor(carFile)
-    // Don't wait on handling the anchor event, let that happen in the background.
-    doNotWait(this.handleAnchorEvent(state$, anchorEvent), this.logger)
+    // const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
+    // const anchorEvent = await this.anchorService.requestAnchor(carFile)
+    // // Don't wait on handling the anchor event, let that happen in the background.
+    // doNotWait(this.handleAnchorEvent(state$, anchorEvent), this.logger)
   }
 
   /**
