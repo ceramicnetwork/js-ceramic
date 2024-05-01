@@ -11,10 +11,11 @@ import {
 import tmp, { type DirectoryResult } from 'tmp-promise'
 import { LevelKVFactory } from '../level-kv-factory.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { FeedAggregationStore } from '../feed-aggregation-store.js'
+import { FeedAggregationStore, MonotonicKey } from '../feed-aggregation-store.js'
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 import { IKVStore } from '../ikv-store.js'
 import { Deferred } from '../../anchor/processing-loop.js'
+import MockDate from 'mockdate'
 
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -85,24 +86,23 @@ describe('deleteStale', () => {
 
 describe('put', () => {
   test('use current timestamp', async () => {
-    const fauxNow = process.hrtime.bigint()
-    const mockTime = jest.spyOn(process.hrtime, 'bigint').mockImplementation(() => {
-      return fauxNow
-    })
+    const now = new Date()
+    MockDate.set(now)
     const streamId = CommonTestUtils.randomStreamID()
     await feedAggregationStore.put(streamId)
     const keys = await feedAggregationStore.findKeys()
     expect(keys.length).toEqual(1)
     const first = keys[0]
-    expect(first).toEqual(fauxNow.toString())
+    const key = `${now.valueOf()}000000`
+    expect(first).toEqual(key)
     const stored = await feedAggregationStore.load(first)
     expect(stored).toEqual(streamId)
-    mockTime.mockRestore()
+    MockDate.reset()
   })
 
-  test('use explicit timestamp', async () => {
+  test('use explicit key', async () => {
     const streamId = CommonTestUtils.randomStreamID()
-    const timestamp = 1000
+    const timestamp = '1000'
     await feedAggregationStore.put(streamId, timestamp)
     const keys = await feedAggregationStore.findKeys()
     expect(keys.length).toEqual(1)
@@ -142,5 +142,19 @@ describe('periodic clean up', () => {
     await defer
     expect(addSpy).toBeCalledTimes(addCalledMax)
     expect(deleteStaleSpy).toBeCalledTimes(addCalledMax)
+  })
+})
+
+describe('MonotonicKey', () => {
+  test('uses current time and counter', () => {
+    const generator = new MonotonicKey()
+    const now = new Date()
+    MockDate.set(now)
+    const nowSpy = jest.spyOn(Date, 'now')
+    const entries = [generator.next(), generator.next(), generator.next()]
+    const nowString = now.valueOf().toString()
+    expect(entries).toEqual([`${nowString}000000`, `${nowString}000001`, `${nowString}000002`])
+    MockDate.reset()
+    expect(nowSpy).toBeCalledTimes(entries.length)
   })
 })

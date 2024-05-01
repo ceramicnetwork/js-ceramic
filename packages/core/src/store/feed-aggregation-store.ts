@@ -22,6 +22,29 @@ export type AggregationStoreEntry = {
 }
 
 /**
+ * Monotonically increasing counter: current time in ms + six digits of a counter.
+ * The counter gets incremented if `next` is called during the same millisecond.
+ */
+export class MonotonicKey {
+  #previous = Date.now()
+  #counter = 0
+
+  /**
+   * Retrieve the next key.
+   */
+  next(now = Date.now()): string {
+    if (this.#previous === now) {
+      const counter = this.#counter++
+      return `${this.#previous}${counter.toString().padStart(6, '0')}`
+    } else {
+      this.#counter = 0
+      this.#previous = now
+      return `${this.#previous}000000`
+    }
+  }
+}
+
+/**
  * A storage for feed aggregation queue: key is a timestamp, value is StreamID.
  */
 export class FeedAggregationStore extends ObjectStore<string, StreamID> {
@@ -29,6 +52,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   readonly staleDuration: number
   readonly cleanupInterval: number | null
   readonly tasks: TaskQueue
+  readonly #keyGenerator = new MonotonicKey()
   #interval: NodeJS.Timeout | undefined
   private readonly onWrite: Subject<void>
 
@@ -65,11 +89,8 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
     return keys.length
   }
 
-  async put(
-    streamId: StreamID,
-    timestamp: string = process.hrtime.bigint().toString()
-  ): Promise<void> {
-    await this.save(timestamp, streamId)
+  async put(streamId: StreamID, key: string = this.#keyGenerator.next()): Promise<void> {
+    await this.save(key, streamId)
     this.onWrite.next()
   }
 
