@@ -54,7 +54,7 @@ export class EthereumAnchorService implements AnchorService {
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     sendRequest: FetchRequest = fetchJson,
-    enableAnchorPollingLoop = true
+    enableAnchorPollingLoop = false
   ) {
     this.#logger = logger
     this.#events = new Subject()
@@ -150,7 +150,7 @@ export class AuthenticatedEthereumAnchorService
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
-    enableAnchorPollingLoop = true
+    enableAnchorPollingLoop = false
   ) {
     super(
       anchorServiceUrl,
