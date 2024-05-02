@@ -77,8 +77,13 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
     return this.store.find(params)
   }
 
-  async deleteStale(lessThan: number): Promise<number> {
-    const keys = await this.store.findKeys({ lt: String(lessThan * 1000) })
+  /**
+   * Delete entries older than `lessThanMS`.
+   *
+   * @param lessThanMs - Unix timestamp in millisecond. Older entries got deleted.
+   */
+  async deleteStale(lessThanMs: number): Promise<number> {
+    const keys = await this.store.findKeys({ lt: String(lessThanMs * 1000) })
     if (keys.length > 0) {
       let batch = this.store.batch()
       for (const k of keys) {

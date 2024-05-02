@@ -163,7 +163,7 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
     this.streamState = this.streamState.bind(this)
     this.feedAggregationStore = new FeedAggregationStore()
-    this.feed = new Feed(this.feedAggregationStore, this.streamState)
+    this.feed = new Feed(this.feedAggregationStore, this.logger, this.streamState)
   }
 
   /**
@@ -957,7 +957,7 @@ export class Repository {
   }
 
   /**
-   * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
+   * Adds the stream's RunningState to the in-memory cache.
    */
   private _registerRunningState(state$: RunningState): void {
     this.inmemory.set(state$.id.toString(), state$)
