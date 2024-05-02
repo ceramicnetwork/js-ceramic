@@ -392,7 +392,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
         // TODO: WS1-1487 not an official ceramic config option
         feedEnabled: config.reconFeedEnabled ?? true,
-        codecs: ipfs.codecs.listCodecs(),
       },
       logger
     )
