@@ -1,4 +1,4 @@
-import { IpfsApi, LoggerProvider, Networks } from '@ceramicnetwork/common'
+import { IndexApi, IpfsApi, LoggerProvider, Networks } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { Dispatcher } from '../dispatcher.js'
 import { StreamStateStore } from '../store/stream-state-store.js'
@@ -6,9 +6,9 @@ import { Repository, RepositoryDependencies } from '../state-management/reposito
 import { PinStore } from '../store/pin-store.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
-import { Feed } from '../feed.js'
 import { IReconApi } from '../recon.js'
 import { LevelKVFactory } from '../store/level-kv-factory.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Promise<Dispatcher> {
   const loggerProvider = new LoggerProvider()
@@ -17,13 +17,29 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   const factory = new LevelKVFactory(levelPath, 'test', logger)
   const stateStore = new StreamStateStore()
   await stateStore.open(factory)
-  const feed = new Feed()
-  const fauxReconApi = {} as IReconApi
-  const repository = new Repository(100, 100, feed, fauxReconApi, logger)
+  const fauxReconApi = {
+    init: () => Promise.resolve(),
+    pipe: () => fauxReconApi,
+    subscribe: () => fauxReconApi,
+  } as unknown as IReconApi
+  const repository = new Repository(100, 100, fauxReconApi, logger)
   const pinStore = {
     stateStore,
+    open: () => Promise.resolve(),
   } as unknown as PinStore
-  repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
+  const anchorRequestStore = {
+    open: () => Promise.resolve(),
+  } as unknown as AnchorRequestStore
+  const index = {
+    init: () => Promise.resolve(),
+  } as unknown as IndexApi
+  repository.setDeps({
+    pinStore,
+    kvFactory: factory,
+    anchorRequestStore,
+    indexing: index,
+  } as unknown as RepositoryDependencies)
+  await repository.init()
   const shutdownSignal = new ShutdownSignal()
 
   return new Dispatcher(

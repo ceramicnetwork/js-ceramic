@@ -1,86 +1,108 @@
-import { test, jest } from '@jest/globals'
-import type { SpiedFunction } from 'jest-mock'
+import { test, jest, expect } from '@jest/globals'
 import type { Response } from 'express'
-import { from, Observable } from 'rxjs'
-import { SseFeed } from '../sse-feed.js'
+import { ExpectedCloseError, SSESink } from '../sse-feed.js'
 import { EventEmitter } from 'node:events'
-import { LoggerProvider } from '@ceramicnetwork/common'
-
-const logger = new LoggerProvider().getDiagnosticsLogger()
+import { WritableStream } from 'node:stream/web'
 
 class FauxResponse extends EventEmitter {
   readonly writeHead = jest.fn()
-  readonly write = jest.fn()
+  readonly write = jest.fn(() => true)
   readonly end = jest.fn()
 }
 
-test('constructor does not subscribe to observable', () => {
-  const observable = from([1, 2, 3])
-  const subscribeSpy = jest.spyOn(observable, 'subscribe')
-  new SseFeed(logger, observable, String)
-  expect(subscribeSpy).not.toBeCalled()
-})
+function readableStreamFromIterable<T>(source: Iterable<T>) {
+  const iterator = source[Symbol.iterator]()
+  return new ReadableStream({
+    start(controller) {
+      const next = iterator.next()
+      if (next.done) {
+        controller.close()
+      } else {
+        controller.enqueue(next.value)
+      }
+    },
+    pull(controller) {
+      const next = iterator.next()
+      if (next.done) {
+        controller.close()
+      } else {
+        controller.enqueue(next.value)
+      }
+    },
+  })
+}
 
-test('send events', () => {
+test('send events', async () => {
   const source = [10, 20, 30]
-  const feed = new SseFeed(logger, from(source), String)
+  const readable = readableStreamFromIterable(source)
   const fauxResponse = new FauxResponse()
-  feed.send(fauxResponse as unknown as Response)
+  const sink = new SSESink(fauxResponse as unknown as Response)
+  const doneStreaming = readable.pipeTo(new WritableStream(sink))
   expect(fauxResponse.writeHead).toBeCalledWith(200, {
     Connection: 'keep-alive',
     'Cache-Control': 'no-cache',
     'Content-Type': 'text/event-stream',
   })
+  await doneStreaming
   expect(fauxResponse.write).toBeCalledTimes(source.length)
   for (const [index, value] of source.entries()) {
     expect(fauxResponse.write).nthCalledWith(index + 1, `data: ${value}\n\n`)
   }
 })
 
-test('close connection when observable is done', () => {
+test('close connection when source is done', async () => {
   const source = [10, 20, 30]
-  const feed = new SseFeed(logger, from(source), String)
+  const readable = readableStreamFromIterable(source)
   const fauxResponse = new FauxResponse()
-  feed.send(fauxResponse as unknown as Response)
+  const sink = new SSESink(fauxResponse as unknown as Response)
+  const doneStreaming = readable.pipeTo(new WritableStream(sink))
+  await doneStreaming
   expect(fauxResponse.write).toBeCalledTimes(source.length)
   expect(fauxResponse.end).toBeCalled()
 })
 
-test('stop subscription when connection closed', () => {
-  const source = new Observable<number>((subscriber) => {
-    let counter = 0
-    const interval = setInterval(() => subscriber.next(counter++), 200)
-    return () => clearInterval(interval)
-  })
-  const subscribeOriginal = source.subscribe.bind(source)
-  let unsubscribeSpy: SpiedFunction
-  const subscribeSpy = jest.spyOn(source, 'subscribe').mockImplementation((...args) => {
-    const subscription = subscribeOriginal(...args)
-    unsubscribeSpy = jest.spyOn(subscription, 'unsubscribe')
-    return subscription
-  })
-  const feed = new SseFeed(logger, source, String)
+test('stop when connection closed', async () => {
+  let counter = 0
+  let interval: NodeJS.Timer | undefined = undefined
+  const source = {
+    start(controller) {
+      interval = setInterval(() => {
+        controller.enqueue(counter++)
+      }, 200)
+    },
+    cancel() {
+      clearInterval(interval)
+    },
+  }
+  const startSpy = jest.spyOn(source, 'start')
+  const cancelSpy = jest.spyOn(source, 'cancel')
+  const readable = new ReadableStream(source)
+
   const fauxResponse = new FauxResponse()
-  feed.send(fauxResponse as unknown as Response)
-  expect(subscribeSpy).toBeCalledTimes(1)
-  expect(unsubscribeSpy).toBeCalledTimes(0)
+  const sink = new SSESink(fauxResponse as unknown as Response)
+  const doneStreaming = readable.pipeTo(new WritableStream(sink))
+  expect(startSpy).toBeCalledTimes(1)
+  expect(cancelSpy).toBeCalledTimes(0)
   fauxResponse.emit('close')
-  expect(unsubscribeSpy).toBeCalledTimes(1)
-  expect(fauxResponse.end).toBeCalled()
+  await expect(doneStreaming).rejects.toThrow(ExpectedCloseError)
+  expect(cancelSpy).toBeCalledTimes(1)
 })
 
-test('close connection on error', () => {
-  const source = new Observable<number>((subscriber) => {
-    subscriber.next(1)
-    subscriber.next(2)
-    subscriber.next(3)
-    subscriber.error(new Error(`Oops`))
+test('close connection on error', async () => {
+  let counter = 0
+  const readable = new ReadableStream({
+    pull(controller) {
+      if (counter > 2) {
+        controller.error(new Error('Oops'))
+        return
+      }
+      controller.enqueue(counter++)
+    },
   })
-  const errSpy = jest.spyOn(logger, 'err')
-  const feed = new SseFeed(logger, source, String)
   const fauxResponse = new FauxResponse()
-  feed.send(fauxResponse as unknown as Response)
+  const sink = new SSESink(fauxResponse as unknown as Response)
+  const doneStreaming = readable.pipeTo(new WritableStream(sink))
+  await expect(doneStreaming).rejects.toThrow(/Oops/)
   expect(fauxResponse.write).toBeCalledTimes(3)
   expect(fauxResponse.end).toBeCalledTimes(1)
-  expect(errSpy).toBeCalledTimes(1)
 })
