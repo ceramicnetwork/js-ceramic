@@ -32,8 +32,6 @@ function modelDefinition(): ModelDefinition {
   }
 }
 
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
 describe('Ceramic feed', () => {
   let ipfs1: IpfsApi
   let ipfs2: IpfsApi
@@ -98,7 +96,7 @@ describe('Ceramic feed', () => {
     await doneStreaming
   })
 
-  testIfV3('add entry after anchoring stream', async () => {
+  test('add entry after anchoring stream', async () => {
     const emissions: FeedDocument[] = []
     const readable1 = ceramic1.feed.aggregation.documents()
     const writable1 = new WritableStream({
