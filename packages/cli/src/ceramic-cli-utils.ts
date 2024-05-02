@@ -154,9 +154,6 @@ export class CeramicCliUtils {
     if (process.env.CERAMIC_DISABLE_IPFS_PEER_DATA_SYNC == 'true')
       config.ipfs.disablePeerDataSync = true
 
-    delete config.anchor.authMethod
-    config.node.privateSeedUrl = undefined
-
     // Validate the config after applying all the overrides
     validateConfig(config)
 

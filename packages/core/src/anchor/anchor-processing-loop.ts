@@ -13,6 +13,9 @@ const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
 const DEFAULT_CONCURRENCY = 25
 
+const ANCHOR_POLL_PACING_MS = 60_000
+const ANCHOR_POLL_JITTER_MS = 10_000
+
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
  * and handle the response via `eventHandler.handle`.
@@ -28,7 +31,8 @@ export class AnchorProcessingLoop {
   readonly #anchorStoreQueue: NamedTaskQueue
   readonly #anchorPollingMetrics: TimeableMetric
   /**
-   * Cache for the last time we polled a stream. Used to prevent polling the same stream more than once per minute.
+   * Cache for the last time we polled a stream. Used to prevent polling the same stream more than once per pacing
+   * interval.
    */
   readonly #pollCache: Map<string, number> = new Map()
 
@@ -54,7 +58,7 @@ export class AnchorProcessingLoop {
       concurrency,
       store.infiniteList(batchSize),
       async (streamId) => {
-        // Exit early if we've already polled this stream in the last minute
+        // Exit early if we've already polled this stream in the last pacing interval
         if (!this.checkPollTime(streamId.toString())) {
           return
         }
@@ -123,14 +127,15 @@ export class AnchorProcessingLoop {
 
   /**
    * Check the poll time for a stream. Updates the poll time and returns true if the stream has not been polled in the
-   * last minute.
+   * last pacing interval.
    */
   checkPollTime(streamId: string): boolean {
     if (this.#pollCache.has(streamId) && (Date.now() < this.#pollCache.get(streamId))) {
       return false
     }
-    // Add ±10 seconds of jitter to prevent all streams from being polled at the same time every minute after a restart
-    this.#pollCache.set(streamId, 50_000 + Math.floor(Math.random() * 20_000))
+    // Add some jitter to prevent all streams from being polled at exactly the same time after a restart
+    const jitter = Math.floor(Math.random() * 2 * ANCHOR_POLL_JITTER_MS) - ANCHOR_POLL_JITTER_MS
+    this.#pollCache.set(streamId, ANCHOR_POLL_PACING_MS + jitter)
     return true
   }
 }

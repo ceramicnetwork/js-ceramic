@@ -8,6 +8,7 @@ export function instrumentRequests(req, res, next) {
   const agent = req.header('user-agent')
 
   const HTTP_REQUEST = 'http_request'
+  const HTTP_REQUEST_CREATE_STREAM = 'http_request_create_stream'
 
   const clean_endpoint_re = /(\/streams\/)[^/?]+(\?.+)?/
 
@@ -20,7 +21,7 @@ export function instrumentRequests(req, res, next) {
     package: 'cli.daemon',
   })
   if (req.method === 'POST' && req.url.includes('api/v0/streams')) {
-    Metrics.count('http_request_create_stream', 1)
+    Metrics.count(HTTP_REQUEST_CREATE_STREAM, 1)
   }
   next()
 }
