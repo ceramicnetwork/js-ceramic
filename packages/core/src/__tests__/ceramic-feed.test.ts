@@ -97,7 +97,7 @@ describe('Ceramic feed', () => {
   })
 
   test('add entry after anchoring stream', async () => {
-    const emissions: FeedDocument[] = []
+    const emissions: Array<FeedDocument> = []
     const readable1 = ceramic1.feed.aggregation.documents()
     const writable1 = new WritableStream({
       write(chunk) {
