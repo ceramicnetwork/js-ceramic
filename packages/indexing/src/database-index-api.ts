@@ -234,7 +234,20 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     }
     const toMerge = cloneDeep(indexedData)
     delete toMerge['created_at']
-    await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
+    await this.dbConnection(tableName)
+      .insert(indexedData)
+      .onConflict('stream_id')
+      .merge(toMerge)
+      .catch((err) => {
+        this.logger.err(
+          `Error indexing ${JSON.stringify(
+            indexedData,
+            null,
+            3
+          )} for model ${tableName} with error: ${err}`
+        )
+        throw err
+      })
   }
 
   /**
