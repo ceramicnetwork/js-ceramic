@@ -13,9 +13,6 @@ const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
 const DEFAULT_CONCURRENCY = 25
 
-const ANCHOR_POLL_PACING_MS = 60_000
-const ANCHOR_POLL_JITTER_MS = 10_000
-
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
  * and handle the response via `eventHandler.handle`.
@@ -30,11 +27,6 @@ export class AnchorProcessingLoop {
    */
   readonly #anchorStoreQueue: NamedTaskQueue
   readonly #anchorPollingMetrics: TimeableMetric
-  /**
-   * Cache for the last time we polled a stream. Used to prevent polling the same stream more than once per pacing
-   * interval.
-   */
-  readonly #pollCache: Map<string, number> = new Map()
 
   constructor(
     batchSize: number,
@@ -58,10 +50,6 @@ export class AnchorProcessingLoop {
       concurrency,
       store.infiniteList(batchSize),
       async (streamId) => {
-        // Exit early if we've already polled this stream in the last pacing interval
-        if (!this.checkPollTime(streamId.toString())) {
-          return
-        }
         try {
           logger.verbose(
             `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
@@ -90,7 +78,6 @@ export class AnchorProcessingLoop {
             await this.#anchorStoreQueue.run(streamId.toString(), async () => {
               const loaded = await store.load(streamId)
               if (loaded.cid.equals(entry.cid)) {
-                this.#pollCache.delete(streamId.toString())
                 await store.remove(streamId)
                 logger.verbose(
                   `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
@@ -123,19 +110,5 @@ export class AnchorProcessingLoop {
   async stop(): Promise<void> {
     this.#anchorPollingMetrics.stopPublishingStats()
     return this.#loop.stop()
-  }
-
-  /**
-   * Check the poll time for a stream. Updates the poll time and returns true if the stream has not been polled in the
-   * last pacing interval.
-   */
-  checkPollTime(streamId: string): boolean {
-    if (this.#pollCache.has(streamId) && (Date.now() < this.#pollCache.get(streamId))) {
-      return false
-    }
-    // Add some jitter to prevent all streams from being polled at exactly the same time after a restart
-    const jitter = Math.floor(Math.random() * 2 * ANCHOR_POLL_JITTER_MS) - ANCHOR_POLL_JITTER_MS
-    this.#pollCache.set(streamId, ANCHOR_POLL_PACING_MS + jitter)
-    return true
   }
 }
