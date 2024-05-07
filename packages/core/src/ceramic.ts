@@ -385,7 +385,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const feed = new Feed()
     const reconApi = new ReconApi(
       {
         enabled: Boolean(process.env.CERAMIC_RECON_MODE),
@@ -395,13 +394,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       },
       logger
     )
-    const repository = new Repository(
-      streamCacheLimit,
-      concurrentRequestsLimit,
-      feed,
-      reconApi,
-      logger
-    )
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, reconApi, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -447,7 +440,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       shutdownSignal,
       providersCache,
       anchorRequestCarBuilder,
-      feed,
+      feed: repository.feed,
       signer,
       reconApi,
     }

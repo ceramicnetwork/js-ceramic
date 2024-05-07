@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.10.0-rc.0...@ceramicnetwork/stream-model-instance-handler@4.10.0) (2024-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [4.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.9.0...@ceramicnetwork/stream-model-instance-handler@4.10.0-rc.0) (2024-04-29)
+
+
+### Bug Fixes
+
+* Don't import observability package into common, which is used in the http-client ([#3217](https://github.com/ceramicnetwork/js-ceramic/issues/3217)) ([2f9f23f](https://github.com/ceramicnetwork/js-ceramic/commit/2f9f23fb11ffc2b46728e8bc8be876242f5fc005))
+
+
+
+
+
+# [4.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.9.0-rc.0...@ceramicnetwork/stream-model-instance-handler@4.9.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
 # [4.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.8.0...@ceramicnetwork/stream-model-instance-handler@4.9.0-rc.0) (2024-04-22)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

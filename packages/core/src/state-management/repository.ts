@@ -27,7 +27,6 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVFactory } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { ModelMetrics, Observable as ObservableMetric } from '@ceramicnetwork/model-metrics'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
@@ -37,7 +36,7 @@ import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CAR } from 'cartonne'
-import { FeedDocument, type Feed } from '../feed.js'
+import { FeedDocument, Feed } from '../feed.js'
 import { doNotWait } from '../ancillary/do-not-wait.js'
 import { IReconApi, ReconEventFeedResponse } from '../recon.js'
 import { Utils } from '../utils.js'
@@ -122,7 +121,7 @@ export class Repository {
    */
   readonly inmemory: StateCache<RunningState>
 
-  private readonly feed: Feed
+  readonly feed: Feed
   readonly feedAggregationStore: FeedAggregationStore
 
   private reconEventFeedSubscription: Subscription | undefined
@@ -140,24 +139,20 @@ export class Repository {
    */
   #syncedPinnedStreams: Set<string> = new Set()
 
-  #numPendingAnchorSubscriptions = 0
-
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
-   * @param feed - Feed to push StreamStates to.
+   * @param recon - Recon API
    */
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
-    feed: Feed,
     private readonly recon: IReconApi,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
-    this.feed = feed
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -166,7 +161,9 @@ export class Repository {
       state$.complete()
     })
     this.updates$ = this.updates$.bind(this)
+    this.streamState = this.streamState.bind(this)
     this.feedAggregationStore = new FeedAggregationStore()
+    this.feed = new Feed(this.feedAggregationStore, this.logger, this.streamState)
   }
 
   /**
@@ -206,17 +203,6 @@ export class Repository {
 
   private get streamUpdater(): StreamUpdater {
     return this.#deps.streamUpdater
-  }
-
-  /**
-   * Returns the number of streams with writes that are waiting to be anchored by the CAS.
-   */
-  get numPendingAnchors(): number {
-    ModelMetrics.observe(
-      ObservableMetric.CURRENT_PENDING_REQUESTS,
-      this.#numPendingAnchorSubscriptions
-    )
-    return this.#numPendingAnchorSubscriptions
   }
 
   private get anchorService(): AnchorService {
@@ -960,22 +946,9 @@ export class Repository {
   }
 
   /**
-   * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
+   * Adds the stream's RunningState to the in-memory cache.
    */
   private _registerRunningState(state$: RunningState): void {
-    state$
-      .pipe(
-        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
-          // Consider distinct if proposed log length differs
-          if (proposedLog.length !== currentLog.length) return false
-          // Or let's see if the tip is different
-          const currentTip = currentLog[currentLog.length - 1].cid
-          const proposedTip = proposedLog[proposedLog.length - 1].cid
-          return currentTip.equals(proposedTip)
-        }),
-        map(FeedDocument.fromStreamState)
-      )
-      .subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
