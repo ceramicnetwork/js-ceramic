@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.10.0...@ceramicnetwork/cli@5.11.0-rc.0) (2024-05-07)
+
+
+### Features
+
+* FeedStream ([#3216](https://github.com/ceramicnetwork/js-ceramic/issues/3216)) ([0b6ff7c](https://github.com/ceramicnetwork/js-ceramic/commit/0b6ff7c825ef915cd24aea4591904f710cae253f))
+
+
+
+
+
 # [5.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.10.0-rc.0...@ceramicnetwork/cli@5.10.0) (2024-05-06)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
