@@ -137,7 +137,7 @@ class StreamIDFeedSource implements UnderlyingSource<AggregationStoreEntry> {
     private readonly find: FeedAggregationStore['find'],
     private readonly onWrite: Observable<void>,
     token: string = new MonotonicKey().next(),
-    private readonly logger: DiagnosticsLogger,
+    private readonly logger: DiagnosticsLogger
   ) {
     this.token = token
   }
