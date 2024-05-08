@@ -162,7 +162,7 @@ export class Repository {
     })
     this.updates$ = this.updates$.bind(this)
     this.streamState = this.streamState.bind(this)
-    this.feedAggregationStore = new FeedAggregationStore()
+    this.feedAggregationStore = new FeedAggregationStore(this.logger)
     this.feed = new Feed(this.feedAggregationStore, this.logger, this.streamState)
   }
 
