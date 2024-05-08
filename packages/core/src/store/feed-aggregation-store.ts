@@ -116,7 +116,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 
   streamIDs(gt?: string): ReadableStream<AggregationStoreEntry> {
-    const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), gt, this.logger)
+    const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), this.logger, gt)
     return new ReadableStream(source)
   }
 
@@ -136,8 +136,8 @@ class StreamIDFeedSource implements UnderlyingSource<AggregationStoreEntry> {
   constructor(
     private readonly find: FeedAggregationStore['find'],
     private readonly onWrite: Observable<void>,
-    token: string = new MonotonicKey().next(),
-    private readonly logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger,
+    token: string = new MonotonicKey().next()
   ) {
     this.token = token
   }
