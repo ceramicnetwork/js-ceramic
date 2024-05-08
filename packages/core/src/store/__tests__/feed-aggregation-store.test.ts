@@ -27,7 +27,7 @@ let feedAggregationStore: FeedAggregationStore
 beforeAll(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   kvFactory = new LevelKVFactory(tmpFolder.path, `fake-${Math.random()}`, logger)
-  feedAggregationStore = new FeedAggregationStore()
+  feedAggregationStore = new FeedAggregationStore(logger)
   const open = async (name: string): Promise<IKVStore> => {
     feedKVStore = await kvFactory.open(name)
     return feedKVStore
@@ -123,7 +123,7 @@ describe('periodic clean up', () => {
   })
 
   test('every cleanupInterval', async () => {
-    const store = new FeedAggregationStore(10, 100)
+    const store = new FeedAggregationStore(logger, 10, 100)
     const tasks = store.tasks
     let addCalledTimes = 0
     const addCalledMax = 3
