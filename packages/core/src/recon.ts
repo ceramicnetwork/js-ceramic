@@ -150,6 +150,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     }
     const body = {
       data: car.toString(),
+      id: '',
     }
     try {
       await this.#sendRequest(this.#url + '/ceramic/events', {
