@@ -14,6 +14,13 @@ import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 const MAX_FAILED_REQUESTS = 3
 const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
 
+const CAS_REQUEST_CREATED = 'cas_request_created'
+const CAS_REQUEST_POLLED = 'cas_request_polled'
+const CAS_REQUEST_FAILED = 'cas_request_failed'
+const CAS_REQUEST_CREATE_FAILED = 'cas_request_create_failed'
+const CAS_REQUEST_POLL_FAILED = 'cas_request_poll_failed'
+const CAS_REQUEST_COMPLETED = 'cas_request_completed'
+
 /**
  * Parse JSON that CAS returns.
  */
@@ -29,7 +36,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
   }
   const parsed = validation.right
   if (ErrorResponse.is(parsed)) {
-    Metrics.count('cas_request_failed', 1)
+    Metrics.count(CAS_REQUEST_FAILED, 1)
     return {
       status: AnchorRequestStatusName.FAILED,
       streamId: streamId,
@@ -38,7 +45,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
     }
   } else {
     if (parsed.status === AnchorRequestStatusName.COMPLETED) {
-      Metrics.count('cas_request_completed', 1)
+      Metrics.count(CAS_REQUEST_COMPLETED, 1)
       return {
         status: parsed.status,
         streamId: parsed.streamId,
@@ -156,6 +163,7 @@ export class RemoteCAS implements CASClient {
 
       // We successfully contacted the CAS
       this._recordCASContactSuccess('created')
+      Metrics.count(CAS_REQUEST_CREATED, 1)
 
       return response
     })
@@ -164,7 +172,7 @@ export class RemoteCAS implements CASClient {
       catchError((error) => {
         // Record the fact that we failed to contact the CAS
         this._recordCASContactFailure()
-
+        Metrics.count(CAS_REQUEST_CREATE_FAILED, 1)
         // clean up the error message to have more context
         throw new Error(
           `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${
@@ -185,7 +193,7 @@ export class RemoteCAS implements CASClient {
 
       // We successfully contacted the CAS
       this._recordCASContactSuccess('polled')
-
+      Metrics.count(CAS_REQUEST_POLLED, 1)
       return response
     })
     const response = await firstValueFrom(
@@ -193,6 +201,7 @@ export class RemoteCAS implements CASClient {
         catchError((error) => {
           // Record the fact that we failed to contact the CAS
           this._recordCASContactFailure()
+          Metrics.count(CAS_REQUEST_POLL_FAILED, 1)
 
           // clean up the error message to have more context
           throw new Error(
