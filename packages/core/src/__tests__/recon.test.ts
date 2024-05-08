@@ -121,7 +121,7 @@ describe('ReconApi', () => {
 
       expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/events`, {
         method: 'POST',
-        body: { data: fakeCar.toString(), id: '' },
+        body: { data: fakeCar.toString() },
       })
     })
   })
