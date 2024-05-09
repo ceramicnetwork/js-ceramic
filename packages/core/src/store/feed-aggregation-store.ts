@@ -3,6 +3,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import type { IKVFactory, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
 import { Observable, firstValueFrom, Subject } from 'rxjs'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import * as process from 'node:process'
 
 function serializeStreamID(streamID: StreamID): string {
@@ -57,6 +58,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   private readonly onWrite: Subject<void>
 
   constructor(
+    private readonly logger: DiagnosticsLogger,
     staleDuration: number = DEFAULT_STALE_DURATION,
     cleanupInterval: number | null = DEFAULT_CLEANUP_INTERVAL
   ) {
@@ -96,6 +98,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
 
   async put(streamId: StreamID, key: string = this.#keyGenerator.next()): Promise<void> {
     await this.save(key, streamId)
+    this.logger.verbose(`Inserting this streamId from LevelDB ${streamId} at ${Date.now()}`)
     this.onWrite.next()
   }
 
@@ -113,7 +116,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 
   streamIDs(gt?: string): ReadableStream<AggregationStoreEntry> {
-    const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), gt)
+    const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), this.logger, gt)
     return new ReadableStream(source)
   }
 
@@ -133,6 +136,7 @@ class StreamIDFeedSource implements UnderlyingSource<AggregationStoreEntry> {
   constructor(
     private readonly find: FeedAggregationStore['find'],
     private readonly onWrite: Observable<void>,
+    private readonly logger: DiagnosticsLogger,
     token: string = new MonotonicKey().next()
   ) {
     this.token = token
@@ -145,6 +149,7 @@ class StreamIDFeedSource implements UnderlyingSource<AggregationStoreEntry> {
       return this.pull(controller)
     }
     for (const entry of entries) {
+      this.logger.verbose(`Sending this streamId from LevelDB ${entry.value} at ${Date.now()}`)
       controller.enqueue({
         resumeToken: entry.key,
         streamID: entry.value,
