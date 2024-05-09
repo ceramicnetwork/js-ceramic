@@ -26,6 +26,7 @@ export async function createCeramic(
         enableHistoricalSync: false,
       },
       sync: false,
+      anchorLoopMinDurationMs: 0,
     },
     config
   )

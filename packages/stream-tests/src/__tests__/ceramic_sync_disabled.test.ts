@@ -25,6 +25,7 @@ const makeCeramicCore = async (
       disableComposedb: true,
     },
     disablePeerDataSync,
+    anchorLoopMinDurationMs: 0,
   })
 
   return core

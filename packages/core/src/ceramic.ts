@@ -270,7 +270,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     )
     const anchorRequestStore = new AnchorRequestStore(
       this._logger,
-      params.anchorLoopMinDurationMs
+      params.anchorLoopMinDurationMs >= 0
         ? params.anchorLoopMinDurationMs
         : DEFAULT_MIN_ANCHOR_LOOP_DURATION_MS
     )
@@ -435,6 +435,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       networkOptions,
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
+      anchorLoopMinDurationMs: parseInt(config.anchorLoopMinDurationMs, 10),
     }
 
     const modules: CeramicModules = {
