@@ -76,6 +76,7 @@ export class RemoteCAS implements CASClient {
   // does not cause this counter to increment.
   #numFailedRequests: number
   #firstFailedRequestDate: Date | null
+  private createRequestTimestamps: number[] = []
 
   constructor(logger: DiagnosticsLogger, anchorServiceUrl: string, sendRequest: FetchRequest) {
     this.#logger = logger
@@ -147,6 +148,7 @@ export class RemoteCAS implements CASClient {
    */
   async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
     const response = await firstValueFrom(this.create$(carFileReader))
+    this.incrementCreateRequestCount()
     return parseResponse(carFileReader.streamId, carFileReader.tip, response)
   }
 
@@ -214,6 +216,23 @@ export class RemoteCAS implements CASClient {
       )
     )
     return parseResponse(streamId, tip, response)
+  }
+
+  private incrementCreateRequestCount(): void {
+    this.createRequestTimestamps.push(Date.now())
+  }
+
+  public getCreateRequestRate(): number {
+    const currentTime = Date.now()
+    const oneMinuteAgo = currentTime - 600000 // 1000 * 60 * 60 * 10
+
+    const recentTimestamps = this.createRequestTimestamps.filter(
+      (timestamp) => timestamp > oneMinuteAgo
+    )
+    this.createRequestTimestamps = recentTimestamps // Update the array to only hold recent timestamps
+
+    // get the average of the rates in the last 15 minutes
+    return recentTimestamps.length / 10
   }
 
   async close() {
