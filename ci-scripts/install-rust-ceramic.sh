@@ -6,7 +6,13 @@ OS=unknown-linux-gnu
 TARGET=$ARCH-$OS
 
 if [ -z ${1+x} ] || [ "$1" == "latest" ]; then
-  VERSION=$(curl https://api.github.com/repos/$REPO/latest -s |  jq .name -r)
+  # Get first pre-release
+  VERSION=$(curl https://api.github.com/repos/$REPO -s |  jq -r 'map(select(.prerelease)) | first | .name')
+  # Get latest release if no pre-release exists
+  if [ "$VERSION" = "null" ]
+  then
+    VERSION=$(curl https://api.github.com/repos/$REPO/latest -s |  jq .name -r)
+  fi
 else
   VERSION="v"$1
 fi

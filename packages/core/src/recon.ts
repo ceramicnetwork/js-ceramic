@@ -10,16 +10,15 @@ import {
   Observable,
   Subscription,
   filter,
-  tap,
   takeUntil,
   Subscriber,
   TeardownLogic,
-  ReplaySubject,
 } from 'rxjs'
 
 import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
-import { EventID, StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
+import { CID } from 'multiformats/cid'
 
 const DEFAULT_POLL_INTERVAL = 1_000 // 1 seconds
 // Note this limit is arbitrary. This limit represents the upper bound on being able to recover after being down
@@ -41,8 +40,8 @@ export type ReconApiConfig = {
  * Recon Event
  */
 export interface ReconEvent {
-  id: EventID
-  data: CAR
+  cid: CID
+  data: CAR | null
 }
 
 /**
@@ -59,7 +58,7 @@ export interface ReconEventFeedResponse {
 export interface IReconApi extends Observable<ReconEventFeedResponse> {
   init(initialCursor?: string): Promise<void>
   registerInterest(model: StreamID): Promise<void>
-  put(event: ReconEvent, opts?: AbortOptions): Promise<void>
+  put(car: CAR, opts?: AbortOptions): Promise<void>
   enabled: boolean
   stop(): void
 }
@@ -97,7 +96,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
    * @param initialCursor
    * @returns
    */
-  async init(initialCursor = '0'): Promise<void> {
+  async init(initialCursor = ''): Promise<void> {
     if (this.#initialized) {
       return
     }
@@ -138,19 +137,19 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
   }
 
   /**
-   * Put an event to the Recon API
-   * @param event The event to put
+   * Put an car representing an event to the Recon API
+   * @param car CAR representing the event
    * @param opts Abort options
    * @returns
    */
-  async put(event: ReconEvent, opts: AbortOptions = {}): Promise<void> {
+  async put(car: CAR, opts: AbortOptions = {}): Promise<void> {
+    const cid = car.roots[0]
     if (!this.enabled) {
-      this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
+      this.#logger.imp(`Recon: disabled, not putting event with cid ${cid.toString()}`)
       return
     }
     const body = {
-      id: event.id.toString(),
-      data: event.data.toString(),
+      data: car.toString(),
     }
     try {
       await this.#sendRequest(this.#url + '/ceramic/events', {
@@ -158,9 +157,9 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
         body,
         signal: opts.signal,
       })
-      this.#logger.debug(`Recon: put event ${event.id}`)
+      this.#logger.debug(`Recon: put event with cid ${cid.toString()}`)
     } catch (err) {
-      this.#logger.err(`Recon: failed to add event ${event.id} with error ${err}`)
+      this.#logger.err(`Recon: failed to add event with cid ${cid.toString()} with error ${err}`)
       throw err
     }
   }
@@ -207,10 +206,10 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
                 }
               )
               return {
-                events: response.events.map(({ id, _data }) => {
+                events: response.events.map(({ id }) => {
                   return {
-                    id: EventID.fromString(id),
-                    data: undefined,
+                    cid: CID.parse(id),
+                    data: null,
                   }
                 }),
                 cursor: response.resumeToken,

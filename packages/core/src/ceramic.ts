@@ -398,7 +398,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
-      networkOptions,
+      networkOptions.pubsubTopic,
       repository,
       logger,
       pubsubLogger,
