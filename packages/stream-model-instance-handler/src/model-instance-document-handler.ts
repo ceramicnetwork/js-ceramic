@@ -351,7 +351,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param header - the header to validate
    */
   async _validateHeader(model: Model, header: ModelInstanceDocumentHeader): Promise<void> {
-    switch (model.content.accountRelation.type) {
+    const relationType = model.content.accountRelation.type
+    switch (relationType) {
       case 'single':
         if (header.unique) {
           throw new Error(
@@ -373,11 +374,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
           )
         }
         break
-      // default:
-      //   throw new UnreachableCaseError(
-      //     model.content.accountRelation.type,
-      //     `Unsupported account relation ${model.content.accountRelation.type} found in Model ${model.content.name}`
-      //   )
+      case 'none':
+        break
+      default:
+        throw new UnreachableCaseError(
+          relationType,
+          `Unsupported account relation ${relationType} found in Model ${model.content.name}`
+        )
     }
   }
 
