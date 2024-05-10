@@ -48,6 +48,28 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
   }
 }
 
+async function sleepOrAbort(timeoutMS: number, abortSignal: AbortSignal): Promise<void> {
+  let timeout
+  let listener
+  return new Promise<void>((resolve) => {
+    if (abortSignal.aborted) {
+      return resolve()
+    }
+
+    listener = () => {
+      resolve()
+    }
+    abortSignal.addEventListener('abort', listener)
+
+    timeout = setTimeout(() => {
+      resolve()
+    }, timeoutMS)
+  }).then(() => {
+    clearTimeout(timeout)
+    abortSignal.removeEventListener('abort', listener)
+  })
+}
+
 /**
  * An object-value store being able to save, retrieve and delete anchor request data identified by stream ids
  *
@@ -116,9 +138,8 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   async *infiniteList(batchSize = 1): AsyncGenerator<StreamID> {
     let gt: StreamID | undefined = undefined
     let numEntries = 0
-    let loopStartTime = new Date()
-    const abortPromise = abortSignalToPromise(this.#abortController.signal)
     do {
+      const loopStartTime = new Date()
       try {
         let timeout
         const timeoutPromise = new Promise<null>((resolve) => {
@@ -149,18 +170,15 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           // If we iterated over all entries in the store in less time than the minLoopDuration,
           // sleep to avoid spamming the CAS.
           const loopEndTime = new Date()
-          const loopDurationMs = loopEndTime.getTime() - loopStartTime.getTime()
+          // jest sometimes does weird things with time so abs is necessary
+          const loopDurationMs = Math.abs(loopEndTime.getTime() - loopStartTime.getTime())
           if (loopDurationMs < this.#minLoopDurationMs) {
             const remainingLoopDuration = this.#minLoopDurationMs - loopDurationMs
-            const sleepPromise = new Promise((resolve) =>
-              setTimeout(resolve, remainingLoopDuration)
-            )
-            await Promise.race([sleepPromise, abortPromise])
+            await sleepOrAbort(remainingLoopDuration, this.#abortController.signal)
           }
 
           gt = undefined
           numEntries = 0
-          loopStartTime = loopEndTime
         }
       } catch (err) {
         this.#logger.err(`Error querying the AnchorRequestStore: ${err}`)

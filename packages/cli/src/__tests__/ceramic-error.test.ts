@@ -53,6 +53,7 @@ beforeAll(async () => {
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
     },
+    anchorLoopMinDurationMs: 0,
   })
 
   const ceramicConfig = makeCeramicConfig(daemonConfig)

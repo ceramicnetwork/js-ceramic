@@ -5,8 +5,6 @@ import tmp from 'tmp-promise'
 import { createDid } from './create_did.js'
 import type { ProvidersCache } from '@ceramicnetwork/core'
 
-const DEFAULT_ANCHOR_LOOP_TEST_DURATION = 10
-
 export async function createCeramic(
   ipfs: IpfsApi,
   config: CeramicConfig & { seed?: string } = { networkName: Networks.INMEMORY },
@@ -26,15 +24,12 @@ export async function createCeramic(
         enableHistoricalSync: false,
       },
       sync: false,
-      anchorLoopMinDurationMs: 0,
+      anchorLoopMinDurationMs: 10,
     },
     config
   )
 
   const [modules, params] = Ceramic._processConfig(ipfs, appliedConfig)
-  params.anchorLoopMinDurationMs = params.anchorLoopMinDurationMs
-    ? params.anchorLoopMinDurationMs
-    : DEFAULT_ANCHOR_LOOP_TEST_DURATION
   if (providersCache) {
     modules.providersCache = providersCache
   }
