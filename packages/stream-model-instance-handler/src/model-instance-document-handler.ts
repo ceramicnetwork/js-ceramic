@@ -351,18 +351,33 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param header - the header to validate
    */
   async _validateHeader(model: Model, header: ModelInstanceDocumentHeader): Promise<void> {
-    if (model.content.accountRelation.type === 'single') {
-      if (header.unique) {
-        throw new Error(
-          `ModelInstanceDocuments for models with SINGLE accountRelations must be created deterministically`
-        )
-      }
-    } else {
-      if (!header.unique) {
-        throw new Error(
-          `Deterministic ModelInstanceDocuments are only allowed on models that have the SINGLE accountRelation`
-        )
-      }
+    switch (model.content.accountRelation.type) {
+      case 'single':
+        if (header.unique) {
+          throw new Error(
+            `ModelInstanceDocuments for models with SINGLE accountRelations must be created deterministically`
+          )
+        }
+        break
+      case 'set':
+        if (!header.unique) {
+          throw new Error(
+            `ModelInstanceDocuments for models with SET accountRelations must be created with a unique field containing data from the fields providing the set semantics`
+          )
+        }
+        break
+      case 'list':
+        if (!header.unique) {
+          throw new Error(
+            `ModelInstanceDocuments for models with LIST accountRelations must be created with a unique field`
+          )
+        }
+        break
+      // default:
+      //   throw new UnreachableCaseError(
+      //     model.content.accountRelation.type,
+      //     `Unsupported account relation ${model.content.accountRelation.type} found in Model ${model.content.name}`
+      //   )
     }
   }
 
