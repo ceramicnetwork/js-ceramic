@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.11.0...@ceramicnetwork/stream-model-instance-handler@4.12.0-rc.0) (2024-05-13)
+
+
+### Bug Fixes
+
+* Enforce unique field in header for set account relation MIDs ([#3226](https://github.com/ceramicnetwork/js-ceramic/issues/3226)) ([5136936](https://github.com/ceramicnetwork/js-ceramic/commit/51369364bfe9f6b63eac2af500f7427d476d7430))
+
+
+
+
+
 # [4.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.11.0-rc.0...@ceramicnetwork/stream-model-instance-handler@4.11.0) (2024-05-13)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

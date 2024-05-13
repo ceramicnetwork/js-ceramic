@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.11.0...@ceramicnetwork/indexing@4.12.0-rc.0) (2024-05-13)
+
+
+### Features
+
+* remove event id ([#3203](https://github.com/ceramicnetwork/js-ceramic/issues/3203)) ([e21c53c](https://github.com/ceramicnetwork/js-ceramic/commit/e21c53ca914a08db21eda77d5704dc4a12e2ecff))
+
+
+
+
+
 # [4.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.11.0-rc.0...@ceramicnetwork/indexing@4.11.0) (2024-05-13)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing

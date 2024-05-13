@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.11.0...@ceramicnetwork/cli@5.12.0-rc.0) (2024-05-13)
+
+
+### Features
+
+* add anchor metrics ([#3223](https://github.com/ceramicnetwork/js-ceramic/issues/3223)) ([6d93db2](https://github.com/ceramicnetwork/js-ceramic/commit/6d93db2b2be269083599705fc7b5b1b4649b1c5d))
+
+
+
+
+
 # [5.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.11.0-rc.0...@ceramicnetwork/cli@5.11.0) (2024-05-13)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
