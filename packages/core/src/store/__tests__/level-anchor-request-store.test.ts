@@ -416,7 +416,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
   test('poll at most once per loop duration', async () => {
     try {
-      const minLoopDuration = 100
+      const minLoopDuration = 300
       const kvFactory = new LevelKVFactory(tmpFolder.path, 'test', logger)
       const anchorRequestStore = new AnchorRequestStore(logger, minLoopDuration, BATCH_TIMEOUT)
       await anchorRequestStore.open(kvFactory)
