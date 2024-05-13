@@ -123,7 +123,7 @@ describe('periodic clean up', () => {
   })
 
   test('every cleanupInterval', async () => {
-    const store = new FeedAggregationStore(logger, 10, 100)
+    const store = new FeedAggregationStore(logger, true, 10, 100)
     const tasks = store.tasks
     let addCalledTimes = 0
     const addCalledMax = 3

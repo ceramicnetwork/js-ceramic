@@ -43,6 +43,7 @@ import { Utils } from '../utils.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model } from '@ceramicnetwork/stream-model'
 import { FeedAggregationStore } from '../store/feed-aggregation-store.js'
+import * as process from 'process'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -162,8 +163,16 @@ export class Repository {
     })
     this.updates$ = this.updates$.bind(this)
     this.streamState = this.streamState.bind(this)
-    this.feedAggregationStore = new FeedAggregationStore(this.logger)
-    this.feed = new Feed(this.feedAggregationStore, this.logger, this.streamState)
+
+    // Data Feed defaults to enabled if env-var is not specified.
+    if (process.env.enableDataFeed === 'false') {
+      this.logger.warn('Data feed disabled by environment variable')
+      this.feedAggregationStore = new FeedAggregationStore(this.logger, false)
+      this.feed = undefined
+    } else {
+      this.feedAggregationStore = new FeedAggregationStore(this.logger)
+      this.feed = new Feed(this.feedAggregationStore, this.logger, this.streamState)
+    }
   }
 
   /**

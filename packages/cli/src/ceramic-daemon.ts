@@ -49,6 +49,7 @@ import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
 import { ExpectedCloseError, SSESink } from './daemon/sse-feed.js'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
+import process from 'process'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -892,6 +893,9 @@ export class CeramicDaemon {
   }
 
   async documentsFeed(req: Request, res: Response): Promise<void> {
+    if (process.env.enableDataFeed === 'false') {
+      throw new Error('Data Feed is disabled')
+    }
     const after = req.query.after?.toString()
     const readable = this.ceramic.feed.aggregation.documents(after)
     const sink = new SSESink(res, JsonAsString.pipe(AggregationDocument).encode)

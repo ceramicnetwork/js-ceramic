@@ -59,6 +59,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
 
   constructor(
     private readonly logger: DiagnosticsLogger,
+    private readonly enabled = true,
     staleDuration: number = DEFAULT_STALE_DURATION,
     cleanupInterval: number | null = DEFAULT_CLEANUP_INTERVAL
   ) {
@@ -72,10 +73,16 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 
   findKeys(params?: Partial<StoreSearchParams>): Promise<Array<string>> {
+    if (!this.enabled) {
+      return Promise.resolve([])
+    }
     return this.store.findKeys(params)
   }
 
   find(params?: Partial<StoreSearchParams>): Promise<Array<IKVStoreFindResult>> {
+    if (!this.enabled) {
+      return Promise.resolve([])
+    }
     return this.store.find(params)
   }
 
@@ -85,6 +92,9 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
    * @param lessThanMs - Unix timestamp in millisecond. Older entries got deleted.
    */
   async deleteStale(lessThanMs: number): Promise<number> {
+    if (!this.enabled) {
+      return
+    }
     const keys = await this.store.findKeys({ lt: String(lessThanMs * 1000) })
     if (keys.length > 0) {
       let batch = this.store.batch()
@@ -97,12 +107,18 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 
   async put(streamId: StreamID, key: string = this.#keyGenerator.next()): Promise<void> {
+    if (!this.enabled) {
+      return
+    }
     await this.save(key, streamId)
     this.logger.verbose(`Inserting this streamId from LevelDB ${streamId} at ${Date.now()}`)
     this.onWrite.next()
   }
 
   async open(factory: Pick<IKVFactory, 'open'>): Promise<void> {
+    if (!this.enabled) {
+      return
+    }
     await super.open(factory)
     if (this.cleanupInterval) {
       this.#interval = setInterval(() => {
@@ -116,11 +132,17 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
   }
 
   streamIDs(gt?: string): ReadableStream<AggregationStoreEntry> {
+    if (!this.enabled) {
+      throw new Error('Data feed disabled')
+    }
     const source = new StreamIDFeedSource(this.find, this.onWrite.asObservable(), this.logger, gt)
     return new ReadableStream(source)
   }
 
   async close(): Promise<void> {
+    if (!this.enabled) {
+      return
+    }
     clearInterval(this.#interval)
     await this.tasks.onIdle()
     await super.close()
