@@ -893,7 +893,7 @@ export class CeramicDaemon {
   }
 
   async documentsFeed(req: Request, res: Response): Promise<void> {
-    if (process.env.enableDataFeed === 'false') {
+    if (process.env.CERAMIC_ENABLE_DATA_FEED === 'false') {
       throw new Error('Data Feed is disabled')
     }
     const after = req.query.after?.toString()

@@ -165,7 +165,7 @@ export class Repository {
     this.streamState = this.streamState.bind(this)
 
     // Data Feed defaults to enabled if env-var is not specified.
-    if (process.env.enableDataFeed === 'false') {
+    if (process.env.CERAMIC_ENABLE_DATA_FEED === 'false') {
       this.logger.warn('Data feed disabled by environment variable')
       this.feedAggregationStore = new FeedAggregationStore(this.logger, false)
       this.feed = undefined
