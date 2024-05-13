@@ -16,6 +16,7 @@ export async function makeCeramicCore(
       disableComposedb: false,
       enableHistoricalSync: false,
     },
+    anchorLoopMinDurationMs: 0,
   })
 
   const handler = new TileDocumentHandler()

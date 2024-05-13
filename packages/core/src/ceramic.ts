@@ -63,6 +63,7 @@ import { LevelKVFactory } from './store/level-kv-factory.js'
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const DEFAULT_MULTIQUERY_TIMEOUT_MS = 30 * 1000
+const DEFAULT_MIN_ANCHOR_LOOP_DURATION_MS = 60 * 1000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**
@@ -161,6 +162,7 @@ export interface CeramicParameters {
   sync?: boolean
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
+  anchorLoopMinDurationMs?: number
 }
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
@@ -266,11 +268,17 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       this._logger,
       params.networkOptions.name
     )
+    const anchorRequestStore = new AnchorRequestStore(
+      this._logger,
+      params.anchorLoopMinDurationMs >= 0
+        ? params.anchorLoopMinDurationMs
+        : DEFAULT_MIN_ANCHOR_LOOP_DURATION_MS
+    )
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
       kvFactory: this._kvFactory,
-      anchorRequestStore: new AnchorRequestStore(this._logger),
+      anchorRequestStore,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       indexing: localIndex,
@@ -427,6 +435,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       networkOptions,
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
+      anchorLoopMinDurationMs: parseInt(config.anchorLoopMinDurationMs, 10),
     }
 
     const modules: CeramicModules = {

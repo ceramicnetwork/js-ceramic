@@ -24,6 +24,7 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
       disableComposedb: false,
     },
+    anchorLoopMinDurationMs: 0,
   })
 
   const handler = new TileDocumentHandler()
