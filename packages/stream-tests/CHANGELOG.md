@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.12.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.12.0-rc.0...@ceramicnetwork/stream-tests@5.12.0-rc.1) (2024-05-13)
+
+
+### Bug Fixes
+
+* rate limit how fast anchor polling loops on small data sets ([#3218](https://github.com/ceramicnetwork/js-ceramic/issues/3218)) ([41ad653](https://github.com/ceramicnetwork/js-ceramic/commit/41ad65374d73104527d9c551183e621532b5c5f8))
+
+
+
+
+
 # [5.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.11.0...@ceramicnetwork/stream-tests@5.12.0-rc.0) (2024-05-13)
 
 
