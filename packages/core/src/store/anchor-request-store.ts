@@ -3,12 +3,11 @@ import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
 import { StreamUtils, type DiagnosticsLogger, type GenesisCommit } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import type { StoreSearchParams } from './ikv-store.js'
-import { abortSignalToPromise } from '../utils.js'
 
 // How long to wait for the store to return a batch from a find request.
 const DEFAULT_BATCH_TIMEOUT_MS = 60 * 1000 // 1 minute
 const ANCHOR_POLLING_PROCESSED = 'anchor_polling_processed'
+const DEFAULT_MIN_LOOP_JITTER_MS = 100
 
 export type AnchorRequestData = {
   cid: CID
@@ -90,17 +89,20 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
    * must take before we restart iterating from the beginning.
    */
   readonly #minLoopDurationMs: number
+  readonly #minLoopJitterMs: number
 
   constructor(
     logger: DiagnosticsLogger,
     minLoopDurationMs,
-    infiniteListBatchTimeoutMs = DEFAULT_BATCH_TIMEOUT_MS
+    infiniteListBatchTimeoutMs = DEFAULT_BATCH_TIMEOUT_MS,
+    minLoopJitterMS = DEFAULT_MIN_LOOP_JITTER_MS
   ) {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.#logger = logger
     this.#infiniteListBatchTimeoutMs = infiniteListBatchTimeoutMs
     this.#abortController = new AbortController()
     this.#minLoopDurationMs = minLoopDurationMs
+    this.#minLoopJitterMs = minLoopJitterMS
   }
 
   exists(key: StreamID): Promise<boolean> {
@@ -174,7 +176,9 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           const loopDurationMs = Math.abs(loopEndTime.getTime() - loopStartTime.getTime())
           if (loopDurationMs < this.#minLoopDurationMs) {
             const remainingLoopDuration = this.#minLoopDurationMs - loopDurationMs
-            await sleepOrAbort(remainingLoopDuration, this.#abortController.signal)
+            if (remainingLoopDuration > this.#minLoopJitterMs) {
+              await sleepOrAbort(remainingLoopDuration, this.#abortController.signal)
+            }
           }
 
           gt = undefined
@@ -190,7 +194,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   async close() {
     this.#logger.debug(`Closing AnchorRequestStore`)
     this.#shouldStop = true
-    this.#abortController.abort('STOP')
+    this.#abortController.abort()
     await super.close()
   }
 }

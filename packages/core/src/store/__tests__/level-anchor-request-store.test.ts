@@ -129,15 +129,13 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
       const model3 = await Model.create(ceramic, MODEL_CONTENT_3)
       streamId3 = model3.id
       genesisCommit3 = await loadGenesisCommit(ceramic, streamId3)
+
+      await ceramic.close()
+      await ipfs.stop()
     } catch (e) {
       console.error(e)
       throw e
     }
-  })
-
-  afterAll(async () => {
-    await ceramic.close()
-    await ipfs.stop()
   })
 
   beforeEach(async () => {
@@ -414,5 +412,72 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     const retrievedFromMainnet = await anchorRequestStore.load(streamId1)
     expect(retrievedFromMainnet).toEqual(null)
+  })
+
+  test('poll at most once per loop duration', async () => {
+    try {
+      const minLoopDuration = 100
+      const kvFactory = new LevelKVFactory(tmpFolder.path, 'test', logger)
+      const anchorRequestStore = new AnchorRequestStore(logger, minLoopDuration, BATCH_TIMEOUT)
+      await anchorRequestStore.open(kvFactory)
+
+      // Setup data in the AnchorRequestStore
+      const anchorRequestData1: AnchorRequestData = {
+        cid: TestUtils.randomCID(),
+        timestamp: Date.now(),
+        genesis: genesisCommit1,
+      }
+      const anchorRequestData2: AnchorRequestData = {
+        cid: TestUtils.randomCID(),
+        timestamp: Date.now(),
+        genesis: genesisCommit2,
+      }
+      const anchorRequestData3: AnchorRequestData = {
+        cid: TestUtils.randomCID(),
+        timestamp: Date.now(),
+        genesis: genesisCommit3,
+      }
+      await anchorRequestStore.save(streamId1, anchorRequestData1)
+      await anchorRequestStore.save(streamId2, anchorRequestData2)
+      await anchorRequestStore.save(streamId3, anchorRequestData3)
+
+      // Get sorted list of StreamID keys in the AnchorRequestStore
+      const sortByKeyStreamId = (
+        a: AnchorRequestStoreListResult,
+        b: AnchorRequestStoreListResult
+      ) => {
+        return a.key.toString().localeCompare(b.key.toString())
+      }
+      const sortedParams = [
+        { key: streamId1, value: anchorRequestData1 },
+        { key: streamId2, value: anchorRequestData2 },
+        { key: streamId3, value: anchorRequestData3 },
+      ].sort(sortByKeyStreamId)
+      const sortedStreamIds = sortedParams.map((param) => param.key.toString())
+
+      // After the initial loop over the batch the AnchorRequestStore should wait before looping again
+      // Therefore getting 4 entries should take at least minLoopDuration ms
+      const start1 = Date.now()
+      const generator = anchorRequestStore.infiniteList(1)
+      expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+      expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+      expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+      await generator.next()
+      const end1 = Date.now()
+      expect(end1 - start1).toBeGreaterThanOrEqual(minLoopDuration)
+
+      // iterate through the rest of the batch so when we call generator.next again we will need to wait
+      const start2 = Date.now()
+      await generator.next()
+      await generator.next()
+      // generator.next should be waiting while we close the store. Closing should cancel the wait.
+      const [_, result] = await Promise.all([anchorRequestStore.close(), generator.next()])
+      const end2 = Date.now()
+      expect(end2 - start2).toBeLessThan(minLoopDuration)
+      expect(result).toEqual({ done: true, value: undefined })
+    } finally {
+      // in case of test failure, ensure the store is closed
+      await anchorRequestStore.close()
+    }
   })
 })
