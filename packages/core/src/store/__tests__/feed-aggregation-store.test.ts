@@ -146,15 +146,45 @@ describe('periodic clean up', () => {
 })
 
 describe('MonotonicKey', () => {
-  test('uses current time and counter', () => {
+  test('initialization and next on different ms', () => {
+    const now = Date.now()
+    const init = now - 100
+    MockDate.set(init)
     const generator = new MonotonicKey()
-    const now = new Date()
     MockDate.set(now)
     const nowSpy = jest.spyOn(Date, 'now')
     const entries = [generator.next(), generator.next(), generator.next()]
-    const nowString = now.valueOf().toString()
+    const nowString = now.toString()
     expect(entries).toEqual([`${nowString}000000`, `${nowString}000001`, `${nowString}000002`])
-    MockDate.reset()
     expect(nowSpy).toBeCalledTimes(entries.length)
+    MockDate.reset()
+    nowSpy.mockRestore()
+  })
+  test('same ms', () => {
+    const now = Date.now()
+    MockDate.set(now)
+    const generator = new MonotonicKey()
+    const nowSpy = jest.spyOn(Date, 'now')
+    const entries = [generator.next(), generator.next(), generator.next()]
+    const nowString = now.toString()
+    expect(entries).toEqual([`${nowString}000000`, `${nowString}000001`, `${nowString}000002`])
+    expect(nowSpy).toBeCalledTimes(entries.length)
+    MockDate.reset()
+    nowSpy.mockRestore()
+  })
+  test('different ms', () => {
+    const now = Date.now()
+    MockDate.set(now)
+    const generator = new MonotonicKey()
+    const nowSpy = jest.spyOn(Date, 'now')
+    const entries = [generator.next()]
+    MockDate.set(now + 1)
+    entries.push(generator.next())
+    MockDate.set(now + 2)
+    entries.push(generator.next())
+    expect(entries).toEqual([`${now}000000`, `${now + 1}000000`, `${now + 2}000000`])
+    expect(nowSpy).toBeCalledTimes(entries.length)
+    MockDate.reset()
+    nowSpy.mockRestore()
   })
 })
