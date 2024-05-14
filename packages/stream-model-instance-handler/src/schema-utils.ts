@@ -1,8 +1,5 @@
-import Ajv, { SchemaObject, ValidateFunction } from 'ajv/dist/2020.js'
+import Ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
-import { LRUCache } from 'least-recent'
-
-const AJV_CACHE_SIZE = 500
 
 function buildAjv(): Ajv {
   const validator = new Ajv({
@@ -22,18 +19,17 @@ function buildAjv(): Ajv {
  */
 export class SchemaValidation {
   readonly ajv: Ajv
-  readonly schemas: LRUCache<string, ValidateFunction>
 
   constructor() {
     this.ajv = buildAjv()
-    this.schemas = new LRUCache(AJV_CACHE_SIZE)
   }
 
   public validateSchema(content: Record<string, any>, schema: SchemaObject, schemaId: string) {
-    let existingSchema = this.schemas.get(schemaId)
+    let existingSchema = this.ajv.getSchema(schemaId)
     if (!existingSchema) {
-      existingSchema = this.ajv.compile(schema)
-      this.schemas.set(schemaId, existingSchema)
+      this.ajv.addSchema(schema, schemaId)
+      //we've added the schema above, so ajv will have it
+      existingSchema = this.ajv.getSchema(schemaId)!
     }
     const isValid = existingSchema(content)
 
