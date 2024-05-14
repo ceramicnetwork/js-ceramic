@@ -38,7 +38,7 @@ export class MonotonicKey {
       const counter = this.#counter++
       return `${this.#previous}${counter.toString().padStart(6, '0')}`
     } else {
-      this.#counter = 0
+      this.#counter = 1
       this.#previous = now
       return `${this.#previous}000000`
     }
