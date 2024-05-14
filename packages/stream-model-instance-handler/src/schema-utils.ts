@@ -1,4 +1,4 @@
-import Ajv, { SchemaObject } from 'ajv/dist/2020.js'
+import Ajv, { SchemaObject, ValidateFunction } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import { LRUCache } from 'least-recent'
 
@@ -21,22 +21,24 @@ function buildAjv(): Ajv {
  * TODO: Move schema stream loading out of this.
  */
 export class SchemaValidation {
-  readonly validators: LRUCache<string, Ajv>
+  readonly ajv: Ajv
+  readonly schemas: LRUCache<string, ValidateFunction>
 
   constructor() {
-    this.validators = new LRUCache(AJV_CACHE_SIZE)
+    this.ajv = buildAjv()
+    this.schemas = new LRUCache(AJV_CACHE_SIZE)
   }
 
   public validateSchema(content: Record<string, any>, schema: SchemaObject, schemaId: string) {
-    let validator = this.validators.get(schemaId)
-    if (!validator) {
-      validator = buildAjv()
-      this.validators.set(schemaId, validator)
+    let existingSchema = this.schemas.get(schemaId)
+    if (!existingSchema) {
+      existingSchema = this.ajv.compile(schema)
+      this.schemas.set(schemaId, existingSchema)
     }
-    const isValid = validator.validate(schema, content)
+    const isValid = existingSchema(content)
 
     if (!isValid) {
-      const errorMessages = validator.errorsText()
+      const errorMessages = this.ajv.errorsText(existingSchema.errors)
       throw new Error(`Validation Error: ${errorMessages}`)
     }
   }
