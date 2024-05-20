@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.12.0...@ceramicnetwork/core@5.13.0-rc.0) (2024-05-20)
+
+
+### Bug Fixes
+
+* Do not transfer 0 to a next ms after initialization ([#3229](https://github.com/ceramicnetwork/js-ceramic/issues/3229)) ([367f3a8](https://github.com/ceramicnetwork/js-ceramic/commit/367f3a8c83b8410e2ee9d6c9ea752d838a59fd0e))
+
+
+
+
+
 # [5.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.12.0-rc.1...@ceramicnetwork/core@5.12.0) (2024-05-20)
 
 **Note:** Version bump only for package @ceramicnetwork/core
