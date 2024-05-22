@@ -60,8 +60,8 @@ describeIfVPrime('Tests that sync streams with many updates', () => {
     await ipfs1?.stop()
   })
 
-  const NUM_UPDATES_PER_STREAM = 101
-  const NUM_STREAMS = 101
+  const NUM_UPDATES_PER_STREAM = 100
+  const NUM_STREAMS = 100
 
   test('sync large docs', async () => {
     // Create streams with many updates each

@@ -65,8 +65,8 @@ export class CommonTestUtils {
         }
         // block not found error indicates the ceramic node has not yet synced the init event for
         // this stream via recon
-        now = new Date()
         await CommonTestUtils.delay(100) // poll every 100ms
+        now = new Date()
       }
     }
   }
