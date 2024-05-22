@@ -11,7 +11,7 @@ import {
 import tmp, { type DirectoryResult } from 'tmp-promise'
 import { LevelKVFactory } from '../level-kv-factory.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { FeedAggregationStore } from '../feed-aggregation-store.js'
+import { FeedAggregationStore, MonotonicKey } from '../feed-aggregation-store.js'
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 import { IKVStore } from '../ikv-store.js'
 import { Deferred } from '../../anchor/processing-loop.js'
@@ -27,7 +27,7 @@ let feedAggregationStore: FeedAggregationStore
 beforeAll(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   kvFactory = new LevelKVFactory(tmpFolder.path, `fake-${Math.random()}`, logger)
-  feedAggregationStore = new FeedAggregationStore()
+  feedAggregationStore = new FeedAggregationStore(logger)
   const open = async (name: string): Promise<IKVStore> => {
     feedKVStore = await kvFactory.open(name)
     return feedKVStore
@@ -37,7 +37,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   const keys = await feedAggregationStore.findKeys()
-  const removeAll = keys.map((k) => feedAggregationStore.remove(Number(k)))
+  const removeAll = keys.map((k) => feedAggregationStore.remove(k))
   await Promise.all(removeAll)
 })
 
@@ -48,13 +48,13 @@ afterAll(async () => {
 })
 
 describe('deleteStale', () => {
-  const TIMESTAMPS = [1000, 2000, 3000, 4000, 5000]
+  const TIMESTAMPS = [1000, 2000, 3000, 4000, 5000] // ns
 
   test('delete old entries', async () => {
-    const threshold = 3000
-    const freshEnough = TIMESTAMPS.filter((t) => t >= threshold)
+    const threshold = 3 // ms, while TIMESTAMPS are in ns
+    const freshEnough = TIMESTAMPS.filter((t) => t >= threshold * 1000)
     for (const t of TIMESTAMPS) {
-      await feedAggregationStore.save(t, CommonTestUtils.randomStreamID())
+      await feedAggregationStore.save(t.toString(), CommonTestUtils.randomStreamID())
     }
     const keysA = await feedAggregationStore.findKeys()
     expect(keysA.length).toEqual(TIMESTAMPS.length)
@@ -69,9 +69,9 @@ describe('deleteStale', () => {
 
   test('do nothing if no old entries', async () => {
     for (const t of TIMESTAMPS) {
-      await feedAggregationStore.save(t, CommonTestUtils.randomStreamID())
+      await feedAggregationStore.save(t.toString(), CommonTestUtils.randomStreamID())
     }
-    const threshold = 1000 // No entries before that
+    const threshold = 1 // No entries before that
     const keysA = await feedAggregationStore.findKeys()
     expect(keysA.length).toEqual(TIMESTAMPS.length)
     const batchSpy = jest.spyOn(feedKVStore, 'batch')
@@ -86,22 +86,23 @@ describe('deleteStale', () => {
 
 describe('put', () => {
   test('use current timestamp', async () => {
-    const fauxNow = new Date()
-    MockDate.set(fauxNow) // "Freeze" Date.now to `fauxNow`
+    const now = new Date()
+    MockDate.set(now)
     const streamId = CommonTestUtils.randomStreamID()
     await feedAggregationStore.put(streamId)
     const keys = await feedAggregationStore.findKeys()
     expect(keys.length).toEqual(1)
-    const first = Number(keys[0])
-    expect(first).toEqual(fauxNow.valueOf())
+    const first = keys[0]
+    const key = `${now.valueOf()}000000`
+    expect(first).toEqual(key)
     const stored = await feedAggregationStore.load(first)
     expect(stored).toEqual(streamId)
-    MockDate.reset() // Unfreeze Date.now
+    MockDate.reset()
   })
 
-  test('use explicit timestamp', async () => {
+  test('use explicit key', async () => {
     const streamId = CommonTestUtils.randomStreamID()
-    const timestamp = 1000
+    const timestamp = '1000'
     await feedAggregationStore.put(streamId, timestamp)
     const keys = await feedAggregationStore.findKeys()
     expect(keys.length).toEqual(1)
@@ -122,7 +123,7 @@ describe('periodic clean up', () => {
   })
 
   test('every cleanupInterval', async () => {
-    const store = new FeedAggregationStore(10, 100)
+    const store = new FeedAggregationStore(logger, 10, 100)
     const tasks = store.tasks
     let addCalledTimes = 0
     const addCalledMax = 3
@@ -141,5 +142,49 @@ describe('periodic clean up', () => {
     await defer
     expect(addSpy).toBeCalledTimes(addCalledMax)
     expect(deleteStaleSpy).toBeCalledTimes(addCalledMax)
+  })
+})
+
+describe('MonotonicKey', () => {
+  test('initialization and next on different ms', () => {
+    const now = Date.now()
+    const init = now - 100
+    MockDate.set(init)
+    const generator = new MonotonicKey()
+    MockDate.set(now)
+    const nowSpy = jest.spyOn(Date, 'now')
+    const entries = [generator.next(), generator.next(), generator.next()]
+    const nowString = now.toString()
+    expect(entries).toEqual([`${nowString}000000`, `${nowString}000001`, `${nowString}000002`])
+    expect(nowSpy).toBeCalledTimes(entries.length)
+    MockDate.reset()
+    nowSpy.mockRestore()
+  })
+  test('same ms', () => {
+    const now = Date.now()
+    MockDate.set(now)
+    const generator = new MonotonicKey()
+    const nowSpy = jest.spyOn(Date, 'now')
+    const entries = [generator.next(), generator.next(), generator.next()]
+    const nowString = now.toString()
+    expect(entries).toEqual([`${nowString}000000`, `${nowString}000001`, `${nowString}000002`])
+    expect(nowSpy).toBeCalledTimes(entries.length)
+    MockDate.reset()
+    nowSpy.mockRestore()
+  })
+  test('different ms', () => {
+    const now = Date.now()
+    MockDate.set(now)
+    const generator = new MonotonicKey()
+    const nowSpy = jest.spyOn(Date, 'now')
+    const entries = [generator.next()]
+    MockDate.set(now + 1)
+    entries.push(generator.next())
+    MockDate.set(now + 2)
+    entries.push(generator.next())
+    expect(entries).toEqual([`${now}000000`, `${now + 1}000000`, `${now + 2}000000`])
+    expect(nowSpy).toBeCalledTimes(entries.length)
+    MockDate.reset()
+    nowSpy.mockRestore()
   })
 })

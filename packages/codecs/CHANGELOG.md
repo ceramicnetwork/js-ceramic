@@ -3,6 +3,105 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.11.0...@ceramicnetwork/codecs@4.12.0-rc.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.11.0-rc.0...@ceramicnetwork/codecs@4.11.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.10.0...@ceramicnetwork/codecs@4.11.0-rc.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.10.0-rc.0...@ceramicnetwork/codecs@4.10.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.9.0...@ceramicnetwork/codecs@4.10.0-rc.0) (2024-05-07)
+
+
+### Features
+
+* FeedStream ([#3216](https://github.com/ceramicnetwork/js-ceramic/issues/3216)) ([0b6ff7c](https://github.com/ceramicnetwork/js-ceramic/commit/0b6ff7c825ef915cd24aea4591904f710cae253f))
+
+
+
+
+
+# [4.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.9.0-rc.0...@ceramicnetwork/codecs@4.9.0) (2024-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.8.0...@ceramicnetwork/codecs@4.9.0-rc.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.8.0-rc.0...@ceramicnetwork/codecs@4.8.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.7.0...@ceramicnetwork/codecs@4.8.0-rc.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.7.0-rc.0...@ceramicnetwork/codecs@4.7.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.6.0...@ceramicnetwork/codecs@4.7.0-rc.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [4.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.6.0-rc.0...@ceramicnetwork/codecs@4.6.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
 # [4.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@4.5.0...@ceramicnetwork/codecs@4.6.0-rc.0) (2024-04-03)
 
 **Note:** Version bump only for package @ceramicnetwork/codecs

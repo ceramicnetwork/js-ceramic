@@ -57,6 +57,7 @@ const createCeramic = async (
       enableHistoricalSync: false,
     },
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
+    anchorLoopMinDurationMs: 0,
   })
   ceramic.did = makeDID(seed, ceramic)
   await ceramic.did.authenticate()

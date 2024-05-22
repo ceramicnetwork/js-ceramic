@@ -3,6 +3,105 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.12.0...@ceramicnetwork/common-test-utils@3.13.0-rc.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.12.0-rc.0...@ceramicnetwork/common-test-utils@3.12.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.11.0...@ceramicnetwork/common-test-utils@3.12.0-rc.0) (2024-05-13)
+
+
+### Features
+
+* remove event id ([#3203](https://github.com/ceramicnetwork/js-ceramic/issues/3203)) ([e21c53c](https://github.com/ceramicnetwork/js-ceramic/commit/e21c53ca914a08db21eda77d5704dc4a12e2ecff))
+
+
+
+
+
+# [3.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.11.0-rc.0...@ceramicnetwork/common-test-utils@3.11.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.10.0...@ceramicnetwork/common-test-utils@3.11.0-rc.0) (2024-05-07)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.10.0-rc.0...@ceramicnetwork/common-test-utils@3.10.0) (2024-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.9.0...@ceramicnetwork/common-test-utils@3.10.0-rc.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.9.0-rc.0...@ceramicnetwork/common-test-utils@3.9.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.8.0...@ceramicnetwork/common-test-utils@3.9.0-rc.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.8.0-rc.0...@ceramicnetwork/common-test-utils@3.8.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.7.0...@ceramicnetwork/common-test-utils@3.8.0-rc.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
+# [3.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.7.0-rc.0...@ceramicnetwork/common-test-utils@3.7.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/common-test-utils
+
+
+
+
+
 # [3.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.6.0...@ceramicnetwork/common-test-utils@3.7.0-rc.0) (2024-04-03)
 
 **Note:** Version bump only for package @ceramicnetwork/common-test-utils

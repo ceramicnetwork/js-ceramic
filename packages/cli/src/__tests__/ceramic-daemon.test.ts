@@ -506,24 +506,27 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   test('feed works via http api', async () => {
-    let messageEvent: any
     const Codec = JsonAsString.pipe(AggregationDocument)
     const source = new EventSource(
       `http://localhost:${daemon.port}/api/v0/feed/aggregation/documents`
     )
-    source.addEventListener('message', (event) => {
-      messageEvent = decode(Codec, event.data)
+    const messageEventP = new Promise<any>((resolve) => {
+      const handler = (event: MessageEvent<unknown>) => {
+        resolve(decode(Codec, event.data))
+        source.removeEventListener('message', handler)
+      }
+      source.addEventListener('message', handler)
     })
-    //this will trigger a feed event
-    const MODEL_DEFINITION: ModelDefinition = {
+    // this will trigger a feed event
+    const modelDefinition: ModelDefinition = {
       name: 'myModel',
       version: '1.0',
       schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
     }
+    const model = await Model.create(client, modelDefinition)
 
-    const model = await Model.create(client, MODEL_DEFINITION)
-
+    const messageEvent = await messageEventP
     expect(messageEvent).toBeDefined()
     expect(messageEvent.content).toMatchObject(model.content)
     expect(messageEvent.commitId).toMatchObject(model.commitId)
@@ -580,7 +583,7 @@ describe('Ceramic interop: core <> http-client', () => {
       // default timeout
       await client.multiQuery(queries)
       expect(loadLinkedStreamsSpy).toBeCalledTimes(2)
-      expect(loadLinkedStreamsSpy.mock.calls[1][1]).toEqual(7000) // default timeout
+      expect(loadLinkedStreamsSpy.mock.calls[1][1]).toEqual(30000) // default timeout
 
       loadLinkedStreamsSpy.mockRestore()
     })

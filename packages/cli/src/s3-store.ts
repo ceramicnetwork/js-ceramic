@@ -1,11 +1,29 @@
 import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
-import type { ChainedKVBatch, IKVFactory, IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
+import type {
+  ChainedKVBatch,
+  IKVFactory,
+  IKVStore,
+  IKVStoreFindResult,
+  StoreSearchParams,
+} from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
 import PQueue from 'p-queue'
 import AWSSDK from 'aws-sdk'
 import { Mutex } from 'await-semaphore'
+import type { DeepNonNullable } from 'ts-essentials'
+
+/**
+ * **Remove** `undefined` fields from an S3 Level search params.
+ */
+function definiteSearchParams<T extends Partial<StoreSearchParams>>(obj: T): DeepNonNullable<T> {
+  return Object.keys(obj).reduce(
+    (acc, key) =>
+      obj[key] === undefined || obj[key] === null ? { ...acc } : { ...acc, [key]: obj[key] },
+    {}
+  ) as DeepNonNullable<T>
+}
 
 /**
  * Maximum GET/HEAD requests per second to AWS S3
@@ -128,19 +146,21 @@ class S3KVStore implements IKVStore {
   }
 
   async findKeys(params?: Partial<StoreSearchParams>): Promise<string[]> {
-    const bufArray = await toArray(
-      this.level.createKeyStream({
-        limit: params?.limit,
-      })
-    )
+    const options = definiteSearchParams({
+      keys: true,
+      values: true,
+      ...params,
+    })
+    const bufArray = await toArray(this.level.createKeyStream(options))
     return bufArray.map((buf) => buf.toString())
   }
 
   async find(params?: Partial<StoreSearchParams>): Promise<IKVStoreFindResult[]> {
-    const options = {
-      limit: params?.limit,
-    }
-    if (params?.gt) (options as any).gt = params.gt
+    const options = definiteSearchParams({
+      keys: true,
+      values: true,
+      ...params,
+    })
     const dataArray = await toArray(this.level.createReadStream(options))
     return dataArray.map((data) => {
       return { key: data.key.toString(), value: JSON.parse(data.value.toString()) }

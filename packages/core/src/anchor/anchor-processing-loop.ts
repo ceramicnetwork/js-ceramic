@@ -7,7 +7,7 @@ import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
-import { ModelMetrics, Observable, Counter } from '@ceramicnetwork/model-metrics'
+import { ModelMetrics, Counter } from '@ceramicnetwork/model-metrics'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 

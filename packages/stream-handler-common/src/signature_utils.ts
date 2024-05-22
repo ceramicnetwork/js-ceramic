@@ -1,13 +1,13 @@
 import type { Cacao } from '@didtools/cacao'
-import type { CommitData, StreamState } from '../stream.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
 import { getTezosVerifier } from '@didtools/pkh-tezos'
-import { CeramicSigner } from '../ceramic-signer.js'
-import { StreamUtils } from './stream-utils.js'
+import { WebauthnAuth } from '@didtools/key-webauthn'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { ModelMetrics } from '@ceramicnetwork/model-metrics'
+import { CeramicSigner, CommitData, StreamState, StreamUtils } from '@ceramicnetwork/common'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS = 24 * 60 * 60
 
@@ -19,6 +19,7 @@ const verifiersCACAO = {
   ...getSolanaVerifier(),
   ...getStacksVerifier(),
   ...getTezosVerifier(),
+  ...WebauthnAuth.getVerifier(),
 }
 
 /**
@@ -58,6 +59,7 @@ export class SignatureUtils {
       if (original.includes('CACAO has expired')) {
         // TODO: string matching error messages is brittle. Can we use a stable error code instead?
         Metrics.count(CACAO_EXPIRED, 1, { source: 'new_commit' })
+        ModelMetrics.recordError(CACAO_EXPIRED + '_new_commit')
       }
       throw new Error(
         `Can not verify signature for commit ${commitData.cid} to stream ${streamId} which has controller DID ${controller}: ${original}`
@@ -109,6 +111,7 @@ export class SignatureUtils {
       const expirationTime = logEntry.expirationTime + DEFAULT_CACAO_REVOCATION_PHASE_OUT_SECS
       if (expirationTime < timestamp) {
         Metrics.count(CACAO_EXPIRED, 1, { source: 'existing_state' })
+        ModelMetrics.recordError(CACAO_EXPIRED + '_existing_state')
         throw new Error(
           `CACAO expired: Commit ${logEntry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
             state

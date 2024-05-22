@@ -3,6 +3,119 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.12.0...@ceramicnetwork/stream-tests@5.13.0-rc.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.12.0-rc.1...@ceramicnetwork/stream-tests@5.12.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.12.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.12.0-rc.0...@ceramicnetwork/stream-tests@5.12.0-rc.1) (2024-05-13)
+
+
+### Bug Fixes
+
+* rate limit how fast anchor polling loops on small data sets ([#3218](https://github.com/ceramicnetwork/js-ceramic/issues/3218)) ([41ad653](https://github.com/ceramicnetwork/js-ceramic/commit/41ad65374d73104527d9c551183e621532b5c5f8))
+
+
+
+
+
+# [5.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.11.0...@ceramicnetwork/stream-tests@5.12.0-rc.0) (2024-05-13)
+
+
+### Features
+
+* remove event id ([#3203](https://github.com/ceramicnetwork/js-ceramic/issues/3203)) ([e21c53c](https://github.com/ceramicnetwork/js-ceramic/commit/e21c53ca914a08db21eda77d5704dc4a12e2ecff))
+
+
+
+
+
+# [5.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.11.0-rc.0...@ceramicnetwork/stream-tests@5.11.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.10.0...@ceramicnetwork/stream-tests@5.11.0-rc.0) (2024-05-07)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.10.0-rc.0...@ceramicnetwork/stream-tests@5.10.0) (2024-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.9.0...@ceramicnetwork/stream-tests@5.10.0-rc.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.9.0-rc.0...@ceramicnetwork/stream-tests@5.9.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.8.0...@ceramicnetwork/stream-tests@5.9.0-rc.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.8.0-rc.0...@ceramicnetwork/stream-tests@5.8.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.7.0...@ceramicnetwork/stream-tests@5.8.0-rc.0) (2024-04-15)
+
+
+### Features
+
+* Add metrics for CACAO expirations ([#3198](https://github.com/ceramicnetwork/js-ceramic/issues/3198)) ([69204e0](https://github.com/ceramicnetwork/js-ceramic/commit/69204e0f64ee24e90d26581acac2b31132ece7c4))
+
+
+
+
+
+# [5.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.7.0-rc.0...@ceramicnetwork/stream-tests@5.7.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [5.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.6.0...@ceramicnetwork/stream-tests@5.7.0-rc.0) (2024-04-03)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

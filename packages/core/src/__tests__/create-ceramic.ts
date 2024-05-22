@@ -30,6 +30,7 @@ export async function createCeramic(
       disableComposedb: false,
       enableHistoricalSync: false,
     },
+    anchorLoopMinDurationMs: 0,
     ...config,
   }
   const ceramic = await Ceramic.create(ipfs, appliedConfig)

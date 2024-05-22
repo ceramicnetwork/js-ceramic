@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@5.1.0...@ceramicnetwork/streamid@5.2.0-rc.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [5.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@5.1.0-rc.0...@ceramicnetwork/streamid@5.1.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [5.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@5.0.0...@ceramicnetwork/streamid@5.1.0-rc.0) (2024-05-13)
+
+
+### Features
+
+* remove event id ([#3203](https://github.com/ceramicnetwork/js-ceramic/issues/3203)) ([e21c53c](https://github.com/ceramicnetwork/js-ceramic/commit/e21c53ca914a08db21eda77d5704dc4a12e2ecff))
+
+
+
+
+
 # [5.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@4.1.0...@ceramicnetwork/streamid@5.0.0) (2024-02-08)
 
 

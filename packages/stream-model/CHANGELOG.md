@@ -3,6 +3,102 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.11.0...@ceramicnetwork/stream-model@4.12.0-rc.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.11.0-rc.0...@ceramicnetwork/stream-model@4.11.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.10.0...@ceramicnetwork/stream-model@4.11.0-rc.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.10.0-rc.0...@ceramicnetwork/stream-model@4.10.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.9.0...@ceramicnetwork/stream-model@4.10.0-rc.0) (2024-05-07)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.9.0-rc.0...@ceramicnetwork/stream-model@4.9.0) (2024-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.8.0...@ceramicnetwork/stream-model@4.9.0-rc.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.8.0-rc.0...@ceramicnetwork/stream-model@4.8.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.7.0...@ceramicnetwork/stream-model@4.8.0-rc.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.7.0-rc.0...@ceramicnetwork/stream-model@4.7.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.6.0...@ceramicnetwork/stream-model@4.7.0-rc.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
+# [4.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.6.0-rc.0...@ceramicnetwork/stream-model@4.6.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model
+
+
+
+
+
 # [4.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@4.5.0...@ceramicnetwork/stream-model@4.6.0-rc.0) (2024-04-03)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model

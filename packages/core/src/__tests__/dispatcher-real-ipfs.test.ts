@@ -45,7 +45,7 @@ describe('Dispatcher with real ipfs over http', () => {
   })
 
   testIfV3('basic ipfs http client functionality', async () => {
-    const cid = await dispatcher.storeCommit({ foo: 'bar' })
+    const cid = await dispatcher.storeInitEvent({ foo: 'bar' }, FAKE_STREAM_ID.type)
 
     const data = await dispatcher.retrieveCommit(cid, FAKE_STREAM_ID)
     expect(data.foo).toEqual('bar')

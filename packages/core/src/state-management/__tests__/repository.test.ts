@@ -34,7 +34,6 @@ import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
 import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
-import type { FeedDocument } from '../../feed.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const STRING_MAP_SCHEMA = {
@@ -126,7 +125,10 @@ describeIfV3('#load', () => {
   test('Sync pinned stream first time loaded from state store', async () => {
     const content = { foo: 'bar' }
     const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
+    const genesisCid = await ceramic.dispatcher.storeInitEvent(
+      genesisCommit,
+      TileDocument.STREAM_TYPE_ID
+    )
     const streamId = new StreamID('tile', genesisCid)
     const streamState = {
       type: TileDocument.STREAM_TYPE_ID,
@@ -175,7 +177,10 @@ describeIfV3('#load', () => {
   test('Pinning a stream prevents it from needing to be synced', async () => {
     const content = { foo: 'bar' }
     const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
+    const genesisCid = await ceramic.dispatcher.storeInitEvent(
+      genesisCommit,
+      TileDocument.STREAM_TYPE_ID
+    )
     const streamId = new StreamID('tile', genesisCid)
     const syncSpy = jest.spyOn(repository, '_sync')
     const loadFromNetworkSpy = jest.spyOn(repository, '_loadStreamFromNetwork')
@@ -434,7 +439,7 @@ describeIfV3('#load', () => {
       // Provide a new commit that the repository doesn't currently know about
       const newContent = { abc: 321, def: 456, gh: 987 }
       const updateCommit = await stream.makeCommit(ceramic.signer, newContent)
-      const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
+      const futureCommitCID = await ceramic.dispatcher.storeEvent(updateCommit, stream.id)
       const futureCommitID = CommitID.make(stream.id, futureCommitCID)
 
       // Now load the stream at a commitID ahead of what is currently in the state in the repository.
@@ -769,46 +774,6 @@ describeIfV3('handleAnchorEvent', () => {
       expect(shouldRemove).toBeTruthy()
       expect(nextSpy).not.toBeCalled()
     })
-  })
-})
-
-describe('_registerRunningState', () => {
-  test('deduplicate stream updates', async () => {
-    const state$ = new RunningState(
-      {
-        type: 1,
-        metadata: { controllers: ['did:3:foo'] },
-        content: { a: 1 },
-        anchorStatus: 0,
-        log: [
-          {
-            cid: TestUtils.randomCID(),
-            type: EventType.INIT,
-          },
-        ],
-        signature: 3,
-      },
-      false
-    )
-    const emittedDocuments: Array<FeedDocument> = []
-    const subscription = ceramic.feed.aggregation.documents.subscribe((document) => {
-      emittedDocuments.push(document)
-    })
-    expect(emittedDocuments.length).toEqual(0)
-    ;(ceramic.repository as any)._registerRunningState(state$)
-    expect(emittedDocuments.length).toEqual(1)
-    state$.next({
-      ...state$.value,
-      anchorStatus: AnchorStatus.PROCESSING,
-    })
-    expect(emittedDocuments.length).toEqual(1)
-    state$.next({
-      ...state$.value,
-      anchorStatus: AnchorStatus.REPLACED,
-    })
-    // Multiple updates that do not change a stream log, still single emission
-    expect(emittedDocuments.length).toEqual(1)
-    subscription.unsubscribe()
   })
 })
 

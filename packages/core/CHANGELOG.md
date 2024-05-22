@@ -3,6 +3,140 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.12.0...@ceramicnetwork/core@5.13.0-rc.0) (2024-05-20)
+
+
+### Bug Fixes
+
+* Do not transfer 0 to a next ms after initialization ([#3229](https://github.com/ceramicnetwork/js-ceramic/issues/3229)) ([367f3a8](https://github.com/ceramicnetwork/js-ceramic/commit/367f3a8c83b8410e2ee9d6c9ea752d838a59fd0e))
+
+
+
+
+
+# [5.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.12.0-rc.1...@ceramicnetwork/core@5.12.0) (2024-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.12.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.12.0-rc.0...@ceramicnetwork/core@5.12.0-rc.1) (2024-05-13)
+
+
+### Bug Fixes
+
+* rate limit how fast anchor polling loops on small data sets ([#3218](https://github.com/ceramicnetwork/js-ceramic/issues/3218)) ([41ad653](https://github.com/ceramicnetwork/js-ceramic/commit/41ad65374d73104527d9c551183e621532b5c5f8))
+
+
+
+
+
+# [5.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.11.0...@ceramicnetwork/core@5.12.0-rc.0) (2024-05-13)
+
+
+### Features
+
+* add anchor metrics ([#3223](https://github.com/ceramicnetwork/js-ceramic/issues/3223)) ([6d93db2](https://github.com/ceramicnetwork/js-ceramic/commit/6d93db2b2be269083599705fc7b5b1b4649b1c5d))
+* remove event id ([#3203](https://github.com/ceramicnetwork/js-ceramic/issues/3203)) ([e21c53c](https://github.com/ceramicnetwork/js-ceramic/commit/e21c53ca914a08db21eda77d5704dc4a12e2ecff))
+
+
+
+
+
+# [5.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.11.0-rc.0...@ceramicnetwork/core@5.11.0) (2024-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.10.0...@ceramicnetwork/core@5.11.0-rc.0) (2024-05-07)
+
+
+### Features
+
+* FeedStream ([#3216](https://github.com/ceramicnetwork/js-ceramic/issues/3216)) ([0b6ff7c](https://github.com/ceramicnetwork/js-ceramic/commit/0b6ff7c825ef915cd24aea4591904f710cae253f))
+
+
+
+
+
+# [5.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.10.0-rc.0...@ceramicnetwork/core@5.10.0) (2024-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.9.0...@ceramicnetwork/core@5.10.0-rc.0) (2024-04-29)
+
+
+### Bug Fixes
+
+* Don't import observability package into common, which is used in the http-client ([#3217](https://github.com/ceramicnetwork/js-ceramic/issues/3217)) ([2f9f23f](https://github.com/ceramicnetwork/js-ceramic/commit/2f9f23fb11ffc2b46728e8bc8be876242f5fc005))
+
+
+
+
+
+# [5.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.9.0-rc.0...@ceramicnetwork/core@5.9.0) (2024-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.8.0...@ceramicnetwork/core@5.9.0-rc.0) (2024-04-22)
+
+
+### Features
+
+* Additional metrics on read and write failures ([#3210](https://github.com/ceramicnetwork/js-ceramic/issues/3210)) ([d8f3551](https://github.com/ceramicnetwork/js-ceramic/commit/d8f355132dad06a3ba9f1e3432b341287c4145d0))
+* Record important errors to ModelMetrics ([#3211](https://github.com/ceramicnetwork/js-ceramic/issues/3211)) ([18a397f](https://github.com/ceramicnetwork/js-ceramic/commit/18a397fdd90f355871c15b8d62e2cf8aa038e644))
+
+
+
+
+
+# [5.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.8.0-rc.0...@ceramicnetwork/core@5.8.0) (2024-04-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.7.0...@ceramicnetwork/core@5.8.0-rc.0) (2024-04-15)
+
+
+### Bug Fixes
+
+* disable recon feed in test where it is causing flaky behavior ([#3206](https://github.com/ceramicnetwork/js-ceramic/issues/3206)) ([4b15ada](https://github.com/ceramicnetwork/js-ceramic/commit/4b15ada431b6cb2b5d000d4e72ab977b404578d3))
+
+
+### Features
+
+* add an entry to the feedstore, when adding to the state store ([#3201](https://github.com/ceramicnetwork/js-ceramic/issues/3201)) ([271bf8b](https://github.com/ceramicnetwork/js-ceramic/commit/271bf8b4e566c12e6a8db0fd1af790d279b8fc2a))
+* Add CERAMIC_AUDIT_EVENT_PERSISTENCE that crashes process if data loss detected ([#3204](https://github.com/ceramicnetwork/js-ceramic/issues/3204)) ([e7f1464](https://github.com/ceramicnetwork/js-ceramic/commit/e7f1464de61aaf30a00dc800b69f7c329cd5ab26))
+* Add metrics for CACAO expirations ([#3198](https://github.com/ceramicnetwork/js-ceramic/issues/3198)) ([69204e0](https://github.com/ceramicnetwork/js-ceramic/commit/69204e0f64ee24e90d26581acac2b31132ece7c4))
+
+
+
+
+
+# [5.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.7.0-rc.0...@ceramicnetwork/core@5.7.0) (2024-04-15)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
 # [5.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.6.0...@ceramicnetwork/core@5.7.0-rc.0) (2024-04-03)
 
 

@@ -7,13 +7,7 @@ import { CID } from 'multiformats/cid'
 import { applyTipToState } from './apply-tip-helper.js'
 
 type EventStorer = {
-  storeDataEvent(
-    data: any,
-    eventHeight: number,
-    streamId: StreamID,
-    controllers: Array<string>,
-    model?: StreamID
-  ): Promise<CID>
+  storeEvent(data: any, streamId: StreamID): Promise<CID>
 }
 
 /**
@@ -64,14 +58,9 @@ export class StreamUpdater {
    */
   async applyCommitFromUser(state: StreamState, commit: CeramicCommit): Promise<StreamState> {
     const streamId = StreamUtils.streamIdFromState(state)
-    const commitHeight = StreamUtils.getCommitHeight(state, commit)
-
-    const commitCid = await this.commitStorer.storeDataEvent(
+    const commitCid = await this.commitStorer.storeEvent(
       commit,
-      commitHeight,
-      StreamUtils.streamIdFromState(state),
-      state.metadata.controllers,
-      state.metadata.model
+      StreamUtils.streamIdFromState(state)
     )
     this.logger.verbose(
       `StreamUpdater stored commit for stream ${streamId.toString()}, CID: ${commitCid.toString()}`

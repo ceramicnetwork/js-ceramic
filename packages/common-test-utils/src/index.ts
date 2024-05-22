@@ -183,7 +183,7 @@ export class CommonTestUtils {
     timeoutMs = 1000 * 30
   ): Promise<void> {
     const hasEventForCID = ({ events }: Events) => {
-      return events.some((event) => event.id.event.toString() === cid.toString())
+      return events.some((event) => event.cid.toString() === cid.toString())
     }
     await this.waitFor(reconFeed, hasEventForCID, timeoutMs).catch((err) => {
       throw new Error(`Error while waiting for event for CID ${cid}: ${err}`)
@@ -192,5 +192,5 @@ export class CommonTestUtils {
 }
 
 type Events = {
-  events: Array<{ id: { event: CID } }>
+  events: Array<{ cid: CID; data: null }>
 }

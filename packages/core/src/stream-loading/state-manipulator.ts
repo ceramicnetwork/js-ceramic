@@ -9,12 +9,12 @@ import {
   StreamUtils,
   UnappliableStreamLog,
   StreamReaderWriter,
-  SignatureUtils,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { HandlersMap } from '../handlers-map.js'
 import { LogSyncer } from './log-syncer.js'
 import cloneDeep from 'lodash.clonedeep'
+import { SignatureUtils } from '@ceramicnetwork/stream-handler-common'
 
 /**
  * @param throwOnInvalidCommit - if true, throws if there is an error applying a commit, otherwise

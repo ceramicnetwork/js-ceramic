@@ -24,6 +24,7 @@ describe('Ceramic integration', () => {
     const ceramic = await Ceramic.create(ipfs1, {
       stateStoreDirectory,
       indexing: { db: databaseConnectionString.href, models: [] },
+      anchorLoopMinDurationMs: 0,
     })
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -37,6 +38,7 @@ describe('Ceramic integration', () => {
       networkName: 'inmemory',
       stateStoreDirectory,
       indexing: { db: databaseConnectionString.href, models: [] },
+      anchorLoopMinDurationMs: 0,
     })
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -49,6 +51,7 @@ describe('Ceramic integration', () => {
     const [modules, params] = Ceramic._processConfig(ipfs1, {
       networkName: 'local',
       indexing: { db: databaseConnectionString.href, models: [] },
+      anchorLoopMinDurationMs: 0,
     })
     modules.anchorService = new InMemoryAnchorService(
       {},
@@ -68,6 +71,7 @@ describe('Ceramic integration', () => {
         networkName: 'fakenetwork',
         stateStoreDirectory,
         indexing: { db: databaseConnectionString.href, models: [] },
+        anchorLoopMinDurationMs: 0,
       })
     ).rejects.toThrow(
       "Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
@@ -81,6 +85,7 @@ describe('Ceramic integration', () => {
       networkName: Networks.INMEMORY,
       stateStoreDirectory: tmpDirectory,
       indexing: { db: databaseConnectionString.href, models: [] },
+      anchorLoopMinDurationMs: 0,
     })
     const dispatcher = modules.dispatcher
     const ceramic = new Ceramic(modules, params)

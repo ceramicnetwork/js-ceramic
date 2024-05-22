@@ -121,3 +121,16 @@ export const promiseTimeout = (
   })
   return Promise.race([timeout, promise])
 }
+
+export const abortSignalToPromise = (abortSignal: AbortSignal): Promise<void> => {
+  return new Promise<void>((resolve) => {
+    if (abortSignal.aborted) {
+      return resolve()
+    }
+    const done = () => {
+      abortSignal.removeEventListener('abort', done)
+      resolve()
+    }
+    abortSignal.addEventListener('abort', done)
+  })
+}

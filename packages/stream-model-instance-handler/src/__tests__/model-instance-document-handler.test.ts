@@ -107,7 +107,16 @@ const CONTENT2 = { myData: 2 }
 const METADATA = { controller: DID_ID, model: FAKE_MODEL_ID }
 const METADATA_WITH_CTX = { controller: DID_ID, model: FAKE_MODEL_ID, context: FAKE_MID_ID }
 const METADATA_BLOB = { controller: DID_ID, model: FAKE_MODEL_IDBLOB, deterministic: false }
-const DETERMINISTIC_METADATA = { controller: DID_ID, model: FAKE_MODEL_ID2, deterministic: true }
+const DETERMINISTIC_SINGLE_METADATA = {
+  controller: DID_ID,
+  model: FAKE_MODEL_ID2,
+  deterministic: true,
+}
+const DETERMINISTIC_SET_METADATA = {
+  controller: DID_ID,
+  model: FAKE_MODEL_SET_ID,
+  deterministic: true,
+}
 
 async function checkSignedCommitMatchesExpectations(
   signer: IntoSigner,
@@ -546,12 +555,12 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit1 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      DETERMINISTIC_METADATA
+      DETERMINISTIC_SINGLE_METADATA
     )
     const commit2 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      DETERMINISTIC_METADATA,
+      DETERMINISTIC_SINGLE_METADATA,
       ['a']
     )
     expect(commit2).not.toEqual(commit1)
@@ -559,7 +568,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit3 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      DETERMINISTIC_METADATA,
+      DETERMINISTIC_SINGLE_METADATA,
       ['a']
     )
     expect(commit3).toEqual(commit2)
@@ -567,7 +576,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit4 = await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      DETERMINISTIC_METADATA,
+      DETERMINISTIC_SINGLE_METADATA,
       ['b']
     )
     expect(commit4).not.toEqual(commit3)
@@ -621,7 +630,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       CONTENT0,
-      DETERMINISTIC_METADATA
+      DETERMINISTIC_SINGLE_METADATA
     )) as SignedCommitContainer
     await ipfs.dag.put(commit, FAKE_CID_1)
 
@@ -639,7 +648,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      DETERMINISTIC_METADATA
+      DETERMINISTIC_SINGLE_METADATA
     )) as SignedCommitContainer
     await ipfs.dag.put(commit, FAKE_CID_1)
 
@@ -658,7 +667,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const rawCommit = await ModelInstanceDocument.makeGenesis(
       context,
       CONTENT0,
-      DETERMINISTIC_METADATA
+      DETERMINISTIC_SINGLE_METADATA
     )
 
     await ipfs.dag.put(rawCommit, FAKE_CID_1)
@@ -702,7 +711,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
   it('MIDs for Models with SINGLE accountRelations must be created deterministically', async () => {
     const commit = await ModelInstanceDocument.makeGenesis(context.signer, null, {
-      ...DETERMINISTIC_METADATA,
+      ...DETERMINISTIC_SINGLE_METADATA,
       deterministic: false,
     })
 
@@ -721,7 +730,25 @@ describe('ModelInstanceDocumentHandler', () => {
     )
   })
 
-  it('MIDs for Models without SINGLE accountRelations must be created uniquely', async () => {
+  it('MIDs for Models with SET accountRelations must be created with unique fields', async () => {
+    const commit = await ModelInstanceDocument.makeGenesis(context.signer, null, {
+      ...DETERMINISTIC_SET_METADATA,
+      deterministic: true,
+    })
+
+    await ipfs.dag.put(commit, FAKE_CID_1)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: EventType.INIT,
+      commit,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /ModelInstanceDocuments for models with SET accountRelations must be created with a unique field containing data from the fields providing the set semantics/
+    )
+  })
+
+  it('MIDs for Models with LIST accountRelations must be created uniquely', async () => {
     const rawCommit = await ModelInstanceDocument.makeGenesis(context.signer, CONTENT0, {
       ...METADATA,
       deterministic: true,
@@ -739,7 +766,7 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: commit.jws,
     }
     await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
-      /Deterministic ModelInstanceDocuments are only allowed on models that have the SINGLE accountRelation/
+      /ModelInstanceDocuments for models with LIST accountRelations must be created with a unique field/
     )
   })
 
@@ -854,7 +881,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      { ...DETERMINISTIC_METADATA, model: FAKE_MODEL_SET_ID },
+      { ...DETERMINISTIC_SINGLE_METADATA, model: FAKE_MODEL_SET_ID },
       ['foo', 'bar']
     )) as GenesisCommit
     await ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -916,7 +943,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.signer,
       null,
-      { ...DETERMINISTIC_METADATA, model: FAKE_MODEL_SET_ID },
+      { ...DETERMINISTIC_SINGLE_METADATA, model: FAKE_MODEL_SET_ID },
       ['a', 'b']
     )) as GenesisCommit
     await ipfs.dag.put(genesisCommit, FAKE_CID_1)
