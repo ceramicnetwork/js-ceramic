@@ -98,7 +98,7 @@ export class FeedAggregationStore extends ObjectStore<string, StreamID> {
 
   async put(streamId: StreamID, key: string = this.#keyGenerator.next()): Promise<void> {
     await this.save(key, streamId)
-    this.logger.verbose(`Inserting this streamId from LevelDB ${streamId} at ${Date.now()}`)
+    this.logger.warn(`Inserting this streamId from LevelDB ${streamId} at ${Date.now()}`)
     this.onWrite.next()
   }
 
@@ -149,7 +149,7 @@ class StreamIDFeedSource implements UnderlyingSource<AggregationStoreEntry> {
       return this.pull(controller)
     }
     for (const entry of entries) {
-      this.logger.verbose(`Sending this streamId from LevelDB ${entry.value} at ${Date.now()}`)
+      this.logger.warn(`Sending this streamId from LevelDB ${entry.value} at ${Date.now()}`)
       controller.enqueue({
         resumeToken: entry.key,
         streamID: entry.value,
