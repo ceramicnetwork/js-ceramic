@@ -52,7 +52,7 @@ commands:
 jobs:
   with-go-ipfs:
     machine:
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2204:current
     environment:
       IPFS_FLAVOR: go
     steps:
@@ -64,7 +64,7 @@ jobs:
             NODE_OPTIONS: '--max_old_space_size=4096'
   with-rust-ipfs:
     machine:
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2204:current
     environment:
       IPFS_FLAVOR: rust
       CERAMIC_ONE_PATH: /usr/local/bin/ceramic-one
@@ -78,7 +78,7 @@ jobs:
             NODE_OPTIONS: '--max_old_space_size=4096'
   dispatch-event:
     machine:
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2204:current
     steps:
       - send-dispatch-event
 
