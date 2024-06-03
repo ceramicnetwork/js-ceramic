@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.13.0...@ceramicnetwork/core@5.14.0-rc.0) (2024-06-03)
+
+
+### Bug Fixes
+
+* stabilize unit test by no longer emitting an entry after it has been processed ([#3230](https://github.com/ceramicnetwork/js-ceramic/issues/3230)) ([52c1414](https://github.com/ceramicnetwork/js-ceramic/commit/52c1414dd44c81f09d53bea03a5741a6e6fb8aa3))
+
+
+
+
+
 # [5.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.13.0-rc.0...@ceramicnetwork/core@5.13.0) (2024-06-03)
 
 **Note:** Version bump only for package @ceramicnetwork/core
