@@ -136,7 +136,7 @@ export class InMemoryAnchorService implements AnchorService {
       })
     )
 
-    doNotWait(this.#cas.create(carFileReader), this.#logger)
+    doNotWait(this.#cas.createRequest(carFileReader), this.#logger)
     return {
       status: AnchorRequestStatusName.PENDING,
       streamId: streamId,

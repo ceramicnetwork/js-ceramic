@@ -128,7 +128,7 @@ export interface CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent>
+  createRequest(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent>
 
   /**
    * Get current status of an anchor request from CAS for `streamId` and its `tip`.

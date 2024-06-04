@@ -145,7 +145,7 @@ export class RemoteCAS implements CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
+  async createRequest(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
     const response = await firstValueFrom(this.create$(carFileReader))
     return parseResponse(carFileReader.streamId, carFileReader.tip, response)
   }
