@@ -6,7 +6,6 @@ import type {
   NotCompleteStatusName,
   AnchorProof,
 } from '@ceramicnetwork/common'
-import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { randomCID, StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
@@ -15,10 +14,6 @@ import { Subject } from 'rxjs'
 import type { LRUCache } from 'least-recent'
 
 class Candidate {
-  static fromCarFileReader(reader: AnchorRequestCarFileReader): Candidate {
-    return new Candidate(reader.streamId, reader.tip, reader.streamId.toString())
-  }
-
   constructor(readonly streamId: StreamID, readonly cid: CID, readonly key: string) {}
 }
 
@@ -87,10 +82,8 @@ export class InMemoryCAS implements CASClient {
     this.#queue = [] // reset
   }
 
-  async createRequest(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
-    const candidate = Candidate.fromCarFileReader(carFileReader)
-    const streamId = candidate.streamId
-    const tip = candidate.cid
+  async createRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    const candidate = new Candidate(streamId, tip, streamId.toString())
     let event: AnchorEvent
     if (this.#anchorOnRequest) {
       try {

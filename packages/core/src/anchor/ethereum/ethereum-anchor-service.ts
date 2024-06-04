@@ -1,14 +1,7 @@
 import { fetchJson } from '@ceramicnetwork/common'
-import type {
-  AnchorEvent,
-  FetchRequest,
-  DiagnosticsLogger,
-  CeramicSigner,
-} from '@ceramicnetwork/common'
+import type { AnchorEvent, FetchRequest, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
-import type { CAR } from 'cartonne'
-import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 import type {
   AnchorService,
@@ -23,6 +16,8 @@ import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { RemoteCAS } from './remote-cas.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
 
 // BATCH_SIZE controls the number of keys fetched from the AnchorRequestStore at once.
 // It does not affect the parallelism/concurrency of actually processing the entries in those batches.
@@ -106,20 +101,15 @@ export class EthereumAnchorService implements AnchorService {
    * Send request to the anchoring service
    * @param carFile - CAR file containing all necessary data for the CAS to anchor
    */
-  async requestAnchor(carFile: CAR): Promise<AnchorEvent> {
-    const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const streamId = carFileReader.streamId
-    const tip = carFileReader.tip
-
+  async requestAnchor(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     await this.#anchorStoreQueue.run(streamId.toString(), () =>
       this.#store.save(streamId, {
         cid: tip,
-        genesis: carFileReader.genesis,
         timestamp: Date.now(),
       })
     )
 
-    doNotWait(this.#cas.createRequest(carFileReader), this.#logger)
+    doNotWait(this.#cas.createRequest(streamId, tip), this.#logger)
     return {
       status: AnchorRequestStatusName.PENDING,
       streamId: streamId,

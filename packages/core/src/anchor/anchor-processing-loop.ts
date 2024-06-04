@@ -1,7 +1,6 @@
 import { ProcessingLoop } from './processing-loop.js'
 import type { CASClient } from './anchor-service.js'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import type { AnchorLoopHandler } from './anchor-service.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
@@ -57,8 +56,7 @@ export class AnchorProcessingLoop {
           const entry = await store.load(streamId)
           const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
             logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
-            const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
-            return cas.createRequest(new AnchorRequestCarFileReader(requestCAR))
+            return cas.createRequest(streamId, entry.cid)
           })
           const isTerminal = await eventHandler.handle(event)
           logger.verbose(

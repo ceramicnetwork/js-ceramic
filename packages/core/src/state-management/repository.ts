@@ -33,7 +33,6 @@ import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
 import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.js'
-import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CAR } from 'cartonne'
 import { FeedDocument, Feed } from '../feed.js'
@@ -66,7 +65,6 @@ export type RepositoryDependencies = {
   indexing: LocalIndexApi
   streamLoader: StreamLoader
   streamUpdater: StreamUpdater
-  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -651,8 +649,7 @@ export class Repository {
       return
     }
 
-    const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
-    const anchorEvent = await this.anchorService.requestAnchor(carFile)
+    const anchorEvent = await this.anchorService.requestAnchor(state$.id, state$.tip)
     // Don't wait on handling the anchor event, let that happen in the background.
     doNotWait(this.handleAnchorEvent(state$, anchorEvent), this.logger)
   }
@@ -1103,13 +1100,9 @@ export class Repository {
   }
 
   anchorLoopHandler(): AnchorLoopHandler {
-    const carBuilder = this.#deps.anchorRequestCarBuilder
     const fromMemoryOrStoreSafe = this.fromMemoryOrStore.bind(this)
     const handleAnchorEvent = this.handleAnchorEvent.bind(this)
     return {
-      buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
-        return carBuilder.build(streamId, tip)
-      },
       async handle(event: AnchorEvent): Promise<boolean> {
         const state$ = await fromMemoryOrStoreSafe(event.streamId)
         if (!state$) return true

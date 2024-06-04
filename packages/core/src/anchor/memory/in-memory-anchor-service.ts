@@ -4,8 +4,6 @@ import {
   type NotCompleteStatusName,
   type DiagnosticsLogger,
 } from '@ceramicnetwork/common'
-import { type CAR } from 'cartonne'
-import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../anchor-service.js'
 import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
@@ -14,6 +12,8 @@ import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 import { LRUCache } from 'least-recent'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
 
 const CHAIN_ID = 'inmemory:12345'
 const BATCH_SIZE = 10
@@ -121,22 +121,16 @@ export class InMemoryAnchorService implements AnchorService {
 
   /**
    * Send request to the anchoring service
-   * @param carFile - CAR file containing all necessary data for the CAS to anchor
    */
-  async requestAnchor(carFile: CAR): Promise<AnchorEvent> {
-    const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const streamId = carFileReader.streamId
-    const tip = carFileReader.tip
-
+  async requestAnchor(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     await this.#anchorStoreQueue.run(streamId.toString(), () =>
       this.#store.save(streamId, {
         cid: tip,
-        genesis: carFileReader.genesis,
         timestamp: Date.now(),
       })
     )
 
-    doNotWait(this.#cas.createRequest(carFileReader), this.#logger)
+    doNotWait(this.#cas.createRequest(streamId, tip), this.#logger)
     return {
       status: AnchorRequestStatusName.PENDING,
       streamId: streamId,

@@ -1,13 +1,10 @@
 import type { AnchorEvent, AnchorProof, FetchRequest } from '@ceramicnetwork/common'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
-import type { CAR } from 'cartonne'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
-import type { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import { CeramicSigner } from '@ceramicnetwork/common'
 
 export type AnchorLoopHandler = {
-  buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR>
   handle(event: AnchorEvent): Promise<boolean>
 }
 
@@ -36,10 +33,9 @@ export interface AnchorService {
   assertCASAccessible(): void
 
   /**
-   * Send request to the anchoring service
-   * @param carFile - CAR file containing all necessary data for the CAS to anchor
+   * Send request to the anchoring service to anchor the given event in the given stream.
    */
-  requestAnchor(carFile: CAR): Promise<AnchorEvent>
+  requestAnchor(streamID: StreamID, tip: CID): Promise<AnchorEvent>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
@@ -128,7 +124,7 @@ export interface CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  createRequest(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent>
+  createRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent>
 
   /**
    * Get current status of an anchor request from CAS for `streamId` and its `tip`.

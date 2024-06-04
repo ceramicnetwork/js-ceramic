@@ -12,7 +12,6 @@ const DEFAULT_MIN_LOOP_JITTER_MS = 100
 export type AnchorRequestData = {
   cid: CID
   timestamp: number
-  genesis: GenesisCommit
 }
 
 export type AnchorRequestStoreListResult = {
@@ -34,7 +33,6 @@ export function serializeAnchorRequestData(value: AnchorRequestData): any {
   return JSON.stringify({
     cid: value.cid.toString(),
     timestamp: value.timestamp,
-    genesis: StreamUtils.serializeCommit(value.genesis),
   })
 }
 
@@ -43,7 +41,6 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
   return {
     cid: CID.parse(parsed.cid),
     timestamp: parsed.timestamp,
-    genesis: StreamUtils.deserializeCommit(parsed.genesis),
   }
 }
 

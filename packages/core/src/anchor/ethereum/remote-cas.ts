@@ -1,7 +1,6 @@
 import type { CASClient } from '../anchor-service.js'
 import type { AnchorEvent, FetchRequest } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
-import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { CASResponseOrError, ErrorResponse, SupportedChainsResponse } from '@ceramicnetwork/codecs'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
@@ -145,19 +144,19 @@ export class RemoteCAS implements CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  async createRequest(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
-    const response = await firstValueFrom(this.create$(carFileReader))
-    return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+  async createRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    const response = await firstValueFrom(this.create$(streamId, tip))
+    return parseResponse(streamId, tip, response)
   }
 
-  create$(carFileReader: AnchorRequestCarFileReader): Observable<unknown> {
+  create$(streamId: StreamID, tip: CID): Observable<unknown> {
     const sendRequest$ = deferAbortable(async (signal) => {
       const response = await this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/vnd.ipld.car',
+          'Content-Type': 'application/json',
         },
-        body: carFileReader.carFile.bytes,
+        body: { streamId: streamId.toString(), cid: tip.toString() },
         signal: signal,
       })
 
@@ -175,11 +174,9 @@ export class RemoteCAS implements CASClient {
         Metrics.count(CAS_REQUEST_CREATE_FAILED, 1)
         // clean up the error message to have more context
         throw new Error(
-          `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${
-            carFileReader.tip
-          }. This is failure #${this.#numFailedRequests} attempting to communicate to the CAS: ${
-            error.message
-          }`
+          `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}. This is failure #${
+            this.#numFailedRequests
+          } attempting to communicate to the CAS: ${error.message}`
         )
       }),
       takeUntil(this.#stopSignal)

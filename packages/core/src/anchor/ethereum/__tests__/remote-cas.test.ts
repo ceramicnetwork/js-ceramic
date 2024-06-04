@@ -2,14 +2,18 @@ import { describe, expect, jest, test } from '@jest/globals'
 import { RemoteCAS } from '../remote-cas.js'
 import { fetchJson, AnchorRequestStatusName, LoggerProvider } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
-import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { dateAsUnix } from '@ceramicnetwork/codecs'
 import MockDate from 'mockdate'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
 
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const POLL_INTERVAL = 100
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
+export const FAKE_STREAM_ID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+)
+export const FAKE_TIP_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 describe('RemoteCAS supportedChains', () => {
   test('returns decoded supported chains on valid response', async () => {
@@ -92,21 +96,20 @@ describe('create', () => {
       Promise.resolve({
         id: 'foo',
         status: AnchorRequestStatusName.PENDING,
-        streamId: carFileReader.streamId.toString(),
-        cid: carFileReader.tip.toString(),
+        streamId: FAKE_STREAM_ID.toString(),
+        cid: FAKE_TIP_CID.toString(),
         message: 'Sending anchoring request',
         createdAt: dateAsUnix.encode(new Date()),
         updatedAt: dateAsUnix.encode(new Date()),
       })
     ) as unknown as typeof fetchJson
     const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
-    const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-    const result = await cas.createRequest(carFileReader)
+    const result = await cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)
     expect(fetchFn).toBeCalled()
     expect(result).toEqual({
       status: AnchorRequestStatusName.PENDING,
-      streamId: carFileReader.streamId,
-      cid: carFileReader.tip,
+      streamId: FAKE_STREAM_ID,
+      cid: FAKE_TIP_CID,
       message: 'Sending anchoring request',
     })
   })
@@ -116,8 +119,7 @@ describe('create', () => {
       throw new Error(`Oops`)
     }) as unknown as typeof fetchJson
     const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
-    const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-    await expect(cas.createRequest(carFileReader)).rejects.toThrow()
+    await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
   })
 })
 
@@ -171,8 +173,6 @@ describe('getStatusForRequest', () => {
 })
 
 describe('assertCASAccessible', () => {
-  const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-
   const fetchNetworkErrFn = jest.fn(() => {
     throw new Error(`Network error`)
   }) as unknown as typeof fetchJson
@@ -199,11 +199,11 @@ describe('assertCASAccessible', () => {
     test('Failures without time passing still accessible', async () => {
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
 
       cas.assertCASAccessible()
     })
@@ -211,8 +211,8 @@ describe('assertCASAccessible', () => {
     test('Time passing without sufficient failures still accessible', async () => {
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
       advanceTime()
 
       cas.assertCASAccessible()
@@ -221,9 +221,9 @@ describe('assertCASAccessible', () => {
     test('Time passing plus sufficient failures means inaccessible', async () => {
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
       advanceTime()
 
       expect(cas.assertCASAccessible.bind(cas)).toThrow(
@@ -235,8 +235,8 @@ describe('assertCASAccessible', () => {
       const casResponse = {
         id: 'foo',
         status: AnchorRequestStatusName.PENDING,
-        streamId: carFileReader.streamId.toString(),
-        cid: carFileReader.tip.toString(),
+        streamId: FAKE_STREAM_ID.toString(),
+        cid: FAKE_TIP_CID.toString(),
         message: 'Sending anchoring request',
         createdAt: dateAsUnix.encode(new Date()),
         updatedAt: dateAsUnix.encode(new Date()),
@@ -253,9 +253,9 @@ describe('assertCASAccessible', () => {
 
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
 
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
       advanceTime()
 
       expect(cas.assertCASAccessible.bind(cas)).toThrow(
@@ -263,10 +263,10 @@ describe('assertCASAccessible', () => {
       )
 
       fetchShouldFail = false
-      await expect(cas.createRequest(carFileReader)).resolves.toEqual({
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).resolves.toEqual({
         status: AnchorRequestStatusName.PENDING,
-        streamId: carFileReader.streamId,
-        cid: carFileReader.tip,
+        streamId: FAKE_STREAM_ID,
+        cid: FAKE_TIP_CID,
         message: 'Sending anchoring request',
       })
       cas.assertCASAccessible()
@@ -358,7 +358,7 @@ describe('assertCASAccessible', () => {
       const tip = TestUtils.randomCID()
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(carFileReader)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
       advanceTime()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()

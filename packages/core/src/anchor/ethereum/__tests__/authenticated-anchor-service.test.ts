@@ -9,11 +9,11 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../../__tests__/create-ceramic.js'
 import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
 import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
-import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
 import type { AnchorLoopHandler } from '../../anchor-service.js'
 import { CARFactory, type CAR } from 'cartonne'
 import { Ceramic } from '../../../ceramic.js'
+import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
 const FAUX_ANCHOR_STORE = {
   save: jest.fn(),
@@ -22,9 +22,6 @@ const FAUX_ANCHOR_STORE = {
   },
 } as unknown as AnchorRequestStore
 const FAUX_HANDLER: AnchorLoopHandler = {
-  async buildRequestCar(): Promise<CAR> {
-    return new CARFactory().build()
-  },
   async handle(): Promise<boolean> {
     return true
   },
@@ -91,7 +88,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     })
     await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
 
-    await anchorService.requestAnchor(generateFakeCarFile())
+    await anchorService.requestAnchor(BaseTestUtils.randomStreamID(), BaseTestUtils.randomCID())
 
     expect(signRequestSpy).toHaveBeenCalledTimes(2) // 1 to get supported chains + 1 to send request
     const signRequestResult = (await signRequestSpy.mock.results[1].value) as any
