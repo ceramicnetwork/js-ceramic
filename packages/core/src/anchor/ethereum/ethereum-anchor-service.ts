@@ -98,8 +98,7 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   /**
-   * Send request to the anchoring service
-   * @param carFile - CAR file containing all necessary data for the CAS to anchor
+   * Send request to the anchoring service to anchor the given Event for the given Stream.
    */
   async requestAnchor(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     await this.#anchorStoreQueue.run(streamId.toString(), () =>

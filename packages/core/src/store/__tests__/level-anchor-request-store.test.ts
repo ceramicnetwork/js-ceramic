@@ -12,16 +12,7 @@ import {
   AnchorRequestStoreListResult,
   serializeAnchorRequestData,
 } from '../anchor-request-store.js'
-import {
-  jest,
-  describe,
-  test,
-  expect,
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-} from '@jest/globals'
+import { jest, describe, test, expect, beforeEach, afterEach, beforeAll } from '@jest/globals'
 import tmp, { type DirectoryResult } from 'tmp-promise'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -162,7 +153,6 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
 
     await anchorRequestStore.save(streamId1, anchorRequestData)
@@ -199,7 +189,6 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
 
     await anchorRequestStore.save(streamId1, anchorRequestData)
@@ -217,21 +206,18 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData1: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
     await anchorRequestStore.save(streamId1, anchorRequestData1)
 
     const anchorRequestData2: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit2,
     }
     await anchorRequestStore.save(streamId2, anchorRequestData2)
 
     const anchorRequestData3: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit3,
     }
     await anchorRequestStore.save(streamId3, anchorRequestData3)
 
@@ -262,17 +248,14 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData1: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
     const anchorRequestData2: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit2,
     }
     const anchorRequestData3: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit3,
     }
     await anchorRequestStore.save(streamId1, anchorRequestData1)
     await anchorRequestStore.save(streamId2, anchorRequestData2)
@@ -319,17 +302,14 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData1: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
     const anchorRequestData2: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit2,
     }
     const anchorRequestData3: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit3,
     }
     await anchorRequestStore.save(streamId1, anchorRequestData1)
     await anchorRequestStore.save(streamId2, anchorRequestData2)
@@ -375,7 +355,6 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
     await anchorRequestStore.save(streamId1, anchorRequestData)
 
@@ -398,7 +377,6 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     const anchorRequestData: AnchorRequestData = {
       cid: TestUtils.randomCID(),
       timestamp: Date.now(),
-      genesis: genesisCommit1,
     }
     await anchorRequestStore.save(streamId1, anchorRequestData)
 
@@ -425,17 +403,14 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
       const anchorRequestData1: AnchorRequestData = {
         cid: TestUtils.randomCID(),
         timestamp: Date.now(),
-        genesis: genesisCommit1,
       }
       const anchorRequestData2: AnchorRequestData = {
         cid: TestUtils.randomCID(),
         timestamp: Date.now(),
-        genesis: genesisCommit2,
       }
       const anchorRequestData3: AnchorRequestData = {
         cid: TestUtils.randomCID(),
         timestamp: Date.now(),
-        genesis: genesisCommit3,
       }
       await anchorRequestStore.save(streamId1, anchorRequestData1)
       await anchorRequestStore.save(streamId2, anchorRequestData2)
