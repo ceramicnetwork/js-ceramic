@@ -124,7 +124,7 @@ export interface CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  createRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent>
+  createRequest(streamId: StreamID, tip: CID, timestamp: Date): Promise<AnchorEvent>
 
   /**
    * Get current status of an anchor request from CAS for `streamId` and its `tip`.

@@ -56,7 +56,7 @@ export class AnchorProcessingLoop {
           const entry = await store.load(streamId)
           const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
             logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
-            return cas.createRequest(streamId, entry.cid)
+            return cas.createRequest(streamId, entry.cid, new Date(entry.timestamp))
           })
           const isTerminal = await eventHandler.handle(event)
           logger.verbose(

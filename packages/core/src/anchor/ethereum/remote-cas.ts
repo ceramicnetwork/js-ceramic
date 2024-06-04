@@ -144,19 +144,23 @@ export class RemoteCAS implements CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  async createRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
-    const response = await firstValueFrom(this.create$(streamId, tip))
+  async createRequest(streamId: StreamID, tip: CID, timestamp): Promise<AnchorEvent> {
+    const response = await firstValueFrom(this.create$(streamId, tip, timestamp))
     return parseResponse(streamId, tip, response)
   }
 
-  create$(streamId: StreamID, tip: CID): Observable<unknown> {
+  create$(streamId: StreamID, tip: CID, timestamp: Date): Observable<unknown> {
     const sendRequest$ = deferAbortable(async (signal) => {
       const response = await this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: { streamId: streamId.toString(), cid: tip.toString() },
+        body: {
+          streamId: streamId.toString(),
+          cid: tip.toString(),
+          timestamp: timestamp.toISOString(),
+        },
         signal: signal,
       })
 

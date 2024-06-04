@@ -101,14 +101,15 @@ export class EthereumAnchorService implements AnchorService {
    * Send request to the anchoring service to anchor the given Event for the given Stream.
    */
   async requestAnchor(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    const now = new Date()
     await this.#anchorStoreQueue.run(streamId.toString(), () =>
       this.#store.save(streamId, {
         cid: tip,
-        timestamp: Date.now(),
+        timestamp: now.getTime(),
       })
     )
 
-    doNotWait(this.#cas.createRequest(streamId, tip), this.#logger)
+    doNotWait(this.#cas.createRequest(streamId, tip, now), this.#logger)
     return {
       status: AnchorRequestStatusName.PENDING,
       streamId: streamId,

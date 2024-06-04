@@ -104,7 +104,7 @@ describe('create', () => {
       })
     ) as unknown as typeof fetchJson
     const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
-    const result = await cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)
+    const result = await cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())
     expect(fetchFn).toBeCalled()
     expect(result).toEqual({
       status: AnchorRequestStatusName.PENDING,
@@ -119,7 +119,7 @@ describe('create', () => {
       throw new Error(`Oops`)
     }) as unknown as typeof fetchJson
     const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
-    await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+    await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
   })
 })
 
@@ -199,11 +199,11 @@ describe('assertCASAccessible', () => {
     test('Failures without time passing still accessible', async () => {
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
 
       cas.assertCASAccessible()
     })
@@ -211,8 +211,8 @@ describe('assertCASAccessible', () => {
     test('Time passing without sufficient failures still accessible', async () => {
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       advanceTime()
 
       cas.assertCASAccessible()
@@ -221,9 +221,9 @@ describe('assertCASAccessible', () => {
     test('Time passing plus sufficient failures means inaccessible', async () => {
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       advanceTime()
 
       expect(cas.assertCASAccessible.bind(cas)).toThrow(
@@ -253,9 +253,9 @@ describe('assertCASAccessible', () => {
 
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
 
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       advanceTime()
 
       expect(cas.assertCASAccessible.bind(cas)).toThrow(
@@ -263,7 +263,7 @@ describe('assertCASAccessible', () => {
       )
 
       fetchShouldFail = false
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).resolves.toEqual({
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).resolves.toEqual({
         status: AnchorRequestStatusName.PENDING,
         streamId: FAKE_STREAM_ID,
         cid: FAKE_TIP_CID,
@@ -358,7 +358,7 @@ describe('assertCASAccessible', () => {
       const tip = TestUtils.randomCID()
       const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
 
-      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID)).rejects.toThrow()
+      await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
       advanceTime()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()

@@ -82,7 +82,7 @@ export class InMemoryCAS implements CASClient {
     this.#queue = [] // reset
   }
 
-  async createRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+  async createRequest(streamId: StreamID, tip: CID, timestamp: Date): Promise<AnchorEvent> {
     const candidate = new Candidate(streamId, tip, streamId.toString())
     let event: AnchorEvent
     if (this.#anchorOnRequest) {
