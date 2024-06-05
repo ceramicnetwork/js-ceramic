@@ -5,6 +5,14 @@ class CustomReporter {
     this._context = reporterContext
   }
 
+  onTestFileStart(test) {
+    console.debug('Jest-Custom: Starting test file', test.path);
+  }
+
+  onTestFileResult(test) {
+    console.debug('Jest-Custom: Finished test file', test.path);
+  }
+
   /**
    * Called when test starts by 'test' or 'it'.
    */
