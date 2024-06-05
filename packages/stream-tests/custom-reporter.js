@@ -1,3 +1,9 @@
+const toMB = (bytes) => Math.floor(bytes / 1024 / 1024)
+
+function heapUsedClause() {
+  return `(${toMB(process.memoryUsage().heapUsed)} MB heap used)`
+}
+
 class CustomReporter {
   constructor(globalConfig, reporterOptions, reporterContext) {
     this._globalConfig = globalConfig
@@ -6,11 +12,11 @@ class CustomReporter {
   }
 
   onTestFileStart(test) {
-    console.debug('Jest-Custom: Starting test file', test.path);
+    console.debug('Jest-Custom: Starting test file', test.path, heapUsedClause())
   }
 
   onTestFileResult(test) {
-    console.debug('Jest-Custom: Finished test file', test.path);
+    console.debug('Jest-Custom: Finished test file', test.path, heapUsedClause())
   }
 
   /**
@@ -19,7 +25,10 @@ class CustomReporter {
   onTestCaseStart(test, testCaseStartInfo) {
     const cwd = test.context.config.cwd + '/'
     const at = test.path.replace(cwd, '')
-    console.log(`Jest-Custom: Starting test case "${testCaseStartInfo.fullName}" at ${at}`)
+    console.log(
+      `Jest-Custom: Starting test case "${testCaseStartInfo.fullName}" at ${at}`,
+      heapUsedClause()
+    )
   }
 
   /**
@@ -28,7 +37,10 @@ class CustomReporter {
   onTestCaseResult(test, testCaseResult) {
     const cwd = test.context.config.cwd + '/'
     const at = test.path.replace(cwd, '')
-    console.log(`Jest-Custom: Finished test case "${testCaseResult.fullName}" at ${at}`)
+    console.log(
+      `Jest-Custom: Finished test case "${testCaseResult.fullName}" at ${at}`,
+      heapUsedClause()
+    )
   }
 }
 
