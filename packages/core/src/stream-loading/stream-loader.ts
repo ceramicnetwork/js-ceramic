@@ -41,6 +41,7 @@ export class StreamLoader {
       }
     }
     const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
+      streamID,
       logWithoutTimestamps
     )
     return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, {
