@@ -7,6 +7,7 @@ import type {
 import { EventType } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
 import type { AnchorValidator } from '../anchor/anchor-service.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 type IpfsRecordLoader = {
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
@@ -65,9 +66,13 @@ export class AnchorTimestampExtractor {
    * Validates all the anchor commits in the log, applying timestamp information to the CommitData
    * entries in the log along the way. Defers throwing errors resulting from anchor validation
    * failures until later, when the anchor commits are actually applied.
+   * @param streamId
    * @param log
    */
-  async verifyAnchorAndApplyTimestamps(log: UnappliableStreamLog): Promise<AppliableStreamLog> {
+  async verifyAnchorAndApplyTimestamps(
+    streamId: StreamID,
+    log: UnappliableStreamLog
+  ): Promise<AppliableStreamLog> {
     let timestamp = null
     for (let i = log.commits.length - 1; i >= 0; i--) {
       const commitData = log.commits[i]
@@ -76,7 +81,9 @@ export class AnchorTimestampExtractor {
           timestamp = await this.verifyAnchorCommit(commitData)
         } catch (err) {
           // Save the error for now to be thrown when trying to actually apply the anchor commit.
-          this.logger.warn(`Error when validating anchor commit: ${err}`)
+          this.logger.warn(
+            `Error when validating anchor commit ${commitData.cid} of stream ${streamId}: ${err}`
+          )
           commitData.anchorValidationError = err
         }
       }
