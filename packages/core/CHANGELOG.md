@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.14.0...@ceramicnetwork/core@5.15.0-rc.0) (2024-06-10)
+
+
+### Bug Fixes
+
+* sleep if loop duration is a special 0 ([#3238](https://github.com/ceramicnetwork/js-ceramic/issues/3238)) ([e2638b1](https://github.com/ceramicnetwork/js-ceramic/commit/e2638b10d66981d1554211bbfa91af5f0d187ba8))
+
+
+
+
+
 # [5.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.14.0-rc.0...@ceramicnetwork/core@5.14.0) (2024-06-10)
 
 **Note:** Version bump only for package @ceramicnetwork/core

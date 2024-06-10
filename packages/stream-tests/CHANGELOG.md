@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.14.0...@ceramicnetwork/stream-tests@5.15.0-rc.0) (2024-06-10)
+
+
+### Bug Fixes
+
+* Remove history sync test ([#3237](https://github.com/ceramicnetwork/js-ceramic/issues/3237)) ([38ce25a](https://github.com/ceramicnetwork/js-ceramic/commit/38ce25ae834fd4f28ac8fe00ca01e3f6dfd5d076))
+
+
+
+
+
 # [5.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.14.0-rc.0...@ceramicnetwork/stream-tests@5.14.0) (2024-06-10)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

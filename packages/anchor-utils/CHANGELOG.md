@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@4.13.0...@ceramicnetwork/anchor-utils@4.14.0-rc.0) (2024-06-10)
+
+
+### Bug Fixes
+
+* Remove stale console.log statement ([#3233](https://github.com/ceramicnetwork/js-ceramic/issues/3233)) ([7c5e38d](https://github.com/ceramicnetwork/js-ceramic/commit/7c5e38d0fa77908df53eb8070075bbbc54155735))
+
+
+
+
+
 # [4.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@4.13.0-rc.0...@ceramicnetwork/anchor-utils@4.13.0) (2024-06-10)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-utils
