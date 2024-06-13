@@ -44,6 +44,7 @@ const TRAILING_SLASH = new RegExp(/\/+$/g) // slash at the end of the string
 const MAINNET_CAS_URLS = [
   'https://cas-internal.3boxlabs.com',
   'https://cas-direct.3boxlabs.com',
+  'https://ceramic-prod-cas-api-gitcoin.3boxlabs.com',
   DEFAULT_ANCHOR_SERVICE_URLS[Networks.MAINNET],
 ]
 export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks, logger: DiagnosticsLogger): string {
