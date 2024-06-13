@@ -40,22 +40,17 @@ export class UnusableAnchorChainsError extends Error {
   }
 }
 
-export class CustomMainnetCasError extends Error {
-  constructor() {
-    super('Cannot use custom anchor service on Ceramic mainnet')
-  }
-}
-
 const TRAILING_SLASH = new RegExp(/\/+$/g) // slash at the end of the string
 const MAINNET_CAS_URLS = [
   'https://cas-internal.3boxlabs.com',
   'https://cas-direct.3boxlabs.com',
   DEFAULT_ANCHOR_SERVICE_URLS[Networks.MAINNET],
 ]
-export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks): string {
+export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks, logger: DiagnosticsLogger): string {
   const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
+  // Log a warning when using a custom anchor service URL on mainnet
   if (isMainnet(network) && !MAINNET_CAS_URLS.includes(casUrl)) {
-    throw new CustomMainnetCasError()
+    logger.warn(`Using custom anchor service URL on mainnet: ${casUrl}`)
   }
   return casUrl
 }
@@ -124,7 +119,7 @@ export function makeAnchorService(
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any, logger)
   }
-  const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
+  const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network, logger)
   if (!config.readOnly) {
     const anchorServiceAuth = makeAnchorServiceAuth(
       config.anchorServiceAuthMethod,
