@@ -41,6 +41,7 @@ Do NOT copy the following code it is for reference only.
     "metrics": {
          "collector-host": STRING               // hostname of OTLP collector when push exporter enabled
          "metrics-exporter-enabled": BOOLEAN    // whether push exporting is enabled, default false
+         "metrics-publisher-enabled": BOOLEAN   // whether metrics are published as streams, default true
          "prometheus-exporter-enabled": BOOLEAN // whether prometheus-compatible endpoint enalbed, default false
          "prometheus-exporter-port": NUMBER     // port for scraping prometheus metrics if enabled
     },
