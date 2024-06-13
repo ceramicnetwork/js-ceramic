@@ -50,7 +50,7 @@ export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Ne
   const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
   // Log a warning when using a custom anchor service URL on mainnet
   if (isMainnet(network) && !MAINNET_CAS_URLS.includes(casUrl)) {
-    logger.warn(`Using custom anchor service URL on mainnet: ${casUrl}`)
+    logger.warn(`${casUrl} is not a standard Anchor Service URL for Ceramic mainnet.  Use a custom anchor service URL at your own risk. Note than an unreliable Ceramic Anchor Service can lead to data loss.`)
   }
   return casUrl
 }
