@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.15.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.15.0-rc.0...@ceramicnetwork/core@5.15.0-rc.1) (2024-06-13)
+
+
+### Features
+
+* allow custom anchor service urls on mainnet ([#3240](https://github.com/ceramicnetwork/js-ceramic/issues/3240)) ([8d7306a](https://github.com/ceramicnetwork/js-ceramic/commit/8d7306aa7e1db7be38cace1b3ceb76dbad1bc627))
+
+
+
+
+
 # [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.14.0...@ceramicnetwork/core@5.15.0-rc.0) (2024-06-10)
 
 
