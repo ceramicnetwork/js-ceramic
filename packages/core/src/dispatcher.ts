@@ -207,7 +207,7 @@ export class Dispatcher {
       Metrics.count(IPFS_CACHE_MISS, 1)
       const bytes = await this._shutdownSignal.abortable((signal) => {
         // @ts-expect-error
-        return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
+        return this._ipfs.block.get(cid, { signal, offline: !this.enableSync || this.recon.enabled})
       })
       this.ipldCache.setBlock(cid, bytes)
       return new CarBlock(cid, bytes)
