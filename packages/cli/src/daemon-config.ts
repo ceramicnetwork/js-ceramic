@@ -399,8 +399,8 @@ export class DaemonMetricsConfig {
   /**
    * Controls whether we publish metrics periodically on the Ceramic Network
    */
-  @jsonMember(Boolean, { name: 'metrics-publisher-disabled' })
-  metricsPublisherDisabled?: boolean = false
+  @jsonMember(Boolean, { name: 'metrics-publisher-enabled' })
+  metricsPublisherEnabled?: boolean = true
 
   /**
    * If metrics publishing enabled, publish interval in milliseconds
