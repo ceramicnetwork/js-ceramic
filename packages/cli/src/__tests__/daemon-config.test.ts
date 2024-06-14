@@ -52,7 +52,7 @@ describe('reading from file', () => {
     expect(daemonConfig.metrics?.metricsPublisherEnabled).toBeTruthy()
   })
   test('setting publish metrics to false overrides default', async () => {
-    console.log("in publish metrics")
+    console.log('in publish metrics')
     const config = { metrics: mockMetricsPublishOff }
     await writeFile(configFilepath, JSON.stringify(config))
     const daemonConfig = await DaemonConfig.fromFile(configFilepath)
