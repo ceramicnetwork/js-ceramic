@@ -344,7 +344,8 @@ export class CeramicDaemon {
     await daemon.listen()
 
     // Now that ceramic node is set up we can start publishing metrics
-    if (! opts.metrics?.metricsPublisherDisabled) {
+    // publishing metrics is enabled by default, even if no metrics config
+    if (! opts.metrics || opts.metrics?.metricsPublisherEnabled) {
       const ipfsVersion = await ipfs.version()
       ModelMetrics.start({
         ceramic: ceramic,
