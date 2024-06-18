@@ -171,7 +171,9 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           const loopEndTime = new Date()
           // jest sometimes does weird things with time so abs is necessary
           const loopDurationMs = Math.abs(loopEndTime.getTime() - loopStartTime.getTime())
-          if (loopDurationMs < this.#minLoopDurationMs) {
+          if (this.#minLoopDurationMs === 0) {
+            await sleepOrAbort(this.#minLoopJitterMs, this.#abortController.signal)
+          } else if (loopDurationMs < this.#minLoopDurationMs) {
             const remainingLoopDuration = this.#minLoopDurationMs - loopDurationMs
             if (remainingLoopDuration > this.#minLoopJitterMs) {
               await sleepOrAbort(remainingLoopDuration, this.#abortController.signal)
