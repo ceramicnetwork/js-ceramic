@@ -19,6 +19,7 @@ const CAS_REQUEST_FAILED = 'cas_request_failed'
 const CAS_REQUEST_CREATE_FAILED = 'cas_request_create_failed'
 const CAS_REQUEST_POLL_FAILED = 'cas_request_poll_failed'
 const CAS_REQUEST_COMPLETED = 'cas_request_completed'
+const CAS_INACCESSIBLE = 'cas_inaccessible'
 
 /**
  * Parse JSON that CAS returns.
@@ -108,6 +109,7 @@ export class RemoteCAS implements CASClient {
         } times in a row, starting at ${this.#firstFailedRequestDate.toISOString()}. Note that failure to anchor may cause data loss.`
       )
       this.#logger.err(err)
+      Metrics.count(CAS_INACCESSIBLE, 1)
       throw err
     }
   }
