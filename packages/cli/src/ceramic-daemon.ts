@@ -7,9 +7,9 @@ import {
 } from '@ceramicnetwork/observability'
 import {
   DEFAULT_PUBLISH_INTERVAL_MS,
-  ModelMetrics,
+  NodeMetrics,
   Observable,
-} from '@ceramicnetwork/model-metrics'
+} from '@ceramicnetwork/node-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -346,7 +346,7 @@ export class CeramicDaemon {
     // Now that ceramic node is set up we can start publishing metrics
     if (opts.metrics?.metricsPublisherEnabled) {
       const ipfsVersion = await ipfs.version()
-      ModelMetrics.start({
+      NodeMetrics.start({
         ceramic: ceramic,
         network: params.networkOptions.name,
         ceramicVersion: version,
@@ -586,7 +586,7 @@ export class CeramicDaemon {
     } catch (err) {
       this.diagnosticsLogger.err(`Error running collection query: ${err}`)
       Metrics.count(ERROR_QUERYING_COLLECTION, 1)
-      ModelMetrics.recordError(ERROR_QUERYING_COLLECTION)
+      NodeMetrics.recordError(ERROR_QUERYING_COLLECTION)
       throw err
     }
   }
@@ -810,7 +810,7 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModels()
-    ModelMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
+    NodeMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
     const body = {
       models: indexedModels.map((id) => id.toString()),
     }
