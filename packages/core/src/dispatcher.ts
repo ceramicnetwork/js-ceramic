@@ -32,7 +32,7 @@ import { CARFactory, CarBlock, type CAR } from 'cartonne'
 import all from 'it-all'
 import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
 import { IReconApi } from './recon.js'
-import { ModelMetrics } from '@ceramicnetwork/model-metrics'
+import { NodeMetrics } from '@ceramicnetwork/node-metrics'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -301,7 +301,7 @@ export class Dispatcher {
     } catch (e) {
       this._logger.err(`Error while storing init event: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
-      ModelMetrics.recordError(ERROR_STORING_COMMIT)
+      NodeMetrics.recordError(ERROR_STORING_COMMIT)
       throw e
     }
   }
@@ -321,7 +321,7 @@ export class Dispatcher {
     } catch (e) {
       this._logger.err(`Error while storing event for stream ${streamId.toString()}: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
-      ModelMetrics.recordError(ERROR_STORING_COMMIT)
+      NodeMetrics.recordError(ERROR_STORING_COMMIT)
       throw e
     }
   }
@@ -454,7 +454,7 @@ export class Dispatcher {
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           Metrics.count(ERROR_IPFS_TIMEOUT, 1)
-          ModelMetrics.recordError(ERROR_IPFS_TIMEOUT)
+          NodeMetrics.recordError(ERROR_IPFS_TIMEOUT)
 
           if (retries > 0) {
             continue
