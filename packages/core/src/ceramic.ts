@@ -53,7 +53,6 @@ import {
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
 import type { AnchorService } from './anchor/anchor-service.js'
-import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
 import { IReconApi, ReconApi } from './recon.js'
@@ -144,7 +143,6 @@ export interface CeramicModules {
   repository: Repository
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
-  anchorRequestCarBuilder: AnchorRequestCarBuilder
   feed: Feed
   signer: CeramicSigner
   reconApi: IReconApi
@@ -284,7 +282,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       indexing: localIndex,
       streamLoader,
       streamUpdater,
-      anchorRequestCarBuilder: modules.anchorRequestCarBuilder,
     })
     this.syncApi = new SyncApi(
       {
@@ -415,7 +412,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       maxQueriesPerSecond,
       reconApi
     )
-    const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
     const pinStoreOptions = {
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
@@ -448,7 +444,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       repository,
       shutdownSignal,
       providersCache,
-      anchorRequestCarBuilder,
       feed: repository.feed,
       signer,
       reconApi,
