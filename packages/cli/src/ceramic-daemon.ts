@@ -322,7 +322,7 @@ export class CeramicDaemon {
     if (provider) {
       await did.authenticate()
       diagnosticsLogger.imp(
-        `Node DID set to '${did.id}. This DID will be used to authenticate to the anchor service'`
+        `Node DID set to '${did.id}'. This DID will be used to authenticate to the anchor service`
       )
     }
     ceramic.did = did
@@ -360,6 +360,9 @@ export class CeramicDaemon {
         nodePeerId: ipfsId.publicKey,
         logger: diagnosticsLogger,
       })
+      diagnosticsLogger.imp(
+        `Publishing Node Metrics to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+      )
     }
 
     return daemon
