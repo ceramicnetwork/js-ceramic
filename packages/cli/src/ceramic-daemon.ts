@@ -5,11 +5,7 @@ import {
   DEFAULT_TRACE_SAMPLE_RATIO,
   ServiceMetrics as Metrics,
 } from '@ceramicnetwork/observability'
-import {
-  DEFAULT_PUBLISH_INTERVAL_MS,
-  NodeMetrics,
-  Observable,
-} from '@ceramicnetwork/node-metrics'
+import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics, Observable } from '@ceramicnetwork/node-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -288,6 +284,7 @@ export class CeramicDaemon {
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
+    params.versionInfo = { cliPackageVersion: version, gitHash: commitHash }
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
     diagnosticsLogger.imp(
       `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${version}, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(
@@ -298,7 +295,9 @@ export class CeramicDaemon {
     )
     const ipfsId = await ipfs.id()
     diagnosticsLogger.imp(
-      `Connecting to IPFS node available as ${ipfsId.addresses.map(String).join(', ')}`
+      `Connecting to IPFS node with version "${ipfsId.agentVersion}" available as ${ipfsId.addresses
+        .map(String)
+        .join(', ')}`
     )
 
     const ceramic = new Ceramic(modules, params)
