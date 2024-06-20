@@ -1,6 +1,6 @@
 # Node Metrics
 
-By default, Ceramic Nodes publish some limited metrics about their state to a model on the Ceramic Network.
+By default, Ceramic Nodes publish some limited metrics about their state publicly to a model on the Ceramic Network.
 
 ## Metric Data Published
 
