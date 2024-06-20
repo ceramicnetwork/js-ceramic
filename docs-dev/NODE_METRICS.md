@@ -1,6 +1,6 @@
 # Node Metrics
 
-By default, Ceramic Nodes publish some limited metrics about their state to a model on the Ceramic Network.
+By default, Ceramic Nodes publish some limited metrics about their state publicly to a model on the Ceramic Network.
 
 ## Metric Data Published
 
@@ -10,18 +10,18 @@ Currently, this includes the following about the Ceramic node:
 
   - DID used to log into the Ceramic Anchor Service
   - IP address, if known
-  - Peer ID (currently on IPFS)
-  - Ceramic Version
-  - IPFS Version
+  - Peer ID
+  - js-ceramic version
+  - ceramic-one version, or IPFS version if still using IPFS.
 
 As well as the following dynamic metrics published periodically (by default once per minute):
 
   - total Pinned streams
   - total Indexed models
-  - current pending requests to CAS
-  - mean Anchor request age
-  - max Anchor request age
-  - number of created requests in the last window
+  - current number of pending requests to CAS
+  - mean pending Anchor request age
+  - max pending Anchor request age
+  - number of writes in the last window
   - number of completed requests in the last window
   - number of errors in the last window
   - a sample of recent errors encountered
