@@ -11,7 +11,7 @@ Currently, this includes the following about the Ceramic node:
   - DID used to log into the Ceramic Anchor Service
   - IP address, if known
   - Peer ID
-  - Ceramic Version
+  - js-ceramic version
   - ceramic-one version, or IPFS version if still using IPFS.
 
 As well as the following dynamic metrics published periodically (by default once per minute):
