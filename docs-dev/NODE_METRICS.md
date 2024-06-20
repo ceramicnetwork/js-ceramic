@@ -21,8 +21,7 @@ As well as the following dynamic metrics published periodically (by default once
   - current number of pending requests to CAS
   - mean pending Anchor request age
   - max pending Anchor request age
-  - number of writes in the last window
-  - number of completed requests in the last window
+  - number of completed anchor requests in the last window
   - number of errors in the last window
   - a sample of recent errors encountered
 
