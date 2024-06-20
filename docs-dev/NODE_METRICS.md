@@ -10,7 +10,7 @@ Currently, this includes the following about the Ceramic node:
 
   - DID used to log into the Ceramic Anchor Service
   - IP address, if known
-  - Peer ID (currently on IPFS)
+  - Peer ID
   - Ceramic Version
   - IPFS Version
 
