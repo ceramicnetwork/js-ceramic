@@ -19,7 +19,7 @@ As well as the following dynamic metrics published periodically (by default once
   - total Pinned streams
   - total Indexed models
   - current number of pending requests to CAS
-  - mean Anchor request age
+  - mean pending Anchor request age
   - max pending Anchor request age
   - number of created requests in the last window
   - number of completed requests in the last window
