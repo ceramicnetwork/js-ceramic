@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { Ceramic } from '@ceramicnetwork/core'
+import { Ceramic, VersionInfo } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon.js'
@@ -16,16 +16,20 @@ const seed = 'SEED'
 const TOPIC = '/ceramic'
 
 const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
-  const core = await Ceramic.create(ipfs, {
-    pubsubTopic: TOPIC,
-    stateStoreDirectory,
-    anchorOnRequest: false,
-    indexing: {
-      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      disableComposedb: false,
+  const core = await Ceramic.create(
+    ipfs,
+    {
+      pubsubTopic: TOPIC,
+      stateStoreDirectory,
+      anchorOnRequest: false,
+      indexing: {
+        db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+        disableComposedb: false,
+      },
+      anchorLoopMinDurationMs: 0,
     },
-    anchorLoopMinDurationMs: 0,
-  })
+    {} as VersionInfo
+  )
 
   const handler = new TileDocumentHandler()
   handler.verifyJWS = (): Promise<void> => {

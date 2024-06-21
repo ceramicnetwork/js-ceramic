@@ -1,5 +1,5 @@
 import { jest, describe, expect, beforeEach, afterEach } from '@jest/globals'
-import { Ceramic } from '../ceramic.js'
+import { Ceramic, VersionInfo } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
@@ -47,18 +47,22 @@ const createCeramic = async (
 
   const databaseFolder = await tmp.dir({ unsafeCleanup: true })
   const connectionString = new URL(`sqlite://${databaseFolder.path}/ceramic.sqlite`)
-  const ceramic = await Ceramic.create(ipfs, {
-    stateStoreDirectory,
-    anchorOnRequest,
-    indexing: {
-      db: connectionString.href,
-      allowQueriesBeforeHistoricalSync: true,
-      disableComposedb: true,
-      enableHistoricalSync: false,
+  const ceramic = await Ceramic.create(
+    ipfs,
+    {
+      stateStoreDirectory,
+      anchorOnRequest,
+      indexing: {
+        db: connectionString.href,
+        allowQueriesBeforeHistoricalSync: true,
+        disableComposedb: true,
+        enableHistoricalSync: false,
+      },
+      pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
+      anchorLoopMinDurationMs: 0,
     },
-    pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
-    anchorLoopMinDurationMs: 0,
-  })
+    {} as VersionInfo
+  )
   ceramic.did = makeDID(seed, ceramic)
   await ceramic.did.authenticate()
 

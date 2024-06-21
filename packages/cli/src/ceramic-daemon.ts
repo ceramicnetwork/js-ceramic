@@ -282,9 +282,14 @@ export class CeramicDaemon {
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
       opts.ipfs?.host
     )
+    const ipfsId = await ipfs.id()
 
-    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
-    params.versionInfo = { cliPackageVersion: version, gitHash: commitHash }
+    const versionInfo = {
+      cliPackageVersion: version,
+      gitHash: commitHash,
+      ceramicOneVersion: ipfsId.agentVersion,
+    }
+    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig, versionInfo)
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
     diagnosticsLogger.imp(
       `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${version}, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(
@@ -293,7 +298,6 @@ export class CeramicDaemon {
         2
       )}`
     )
-    const ipfsId = await ipfs.id()
     diagnosticsLogger.imp(
       `Connecting to IPFS node with version "${ipfsId.agentVersion}" available as ${ipfsId.addresses
         .map(String)

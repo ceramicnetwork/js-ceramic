@@ -9,6 +9,8 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
+const VERSION_INFO = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
+
 export async function createCeramic(
   ipfs: IpfsApi,
   config?: CeramicConfig & {
@@ -33,7 +35,7 @@ export async function createCeramic(
     anchorLoopMinDurationMs: 0,
     ...config,
   }
-  const ceramic = await Ceramic.create(ipfs, appliedConfig)
+  const ceramic = await Ceramic.create(ipfs, appliedConfig, VERSION_INFO)
   const seed = sha256.hash(uint8arrays.fromString(appliedConfig.seed || 'SEED'))
   const provider = new Ed25519Provider(seed)
   const keyDidResolver = KeyDidResolver.getResolver()

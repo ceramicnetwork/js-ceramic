@@ -10,6 +10,8 @@ import { CID } from 'multiformats/cid'
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const POLL_INTERVAL = 100
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
+const VERSION_INFO = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
+
 export const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
@@ -20,7 +22,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       supportedChains: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
 
     const supportedChains = await cas.supportedChains()
     expect(supportedChains).toEqual(['eip155:42'])
@@ -33,7 +35,7 @@ describe('RemoteCAS supportedChains', () => {
       someOtherField: 'SomeOtherContent',
       supportedChains: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
     const supportedChains = await cas.supportedChains()
     expect(supportedChains).toEqual(['eip155:42'])
     expect(fetchFn).toBeCalledTimes(1)
@@ -44,7 +46,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       supportedChains: ['eip155:42', 'eip155:1'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
     await expect(cas.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         supportedChains: ['eip155:42', 'eip155:1'],
@@ -56,7 +58,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       incorrectFieldName: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
     await expect(cas.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         incorrectFieldName: ['eip155:42'],
@@ -68,7 +70,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFnNull = jest.fn(async () => ({
       supportedChains: null,
     })) as unknown as typeof fetchJson
-    const casForNull = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFnNull)
+    const casForNull = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFnNull, VERSION_INFO)
     const expectedErrorNull =
       'Error: Invalid value null supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)'
     await expect(casForNull.supportedChains()).rejects.toThrow(
@@ -80,7 +82,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFnEmpty = jest.fn(async () => ({
       supportedChains: [],
     })) as unknown as typeof fetchJson
-    const casForEmpty = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFnEmpty)
+    const casForEmpty = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFnEmpty, VERSION_INFO)
     const expectedErrorUndefined = `Error: Invalid value [] supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)`
     await expect(casForEmpty.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
@@ -103,7 +105,7 @@ describe('create', () => {
         updatedAt: dateAsUnix.encode(new Date()),
       })
     ) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
     const result = await cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())
     expect(fetchFn).toBeCalled()
     expect(result).toEqual({
@@ -118,7 +120,7 @@ describe('create', () => {
     const fetchFn = jest.fn(async () => {
       throw new Error(`Oops`)
     }) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
     await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
   })
 })
@@ -140,7 +142,8 @@ describe('getStatusForRequest', () => {
     const cas = new RemoteCAS(
       LOGGER,
       ANCHOR_SERVICE_URL,
-      fetchJsonFn as unknown as typeof fetchJson
+      fetchJsonFn as unknown as typeof fetchJson,
+      VERSION_INFO
     )
     const response = await cas.getStatusForRequest(streamId, tip)
     expect(response).toEqual({
@@ -163,7 +166,8 @@ describe('getStatusForRequest', () => {
     const cas = new RemoteCAS(
       LOGGER,
       ANCHOR_SERVICE_URL,
-      fetchJsonFn as unknown as typeof fetchJson
+      fetchJsonFn as unknown as typeof fetchJson,
+      VERSION_INFO
     )
     const responseP = cas.getStatusForRequest(streamId, tip)
     await TestUtils.delay(POLL_INTERVAL)
@@ -191,13 +195,13 @@ describe('assertCASAccessible', () => {
   }
 
   test('Starts accessible', async () => {
-    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
     cas.assertCASAccessible()
   })
 
   describe('create failures', () => {
     test('Failures without time passing still accessible', async () => {
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
@@ -209,7 +213,7 @@ describe('assertCASAccessible', () => {
     })
 
     test('Time passing without sufficient failures still accessible', async () => {
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
@@ -219,7 +223,7 @@ describe('assertCASAccessible', () => {
     })
 
     test('Time passing plus sufficient failures means inaccessible', async () => {
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
@@ -251,7 +255,7 @@ describe('assertCASAccessible', () => {
         }
       }) as unknown as typeof fetchJson
 
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
 
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
@@ -278,7 +282,7 @@ describe('assertCASAccessible', () => {
     const tip = TestUtils.randomCID()
 
     test('Failures without time passing still accessible', async () => {
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
@@ -290,7 +294,7 @@ describe('assertCASAccessible', () => {
     })
 
     test('Time passing without sufficient failures still accessible', async () => {
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
@@ -300,7 +304,7 @@ describe('assertCASAccessible', () => {
     })
 
     test('Time passing plus sufficient failures means inaccessible', async () => {
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
@@ -330,7 +334,7 @@ describe('assertCASAccessible', () => {
         }
       }) as unknown as typeof fetchJson
 
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn, VERSION_INFO)
 
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()
@@ -356,7 +360,7 @@ describe('assertCASAccessible', () => {
     test('Time passing plus sufficient failures means inaccessible', async () => {
       const streamId = TestUtils.randomStreamID()
       const tip = TestUtils.randomCID()
-      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn)
+      const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchNetworkErrFn, VERSION_INFO)
 
       await expect(cas.createRequest(FAKE_STREAM_ID, FAKE_TIP_CID, new Date())).rejects.toThrow()
       await expect(cas.getStatusForRequest(streamId, tip)).rejects.toThrow()

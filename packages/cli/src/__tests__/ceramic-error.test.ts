@@ -2,7 +2,7 @@ import getPort from 'get-port'
 import { IpfsApi, LogLevel } from '@ceramicnetwork/common'
 import * as tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { Ceramic } from '@ceramicnetwork/core'
+import { Ceramic, VersionInfo } from '@ceramicnetwork/core'
 import * as random from '@stablelib/random'
 import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon.js'
 import { CeramicClient } from '@ceramicnetwork/http-client'
@@ -58,7 +58,7 @@ beforeAll(async () => {
 
   const ceramicConfig = makeCeramicConfig(daemonConfig)
   ceramicConfig.enableAnchorPollingLoop = false
-  core = await Ceramic.create(ipfs, ceramicConfig)
+  core = await Ceramic.create(ipfs, ceramicConfig, {} as VersionInfo)
   daemon = new CeramicDaemon(core, daemonConfig)
   await daemon.listen()
   const apiUrl = `http://localhost:${daemonPort}`

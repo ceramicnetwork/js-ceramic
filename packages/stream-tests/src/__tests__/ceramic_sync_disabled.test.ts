@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { Ceramic } from '@ceramicnetwork/core'
+import { Ceramic, VersionInfo } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon, DaemonConfig, makeDID } from '@ceramicnetwork/cli'
@@ -17,16 +17,20 @@ const makeCeramicCore = async (
   stateStoreDirectory: string,
   disablePeerDataSync: boolean
 ): Promise<Ceramic> => {
-  const core = await Ceramic.create(ipfs, {
-    pubsubTopic: TOPIC,
-    stateStoreDirectory,
-    anchorOnRequest: false,
-    indexing: {
-      disableComposedb: true,
+  const core = await Ceramic.create(
+    ipfs,
+    {
+      pubsubTopic: TOPIC,
+      stateStoreDirectory,
+      anchorOnRequest: false,
+      indexing: {
+        disableComposedb: true,
+      },
+      disablePeerDataSync,
+      anchorLoopMinDurationMs: 0,
     },
-    disablePeerDataSync,
-    anchorLoopMinDurationMs: 0,
-  })
+    {} as VersionInfo
+  )
 
   return core
 }
