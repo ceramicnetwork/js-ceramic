@@ -94,6 +94,9 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const ERROR_LOADING_STREAM = 'error_loading_stream'
 const ERROR_APPLYING_COMMIT = 'error_applying_commit'
+const VERSION_INFO = 'version_info'
+
+const PUBLISH_VERSION_INTERVAL_MS = 1000 * 60 * 60 // once per hour
 
 /**
  * Ceramic configuration
@@ -148,6 +151,11 @@ export interface CeramicModules {
   reconApi: IReconApi
 }
 
+interface VersionInfo {
+  cliPackageVersion: string
+  gitHash: string
+}
+
 /**
  * Parameters that control internal Ceramic behavior.
  * Most users will not provide this directly but will let it be derived automatically from the
@@ -161,6 +169,7 @@ export interface CeramicParameters {
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
   anchorLoopMinDurationMs?: number
+  versionInfo?: VersionInfo
 }
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
@@ -220,6 +229,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly _kvFactory: IKVFactory
   private readonly _runId: string
   private readonly _startTime: Date
+  private readonly _versionInfo: VersionInfo
+  private _versionMetricInterval: NodeJS.Timer | undefined = undefined
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._signer = modules.signer
@@ -236,6 +247,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this._readOnly = params.readOnly
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+    this._versionInfo = params.versionInfo
     this._runId = crypto.randomUUID()
     this._startTime = new Date()
 
@@ -510,11 +522,25 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       }
 
       await this._startupChecks()
+
+      this._versionMetricInterval = setInterval(
+        this._publishVersionMetrics.bind(this),
+        PUBLISH_VERSION_INTERVAL_MS
+      )
     } catch (err) {
       this._logger.err(err)
       await this.close()
       throw err
     }
+  }
+
+  async _publishVersionMetrics() {
+    const ipfsVersion = (await this.ipfs.id()).agentVersion
+    Metrics.observe(VERSION_INFO, 1, {
+      jsCeramicVersion: this._versionInfo.cliPackageVersion,
+      jsCeramicGitHash: this._versionInfo.gitHash,
+      ceramicOneVersion: ipfsVersion,
+    })
   }
 
   /**
@@ -903,6 +929,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
+    clearInterval(this._versionMetricInterval)
     await this.anchorService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()
