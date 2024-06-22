@@ -52,7 +52,7 @@
     "@ceramicnetwork/indexing": "^4.15.0",
     "@ceramicnetwork/ipfs-daemon": "^5.15.0",
     "@ceramicnetwork/logger": "^5.0.0",
-    "@ceramicnetwork/node-metrics": "^1.0.1",
+    "@ceramicnetwork/node-metrics": "^1.0.3",
     "@ceramicnetwork/observability": "^1.4.4",
     "@ceramicnetwork/stream-tile": "^5.14.0",
     "@ceramicnetwork/streamid": "^5.4.0",
