@@ -346,8 +346,9 @@ export class CeramicDaemon {
     // publishing metrics is enabled by default, even if no metrics config
     if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
       const ipfsVersion = await ipfs.version()
+      let didId: string | null = null;
       try {
-        const didId = did.id
+        didId = did.id
       } catch (err: any) {
         diagnosticsLogger.imp(
           `Unable to publish node metrics without an authenticated DID.  If you wish your ceramic node to be able to publish metrics a privateSeedUrl is required. Error: ${err.toString()}`
