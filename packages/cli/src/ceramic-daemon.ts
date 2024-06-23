@@ -346,22 +346,31 @@ export class CeramicDaemon {
     // publishing metrics is enabled by default, even if no metrics config
     if (! opts.metrics || opts.metrics?.metricsPublisherEnabled) {
       const ipfsVersion = await ipfs.version()
-      NodeMetrics.start({
-        ceramic: ceramic,
-        network: params.networkOptions.name,
-        ceramicVersion: version,
-        ipfsVersion: ipfsVersion.version,
-        intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-        nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-        nodeName: '', // daemon.hostname is not useful
-        nodeAuthDID: did.id,
-        nodeIPAddr: '', // daemon.hostname is not the external name
-        nodePeerId: ipfsId.publicKey,
-        logger: diagnosticsLogger,
-      })
-      diagnosticsLogger.imp(
-        `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
-      )
+      try {
+        const didId = did.id
+      } catch (err: any) {
+        diagnosticsLogger.imp(
+          `Unable to publish node metrics without an authenticated DID.  If you wish your ceramic node to be able to publish metrics a privateSeedUrl is required. Error: ${err.toString()}`
+        )
+      }
+      if (didId) {
+        NodeMetrics.start({
+          ceramic: ceramic,
+          network: params.networkOptions.name,
+          ceramicVersion: version,
+          ipfsVersion: ipfsVersion.version,
+          intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+          nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+          nodeName: '', // daemon.hostname is not useful
+          nodeAuthDID: didId,
+          nodeIPAddr: '', // daemon.hostname is not the external name
+          nodePeerId: ipfsId.publicKey,
+          logger: diagnosticsLogger,
+        })
+        diagnosticsLogger.imp(
+          `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+        )
+      }
     }
 
     return daemon
