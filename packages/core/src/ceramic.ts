@@ -406,6 +406,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const maxQueriesPerSecond = process.env.CERAMIC_PUBSUB_QPS_LIMIT
       ? parseInt(process.env.CERAMIC_PUBSUB_QPS_LIMIT)
       : DEFAULT_QPS_LIMIT
+    const anchorLoopMinDurationMs = process.env.CERAMIC_ANCHOR_LOOP_MIN_DURATION_MS
+      ? parseInt(process.env.CERAMIC_ANCHOR_LOOP_MIN_DURATION_MS, 10)
+      : config.anchorLoopMinDurationMs
+      ? parseInt(config.anchorLoopMinDurationMs, 10)
+      : DEFAULT_MIN_ANCHOR_LOOP_DURATION_MS
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const reconApi = new ReconApi(
@@ -449,7 +454,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       networkOptions,
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
-      anchorLoopMinDurationMs: parseInt(config.anchorLoopMinDurationMs, 10),
+      anchorLoopMinDurationMs: anchorLoopMinDurationMs,
       versionInfo,
     }
 
