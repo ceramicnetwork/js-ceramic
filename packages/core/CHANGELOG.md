@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.15.0...@ceramicnetwork/core@5.16.0-rc.0) (2024-06-24)
+
+
+### Bug Fixes
+
+* add offline mode to ipfs dag retrievals in pin store ([#3242](https://github.com/ceramicnetwork/js-ceramic/issues/3242)) ([db89e31](https://github.com/ceramicnetwork/js-ceramic/commit/db89e311fb067ece2a3481806fee8be942c2e424))
+* bump to node-metrics with better non-string handling ([#3247](https://github.com/ceramicnetwork/js-ceramic/issues/3247)) ([f612756](https://github.com/ceramicnetwork/js-ceramic/commit/f612756b6c16e7294190887a1e3a801511f2121e))
+* switch package name to node-metrics / NodeMetrics from model-metrics ([#3243](https://github.com/ceramicnetwork/js-ceramic/issues/3243)) ([ccfb342](https://github.com/ceramicnetwork/js-ceramic/commit/ccfb34203e6218926e213970c9d379b7680f2cea))
+
+
+### Features
+
+* Do not send CAR files when creating anchor requests against the CAS ([#3234](https://github.com/ceramicnetwork/js-ceramic/issues/3234)) ([48c7100](https://github.com/ceramicnetwork/js-ceramic/commit/48c7100619754a46b8d8fa21c5a514dbe34cc5c4))
+* Publish js-ceramic and C1 versions as a metric once per hour ([#3245](https://github.com/ceramicnetwork/js-ceramic/issues/3245)) ([6124192](https://github.com/ceramicnetwork/js-ceramic/commit/6124192e8a1426e75a4169ed6da405bd79f40adc))
+* send js-ceramic and ceramic-one versions to CAS when creating requests ([#3246](https://github.com/ceramicnetwork/js-ceramic/issues/3246)) ([bd90887](https://github.com/ceramicnetwork/js-ceramic/commit/bd9088727863f2da847f40aa739d25281a05ffae))
+
+
+
+
+
 # [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.15.0-rc.1...@ceramicnetwork/core@5.15.0) (2024-06-17)
 
 **Note:** Version bump only for package @ceramicnetwork/core

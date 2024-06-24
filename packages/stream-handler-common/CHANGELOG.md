@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-handler-common@4.14.0...@ceramicnetwork/stream-handler-common@4.15.0-rc.0) (2024-06-24)
+
+
+### Bug Fixes
+
+* switch package name to node-metrics / NodeMetrics from model-metrics ([#3243](https://github.com/ceramicnetwork/js-ceramic/issues/3243)) ([ccfb342](https://github.com/ceramicnetwork/js-ceramic/commit/ccfb34203e6218926e213970c9d379b7680f2cea))
+
+
+
+
+
 # [4.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-handler-common@4.14.0-rc.0...@ceramicnetwork/stream-handler-common@4.14.0) (2024-06-17)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-handler-common
