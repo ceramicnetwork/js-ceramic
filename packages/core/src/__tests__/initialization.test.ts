@@ -6,6 +6,8 @@ import { Networks } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
+const VERSION_INFO = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
+
 describe('Ceramic integration', () => {
   jest.setTimeout(60000)
   let ipfs1: IpfsApi
@@ -21,11 +23,15 @@ describe('Ceramic integration', () => {
   it('can create Ceramic instance on default network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${stateStoreDirectory}/ceramic.sqlite`)
-    const ceramic = await Ceramic.create(ipfs1, {
-      stateStoreDirectory,
-      indexing: { db: databaseConnectionString.href, models: [] },
-      anchorLoopMinDurationMs: 0,
-    })
+    const ceramic = await Ceramic.create(
+      ipfs1,
+      {
+        stateStoreDirectory,
+        indexing: { db: databaseConnectionString.href },
+        anchorLoopMinDurationMs: 0,
+      },
+      VERSION_INFO
+    )
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
     await ceramic.close()
@@ -34,12 +40,16 @@ describe('Ceramic integration', () => {
   it('can create Ceramic instance explicitly on inmemory network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${stateStoreDirectory}/ceramic.sqlite`)
-    const ceramic = await Ceramic.create(ipfs1, {
-      networkName: 'inmemory',
-      stateStoreDirectory,
-      indexing: { db: databaseConnectionString.href, models: [] },
-      anchorLoopMinDurationMs: 0,
-    })
+    const ceramic = await Ceramic.create(
+      ipfs1,
+      {
+        networkName: 'inmemory',
+        stateStoreDirectory,
+        indexing: { db: databaseConnectionString.href },
+        anchorLoopMinDurationMs: 0,
+      },
+      VERSION_INFO
+    )
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
     await ceramic.close()
@@ -48,11 +58,15 @@ describe('Ceramic integration', () => {
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
     const tmpDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
-    const [modules, params] = Ceramic._processConfig(ipfs1, {
-      networkName: 'local',
-      indexing: { db: databaseConnectionString.href, models: [] },
-      anchorLoopMinDurationMs: 0,
-    })
+    const [modules, params] = Ceramic._processConfig(
+      ipfs1,
+      {
+        networkName: 'local',
+        indexing: { db: databaseConnectionString.href },
+        anchorLoopMinDurationMs: 0,
+      },
+      VERSION_INFO
+    )
     modules.anchorService = new InMemoryAnchorService(
       {},
       modules.loggerProvider.getDiagnosticsLogger()
@@ -67,12 +81,16 @@ describe('Ceramic integration', () => {
     const stateStoreDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${stateStoreDirectory}/ceramic.sqlite`)
     await expect(
-      Ceramic.create(ipfs1, {
-        networkName: 'fakenetwork',
-        stateStoreDirectory,
-        indexing: { db: databaseConnectionString.href, models: [] },
-        anchorLoopMinDurationMs: 0,
-      })
+      Ceramic.create(
+        ipfs1,
+        {
+          networkName: 'fakenetwork',
+          stateStoreDirectory,
+          indexing: { db: databaseConnectionString.href },
+          anchorLoopMinDurationMs: 0,
+        },
+        VERSION_INFO
+      )
     ).rejects.toThrow(
       "Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
     )
@@ -81,12 +99,16 @@ describe('Ceramic integration', () => {
   test('init dispatcher', async () => {
     const tmpDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
-    const [modules, params] = await Ceramic._processConfig(ipfs1, {
-      networkName: Networks.INMEMORY,
-      stateStoreDirectory: tmpDirectory,
-      indexing: { db: databaseConnectionString.href, models: [] },
-      anchorLoopMinDurationMs: 0,
-    })
+    const [modules, params] = await Ceramic._processConfig(
+      ipfs1,
+      {
+        networkName: Networks.INMEMORY,
+        stateStoreDirectory: tmpDirectory,
+        indexing: { db: databaseConnectionString.href },
+        anchorLoopMinDurationMs: 0,
+      },
+      VERSION_INFO
+    )
     const dispatcher = modules.dispatcher
     const ceramic = new Ceramic(modules, params)
     const dispatcherInitSpy = jest.spyOn(dispatcher, 'init')

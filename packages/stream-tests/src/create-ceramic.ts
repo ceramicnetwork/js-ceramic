@@ -5,6 +5,8 @@ import tmp from 'tmp-promise'
 import { createDid } from './create_did.js'
 import type { ProvidersCache } from '@ceramicnetwork/core'
 
+const VERSION_INFO = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
+
 export async function createCeramic(
   ipfs: IpfsApi,
   config: CeramicConfig & { seed?: string } = { networkName: Networks.INMEMORY },
@@ -29,7 +31,7 @@ export async function createCeramic(
     config
   )
 
-  const [modules, params] = Ceramic._processConfig(ipfs, appliedConfig)
+  const [modules, params] = Ceramic._processConfig(ipfs, appliedConfig, VERSION_INFO)
   if (providersCache) {
     modules.providersCache = providersCache
   }

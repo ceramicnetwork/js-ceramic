@@ -10,6 +10,11 @@ import {
   AuthenticatedEthereumAnchorService,
   EthereumAnchorService,
 } from '../../anchor/ethereum/ethereum-anchor-service.js'
+import { VersionInfo } from '../../ceramic.js'
+import { CeramicSigner } from '@ceramicnetwork/common'
+
+const VERSION_INFO: VersionInfo = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
+const SIGNER = CeramicSigner.invalid()
 
 describe('makeAnchorServiceUrl', () => {
   const CUSTOM_URL = 'https://cas.com'
@@ -35,11 +40,25 @@ describe('makeAnchorServiceUrl', () => {
 describe('makeAnchorService', () => {
   const logger = new LoggerProvider().getDiagnosticsLogger()
   test('readOnly means null', () => {
-    const result = makeAnchorService({ readOnly: true }, '', Networks.MAINNET, logger)
+    const result = makeAnchorService(
+      { readOnly: true },
+      '',
+      Networks.MAINNET,
+      logger,
+      VERSION_INFO,
+      SIGNER
+    )
     expect(result).toBeInstanceOf(EthereumAnchorService)
   })
   test('inmemory', () => {
-    const result = makeAnchorService({ readOnly: false }, '', Networks.INMEMORY, logger)
+    const result = makeAnchorService(
+      { readOnly: false },
+      '',
+      Networks.INMEMORY,
+      logger,
+      VERSION_INFO,
+      SIGNER
+    )
     expect(result).toBeInstanceOf(InMemoryAnchorService)
   })
   test('auth', () => {
@@ -47,12 +66,21 @@ describe('makeAnchorService', () => {
       { readOnly: false, anchorServiceAuthMethod: 'auth' },
       '',
       Networks.MAINNET,
-      logger
+      logger,
+      VERSION_INFO,
+      SIGNER
     )
     expect(result).toBeInstanceOf(AuthenticatedEthereumAnchorService)
   })
   test('no auth', () => {
-    const result = makeAnchorService({ readOnly: false }, '', Networks.MAINNET, logger)
+    const result = makeAnchorService(
+      { readOnly: false },
+      '',
+      Networks.MAINNET,
+      logger,
+      VERSION_INFO,
+      SIGNER
+    )
     expect(result).toBeInstanceOf(EthereumAnchorService)
   })
 })

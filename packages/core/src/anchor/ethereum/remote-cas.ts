@@ -9,6 +9,7 @@ import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { VersionInfo } from '../../ceramic.js'
 
 const MAX_FAILED_REQUESTS = 3
 const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
@@ -69,6 +70,7 @@ export class RemoteCAS implements CASClient {
   readonly #chainIdApiEndpoint: string
   readonly #sendRequest: FetchRequest
   readonly #stopSignal: Subject<void>
+  readonly #versionInfo: VersionInfo
 
   // Used to track when we fail to reach the CAS at all (e.g. from a network error)
   // Note it does not care about if the status of the request *on* the CAS.  In other words,
@@ -77,11 +79,17 @@ export class RemoteCAS implements CASClient {
   #numFailedRequests: number
   #firstFailedRequestDate: Date | null
 
-  constructor(logger: DiagnosticsLogger, anchorServiceUrl: string, sendRequest: FetchRequest) {
+  constructor(
+    logger: DiagnosticsLogger,
+    anchorServiceUrl: string,
+    sendRequest: FetchRequest,
+    versionInfo: VersionInfo
+  ) {
     this.#logger = logger
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#sendRequest = sendRequest
+    this.#versionInfo = versionInfo
     this.#stopSignal = new Subject()
     this.#numFailedRequests = 0
     this.#firstFailedRequestDate = null
@@ -162,6 +170,8 @@ export class RemoteCAS implements CASClient {
           streamId: streamId.toString(),
           cid: tip.toString(),
           timestamp: timestamp.toISOString(),
+          jsCeramicVersion: this.#versionInfo.cliPackageVersion,
+          ceramicOneVersion: this.#versionInfo.ceramicOneVersion,
         },
         signal: signal,
       })

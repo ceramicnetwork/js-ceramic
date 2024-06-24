@@ -151,9 +151,10 @@ export interface CeramicModules {
   reconApi: IReconApi
 }
 
-interface VersionInfo {
+export interface VersionInfo {
   cliPackageVersion: string
   gitHash: string
+  ceramicOneVersion: string
 }
 
 /**
@@ -367,7 +368,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
    * to call `Ceramic.create()` instead which calls this internally.
    */
-  static _processConfig(ipfs: IpfsApi, config: CeramicConfig): [CeramicModules, CeramicParameters] {
+  static _processConfig(
+    ipfs: IpfsApi,
+    config: CeramicConfig,
+    versionInfo: VersionInfo
+  ): [CeramicModules, CeramicParameters] {
     // Initialize ceramic loggers
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
@@ -385,6 +390,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       ethereumRpcUrl,
       networkOptions.name,
       logger,
+      versionInfo,
       signer
     )
     const providersCache = new ProvidersCache(ethereumRpcUrl)
@@ -444,6 +450,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
       anchorLoopMinDurationMs: parseInt(config.anchorLoopMinDurationMs, 10),
+      versionInfo,
     }
 
     const modules: CeramicModules = {
@@ -468,9 +475,14 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * Create Ceramic instance
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
+   * @param versionInfo - Information about the version of js-ceramic and ceramic-one that is being running.
    */
-  static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [modules, params] = Ceramic._processConfig(ipfs, config)
+  static async create(
+    ipfs: IpfsApi,
+    config: CeramicConfig = {},
+    versionInfo: VersionInfo
+  ): Promise<Ceramic> {
+    const [modules, params] = Ceramic._processConfig(ipfs, config, versionInfo)
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
@@ -535,11 +547,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   }
 
   async _publishVersionMetrics() {
-    const ipfsVersion = (await this.ipfs.id()).agentVersion
     Metrics.observe(VERSION_INFO, 1, {
       jsCeramicVersion: this._versionInfo.cliPackageVersion,
       jsCeramicGitHash: this._versionInfo.gitHash,
-      ceramicOneVersion: ipfsVersion,
+      ceramicOneVersion: this._versionInfo.ceramicOneVersion,
     })
   }
 

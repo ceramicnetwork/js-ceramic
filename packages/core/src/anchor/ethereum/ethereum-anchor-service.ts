@@ -18,6 +18,7 @@ import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
+import { VersionInfo } from '../../ceramic.js'
 
 // BATCH_SIZE controls the number of keys fetched from the AnchorRequestStore at once.
 // It does not affect the parallelism/concurrency of actually processing the entries in those batches.
@@ -48,12 +49,13 @@ export class EthereumAnchorService implements AnchorService {
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
+    versionInfo: VersionInfo,
     sendRequest: FetchRequest = fetchJson,
     enableAnchorPollingLoop = true
   ) {
     this.#logger = logger
     this.#events = new Subject()
-    this.#cas = new RemoteCAS(logger, anchorServiceUrl, sendRequest)
+    this.#cas = new RemoteCAS(logger, anchorServiceUrl, sendRequest, versionInfo)
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
@@ -140,12 +142,14 @@ export class AuthenticatedEthereumAnchorService
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
+    versionInfo: VersionInfo,
     enableAnchorPollingLoop = true
   ) {
     super(
       anchorServiceUrl,
       ethereumRpcUrl,
       logger,
+      versionInfo,
       auth.sendAuthenticatedRequest.bind(auth),
       enableAnchorPollingLoop
     )

@@ -1,6 +1,6 @@
 import { CeramicSigner, type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
-import type { CeramicConfig } from '../ceramic.js'
+import type { CeramicConfig, VersionInfo } from '../ceramic.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import {
   AuthenticatedEthereumAnchorService,
@@ -121,6 +121,7 @@ export function makeAnchorService(
   ethereumRpcUrl: string | undefined,
   network: Networks,
   logger: DiagnosticsLogger,
+  versionInfo: VersionInfo,
   signer: CeramicSigner
 ): AnchorService {
   if (network === Networks.INMEMORY) {
@@ -140,11 +141,12 @@ export function makeAnchorService(
         anchorServiceAuth,
         anchorServiceUrl,
         ethereumRpcUrl,
-        logger
+        logger,
+        versionInfo
       )
     }
   }
-  return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger)
+  return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger, versionInfo)
 }
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port

@@ -11,8 +11,7 @@ import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor
 import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
 import type { AnchorLoopHandler } from '../../anchor-service.js'
-import { CARFactory, type CAR } from 'cartonne'
-import { Ceramic } from '../../../ceramic.js'
+import { Ceramic, VersionInfo } from '../../../ceramic.js'
 import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
 const FAUX_ANCHOR_STORE = {
@@ -28,6 +27,7 @@ const FAUX_HANDLER: AnchorLoopHandler = {
 }
 
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+const VERSION_INFO: VersionInfo = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
 
 describe('AuthenticatedEthereumAnchorServiceTest', () => {
   let ipfs: IpfsApi
@@ -53,7 +53,13 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
+    const anchorService = new AuthenticatedEthereumAnchorService(
+      auth,
+      url,
+      url,
+      diagnosticsLogger,
+      VERSION_INFO
+    )
 
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
@@ -82,7 +88,13 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
+    const anchorService = new AuthenticatedEthereumAnchorService(
+      auth,
+      url,
+      url,
+      diagnosticsLogger,
+      VERSION_INFO
+    )
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
     })
