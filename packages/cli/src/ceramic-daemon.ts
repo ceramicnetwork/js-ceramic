@@ -342,11 +342,11 @@ export class CeramicDaemon {
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
 
-    // Now that ceramic node is set up we can start publishing metrics
-    // publishing metrics is enabled by default, even if no metrics config
-    if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
-      const ipfsVersion = await ipfs.version()
-      if (did.authenticated) {
+    if (did.authenticated) {
+      // If authenticated into the node, we can start publishing metrics
+      // publishing metrics is enabled by default, even if no metrics config
+      if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
+        const ipfsVersion = await ipfs.version()
         NodeMetrics.start({
           ceramic: ceramic,
           network: params.networkOptions.name,
@@ -364,6 +364,11 @@ export class CeramicDaemon {
           `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
         )
       }
+    } else {
+      // warn that the node does not have an authenticated did
+      diagnosticsLogger.imp(
+        `The ceramic daemon is running without an authenticated DID.  This means that this node cannot itself publish streams, including node metrics, and cannot use a DID as the method to authenticate with the Ceramic Anchor Service.  See https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet#updating-to-did-based-authentication for instructions on how to update your node to use DID authentication.`
+      )
     }
 
     return daemon
