@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.16.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.16.0-rc.0...@ceramicnetwork/cli@5.16.0-rc.1) (2024-06-27)
+
+
+### Bug Fixes
+
+* **ceramic-node:** handle case where the admin DID is not authenticated ([#3248](https://github.com/ceramicnetwork/js-ceramic/issues/3248)) ([122b65b](https://github.com/ceramicnetwork/js-ceramic/commit/122b65bf4460ef87b656a730b06e981549969f39))
+
+
+
+
+
 # [5.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.15.0...@ceramicnetwork/cli@5.16.0-rc.0) (2024-06-24)
 
 
