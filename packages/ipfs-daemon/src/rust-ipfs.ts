@@ -147,7 +147,7 @@ class RemoteRunningIpfs {
 
 async function remote(host?: string, port?: number): Promise<RunningIpfs> {
   const resolvedHost = host || 'localhost'
-  const resolvedPort = port || 5001
+  const resolvedPort = port || 5101
   const ipfs = createIpfsClient({
     host: resolvedHost,
     port: resolvedPort,
