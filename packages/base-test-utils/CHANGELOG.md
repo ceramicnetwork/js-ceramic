@@ -3,6 +3,46 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.9.0-rc.0...@ceramicnetwork/base-test-utils@3.9.0) (2024-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
+# [3.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.8.0...@ceramicnetwork/base-test-utils@3.9.0-rc.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
+# [3.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.8.0-rc.0...@ceramicnetwork/base-test-utils@3.8.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
+# [3.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.7.0...@ceramicnetwork/base-test-utils@3.8.0-rc.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
+# [3.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.7.0-rc.0...@ceramicnetwork/base-test-utils@3.7.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
 # [3.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.6.0...@ceramicnetwork/base-test-utils@3.7.0-rc.0) (2024-05-20)
 
 **Note:** Version bump only for package @ceramicnetwork/base-test-utils

@@ -25,7 +25,7 @@ import {
   StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { ModelMetrics } from '@ceramicnetwork/model-metrics'
+import { NodeMetrics } from '@ceramicnetwork/node-metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -53,7 +53,6 @@ import {
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
 import type { AnchorService } from './anchor/anchor-service.js'
-import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
 import { IReconApi, ReconApi } from './recon.js'
@@ -95,6 +94,9 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const ERROR_LOADING_STREAM = 'error_loading_stream'
 const ERROR_APPLYING_COMMIT = 'error_applying_commit'
+const VERSION_INFO = 'version_info'
+
+const PUBLISH_VERSION_INTERVAL_MS = 1000 * 60 * 60 // once per hour
 
 /**
  * Ceramic configuration
@@ -144,10 +146,15 @@ export interface CeramicModules {
   repository: Repository
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
-  anchorRequestCarBuilder: AnchorRequestCarBuilder
   feed: Feed
   signer: CeramicSigner
   reconApi: IReconApi
+}
+
+export interface VersionInfo {
+  cliPackageVersion: string
+  gitHash: string
+  ceramicOneVersion: string
 }
 
 /**
@@ -163,6 +170,7 @@ export interface CeramicParameters {
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
   anchorLoopMinDurationMs?: number
+  versionInfo?: VersionInfo
 }
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
@@ -222,6 +230,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly _kvFactory: IKVFactory
   private readonly _runId: string
   private readonly _startTime: Date
+  private readonly _versionInfo: VersionInfo
+  private _versionMetricInterval: NodeJS.Timer | undefined = undefined
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._signer = modules.signer
@@ -238,6 +248,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this._readOnly = params.readOnly
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+    this._versionInfo = params.versionInfo
     this._runId = crypto.randomUUID()
     this._startTime = new Date()
 
@@ -284,7 +295,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       indexing: localIndex,
       streamLoader,
       streamUpdater,
-      anchorRequestCarBuilder: modules.anchorRequestCarBuilder,
     })
     this.syncApi = new SyncApi(
       {
@@ -358,7 +368,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
    * to call `Ceramic.create()` instead which calls this internally.
    */
-  static _processConfig(ipfs: IpfsApi, config: CeramicConfig): [CeramicModules, CeramicParameters] {
+  static _processConfig(
+    ipfs: IpfsApi,
+    config: CeramicConfig,
+    versionInfo: VersionInfo
+  ): [CeramicModules, CeramicParameters] {
     // Initialize ceramic loggers
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
@@ -376,6 +390,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       ethereumRpcUrl,
       networkOptions.name,
       logger,
+      versionInfo,
       signer
     )
     const providersCache = new ProvidersCache(ethereumRpcUrl)
@@ -415,7 +430,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       maxQueriesPerSecond,
       reconApi
     )
-    const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
     const pinStoreOptions = {
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
@@ -436,6 +450,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
       anchorLoopMinDurationMs: parseInt(config.anchorLoopMinDurationMs, 10),
+      versionInfo,
     }
 
     const modules: CeramicModules = {
@@ -448,7 +463,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       repository,
       shutdownSignal,
       providersCache,
-      anchorRequestCarBuilder,
       feed: repository.feed,
       signer,
       reconApi,
@@ -461,9 +475,14 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * Create Ceramic instance
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
+   * @param versionInfo - Information about the version of js-ceramic and ceramic-one that is being running.
    */
-  static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [modules, params] = Ceramic._processConfig(ipfs, config)
+  static async create(
+    ipfs: IpfsApi,
+    config: CeramicConfig = {},
+    versionInfo: VersionInfo
+  ): Promise<Ceramic> {
+    const [modules, params] = Ceramic._processConfig(ipfs, config, versionInfo)
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
@@ -515,11 +534,24 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       }
 
       await this._startupChecks()
+
+      this._versionMetricInterval = setInterval(
+        this._publishVersionMetrics.bind(this),
+        PUBLISH_VERSION_INTERVAL_MS
+      )
     } catch (err) {
       this._logger.err(err)
       await this.close()
       throw err
     }
+  }
+
+  async _publishVersionMetrics() {
+    Metrics.observe(VERSION_INFO, 1, {
+      jsCeramicVersion: this._versionInfo.cliPackageVersion,
+      jsCeramicGitHash: this._versionInfo.gitHash,
+      ceramicOneVersion: this._versionInfo.ceramicOneVersion,
+    })
   }
 
   /**
@@ -649,7 +681,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     } catch (err) {
       this._logger.err(`Error applying commit to stream ${streamId.toString()}: ${err}`)
       Metrics.count(ERROR_APPLYING_COMMIT, 1)
-      ModelMetrics.recordError(ERROR_APPLYING_COMMIT)
+      NodeMetrics.recordError(ERROR_APPLYING_COMMIT)
       throw err
     }
   }
@@ -719,7 +751,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       } catch (err) {
         this._logger.err(`Error loading stream ${streamId.toString()}: ${err}`)
         Metrics.count(ERROR_LOADING_STREAM, 1)
-        ModelMetrics.recordError(ERROR_LOADING_STREAM)
+        NodeMetrics.recordError(ERROR_LOADING_STREAM)
         if (opts.sync != SyncOptions.SYNC_ON_ERROR) {
           throw err
         }
@@ -807,7 +839,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
           )
         }
         Metrics.count(ERROR_LOADING_STREAM, 1)
-        ModelMetrics.recordError(ERROR_LOADING_STREAM)
+        NodeMetrics.recordError(ERROR_LOADING_STREAM)
         return Promise.resolve()
       }
       const streamRef = opts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
@@ -908,6 +940,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
+    clearInterval(this._versionMetricInterval)
     await this.anchorService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()

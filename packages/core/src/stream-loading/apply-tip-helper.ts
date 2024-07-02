@@ -29,6 +29,7 @@ export async function applyTipToState(
     state.log.map((logEntry) => logEntry.cid)
   )
   const logWithTimestamps = await anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
+    streamID,
     logWithoutTimestamps
   )
   return stateManipulator.applyLogToState(state, logWithTimestamps, opts)

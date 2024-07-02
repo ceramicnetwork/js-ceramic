@@ -9,11 +9,10 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../../__tests__/create-ceramic.js'
 import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
 import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
-import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
 import type { AnchorLoopHandler } from '../../anchor-service.js'
-import { CARFactory, type CAR } from 'cartonne'
-import { Ceramic } from '../../../ceramic.js'
+import { Ceramic, VersionInfo } from '../../../ceramic.js'
+import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
 const FAUX_ANCHOR_STORE = {
   save: jest.fn(),
@@ -22,15 +21,13 @@ const FAUX_ANCHOR_STORE = {
   },
 } as unknown as AnchorRequestStore
 const FAUX_HANDLER: AnchorLoopHandler = {
-  async buildRequestCar(): Promise<CAR> {
-    return new CARFactory().build()
-  },
   async handle(): Promise<boolean> {
     return true
   },
 }
 
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+const VERSION_INFO: VersionInfo = { cliPackageVersion: '', gitHash: '', ceramicOneVersion: '' }
 
 describe('AuthenticatedEthereumAnchorServiceTest', () => {
   let ipfs: IpfsApi
@@ -56,7 +53,13 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
+    const anchorService = new AuthenticatedEthereumAnchorService(
+      auth,
+      url,
+      url,
+      diagnosticsLogger,
+      VERSION_INFO
+    )
 
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
@@ -85,13 +88,19 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
+    const anchorService = new AuthenticatedEthereumAnchorService(
+      auth,
+      url,
+      url,
+      diagnosticsLogger,
+      VERSION_INFO
+    )
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
     })
     await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
 
-    await anchorService.requestAnchor(generateFakeCarFile())
+    await anchorService.requestAnchor(BaseTestUtils.randomStreamID(), BaseTestUtils.randomCID())
 
     expect(signRequestSpy).toHaveBeenCalledTimes(2) // 1 to get supported chains + 1 to send request
     const signRequestResult = (await signRequestSpy.mock.results[1].value) as any

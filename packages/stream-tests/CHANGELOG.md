@@ -3,6 +3,84 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.16.0-rc.1...@ceramicnetwork/stream-tests@5.16.0) (2024-07-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.16.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.16.0-rc.0...@ceramicnetwork/stream-tests@5.16.0-rc.1) (2024-06-27)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.15.0...@ceramicnetwork/stream-tests@5.16.0-rc.0) (2024-06-24)
+
+
+### Features
+
+* send js-ceramic and ceramic-one versions to CAS when creating requests ([#3246](https://github.com/ceramicnetwork/js-ceramic/issues/3246)) ([bd90887](https://github.com/ceramicnetwork/js-ceramic/commit/bd9088727863f2da847f40aa739d25281a05ffae))
+
+
+
+
+
+# [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.15.0-rc.1...@ceramicnetwork/stream-tests@5.15.0) (2024-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.15.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.15.0-rc.0...@ceramicnetwork/stream-tests@5.15.0-rc.1) (2024-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.14.0...@ceramicnetwork/stream-tests@5.15.0-rc.0) (2024-06-10)
+
+
+### Bug Fixes
+
+* Remove history sync test ([#3237](https://github.com/ceramicnetwork/js-ceramic/issues/3237)) ([38ce25a](https://github.com/ceramicnetwork/js-ceramic/commit/38ce25ae834fd4f28ac8fe00ca01e3f6dfd5d076))
+
+
+
+
+
+# [5.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.14.0-rc.0...@ceramicnetwork/stream-tests@5.14.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.13.0...@ceramicnetwork/stream-tests@5.14.0-rc.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [5.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.13.0-rc.0...@ceramicnetwork/stream-tests@5.13.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.12.0...@ceramicnetwork/stream-tests@5.13.0-rc.0) (2024-05-20)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

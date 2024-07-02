@@ -1,14 +1,7 @@
 import { fetchJson } from '@ceramicnetwork/common'
-import type {
-  AnchorEvent,
-  FetchRequest,
-  DiagnosticsLogger,
-  CeramicSigner,
-} from '@ceramicnetwork/common'
+import type { AnchorEvent, FetchRequest, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
-import type { CAR } from 'cartonne'
-import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 import type {
   AnchorService,
@@ -23,6 +16,9 @@ import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { RemoteCAS } from './remote-cas.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
+import { VersionInfo } from '../../ceramic.js'
 
 // BATCH_SIZE controls the number of keys fetched from the AnchorRequestStore at once.
 // It does not affect the parallelism/concurrency of actually processing the entries in those batches.
@@ -53,12 +49,13 @@ export class EthereumAnchorService implements AnchorService {
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
+    versionInfo: VersionInfo,
     sendRequest: FetchRequest = fetchJson,
     enableAnchorPollingLoop = true
   ) {
     this.#logger = logger
     this.#events = new Subject()
-    this.#cas = new RemoteCAS(logger, anchorServiceUrl, sendRequest)
+    this.#cas = new RemoteCAS(logger, anchorServiceUrl, sendRequest, versionInfo)
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
@@ -103,23 +100,18 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   /**
-   * Send request to the anchoring service
-   * @param carFile - CAR file containing all necessary data for the CAS to anchor
+   * Send request to the anchoring service to anchor the given Event for the given Stream.
    */
-  async requestAnchor(carFile: CAR): Promise<AnchorEvent> {
-    const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const streamId = carFileReader.streamId
-    const tip = carFileReader.tip
-
+  async requestAnchor(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    const now = new Date()
     await this.#anchorStoreQueue.run(streamId.toString(), () =>
       this.#store.save(streamId, {
         cid: tip,
-        genesis: carFileReader.genesis,
-        timestamp: Date.now(),
+        timestamp: now.getTime(),
       })
     )
 
-    doNotWait(this.#cas.create(carFileReader), this.#logger)
+    doNotWait(this.#cas.createRequest(streamId, tip, now), this.#logger)
     return {
       status: AnchorRequestStatusName.PENDING,
       streamId: streamId,
@@ -150,12 +142,14 @@ export class AuthenticatedEthereumAnchorService
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
+    versionInfo: VersionInfo,
     enableAnchorPollingLoop = true
   ) {
     super(
       anchorServiceUrl,
       ethereumRpcUrl,
       logger,
+      versionInfo,
       auth.sendAuthenticatedRequest.bind(auth),
       enableAnchorPollingLoop
     )

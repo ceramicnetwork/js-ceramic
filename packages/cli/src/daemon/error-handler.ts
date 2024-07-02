@@ -1,6 +1,6 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { ModelMetrics } from '@ceramicnetwork/model-metrics'
+import { NodeMetrics } from '@ceramicnetwork/node-metrics'
 
 export class StartupError extends Error {}
 
@@ -29,7 +29,7 @@ export function errorHandler(logger: DiagnosticsLogger): ErrorRequestHandler {
       // 2xx indicates error has not yet been handled
       res.status(500)
     }
-    ModelMetrics.recordError(err.message)
+    NodeMetrics.recordError(err.message)
     res.send({ error: err.message })
   }
 }

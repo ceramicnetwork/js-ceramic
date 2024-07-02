@@ -3,6 +3,91 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.16.0-rc.0...@ceramicnetwork/core@5.16.0) (2024-07-01)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.15.0...@ceramicnetwork/core@5.16.0-rc.0) (2024-06-24)
+
+
+### Bug Fixes
+
+* add offline mode to ipfs dag retrievals in pin store ([#3242](https://github.com/ceramicnetwork/js-ceramic/issues/3242)) ([db89e31](https://github.com/ceramicnetwork/js-ceramic/commit/db89e311fb067ece2a3481806fee8be942c2e424))
+* bump to node-metrics with better non-string handling ([#3247](https://github.com/ceramicnetwork/js-ceramic/issues/3247)) ([f612756](https://github.com/ceramicnetwork/js-ceramic/commit/f612756b6c16e7294190887a1e3a801511f2121e))
+* switch package name to node-metrics / NodeMetrics from model-metrics ([#3243](https://github.com/ceramicnetwork/js-ceramic/issues/3243)) ([ccfb342](https://github.com/ceramicnetwork/js-ceramic/commit/ccfb34203e6218926e213970c9d379b7680f2cea))
+
+
+### Features
+
+* Do not send CAR files when creating anchor requests against the CAS ([#3234](https://github.com/ceramicnetwork/js-ceramic/issues/3234)) ([48c7100](https://github.com/ceramicnetwork/js-ceramic/commit/48c7100619754a46b8d8fa21c5a514dbe34cc5c4))
+* Publish js-ceramic and C1 versions as a metric once per hour ([#3245](https://github.com/ceramicnetwork/js-ceramic/issues/3245)) ([6124192](https://github.com/ceramicnetwork/js-ceramic/commit/6124192e8a1426e75a4169ed6da405bd79f40adc))
+* send js-ceramic and ceramic-one versions to CAS when creating requests ([#3246](https://github.com/ceramicnetwork/js-ceramic/issues/3246)) ([bd90887](https://github.com/ceramicnetwork/js-ceramic/commit/bd9088727863f2da847f40aa739d25281a05ffae))
+
+
+
+
+
+# [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.15.0-rc.1...@ceramicnetwork/core@5.15.0) (2024-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.15.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.15.0-rc.0...@ceramicnetwork/core@5.15.0-rc.1) (2024-06-13)
+
+
+### Features
+
+* allow custom anchor service urls on mainnet ([#3240](https://github.com/ceramicnetwork/js-ceramic/issues/3240)) ([8d7306a](https://github.com/ceramicnetwork/js-ceramic/commit/8d7306aa7e1db7be38cace1b3ceb76dbad1bc627))
+
+
+
+
+
+# [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.14.0...@ceramicnetwork/core@5.15.0-rc.0) (2024-06-10)
+
+
+### Bug Fixes
+
+* sleep if loop duration is a special 0 ([#3238](https://github.com/ceramicnetwork/js-ceramic/issues/3238)) ([e2638b1](https://github.com/ceramicnetwork/js-ceramic/commit/e2638b10d66981d1554211bbfa91af5f0d187ba8))
+
+
+
+
+
+# [5.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.14.0-rc.0...@ceramicnetwork/core@5.14.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [5.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.13.0...@ceramicnetwork/core@5.14.0-rc.0) (2024-06-03)
+
+
+### Bug Fixes
+
+* stabilize unit test by no longer emitting an entry after it has been processed ([#3230](https://github.com/ceramicnetwork/js-ceramic/issues/3230)) ([52c1414](https://github.com/ceramicnetwork/js-ceramic/commit/52c1414dd44c81f09d53bea03a5741a6e6fb8aa3))
+
+
+
+
+
+# [5.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.13.0-rc.0...@ceramicnetwork/core@5.13.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
 # [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.12.0...@ceramicnetwork/core@5.13.0-rc.0) (2024-05-20)
 
 

@@ -1,6 +1,6 @@
 import { CeramicSigner, type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
-import type { CeramicConfig } from '../ceramic.js'
+import type { CeramicConfig, VersionInfo } from '../ceramic.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import {
   AuthenticatedEthereumAnchorService,
@@ -40,22 +40,24 @@ export class UnusableAnchorChainsError extends Error {
   }
 }
 
-export class CustomMainnetCasError extends Error {
-  constructor() {
-    super('Cannot use custom anchor service on Ceramic mainnet')
-  }
-}
-
 const TRAILING_SLASH = new RegExp(/\/+$/g) // slash at the end of the string
 const MAINNET_CAS_URLS = [
   'https://cas-internal.3boxlabs.com',
   'https://cas-direct.3boxlabs.com',
+  'https://ceramic-prod-cas-api-gitcoin.3boxlabs.com',
   DEFAULT_ANCHOR_SERVICE_URLS[Networks.MAINNET],
 ]
-export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks): string {
+export function makeAnchorServiceUrl(
+  fromConfig: string | undefined,
+  network: Networks,
+  logger: DiagnosticsLogger
+): string {
   const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
+  // Log a warning when using a custom anchor service URL on mainnet
   if (isMainnet(network) && !MAINNET_CAS_URLS.includes(casUrl)) {
-    throw new CustomMainnetCasError()
+    logger.warn(
+      `${casUrl} is not a standard Anchor Service URL for Ceramic mainnet.  Use a custom anchor service URL at your own risk. Note than an unreliable Ceramic Anchor Service can lead to data loss.`
+    )
   }
   return casUrl
 }
@@ -119,12 +121,13 @@ export function makeAnchorService(
   ethereumRpcUrl: string | undefined,
   network: Networks,
   logger: DiagnosticsLogger,
+  versionInfo: VersionInfo,
   signer: CeramicSigner
 ): AnchorService {
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any, logger)
   }
-  const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
+  const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network, logger)
   if (!config.readOnly) {
     const anchorServiceAuth = makeAnchorServiceAuth(
       config.anchorServiceAuthMethod,
@@ -138,11 +141,12 @@ export function makeAnchorService(
         anchorServiceAuth,
         anchorServiceUrl,
         ethereumRpcUrl,
-        logger
+        logger,
+        versionInfo
       )
     }
   }
-  return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger)
+  return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger, versionInfo)
 }
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port

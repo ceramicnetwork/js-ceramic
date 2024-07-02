@@ -1,7 +1,6 @@
 import type { CASClient } from '../anchor-service.js'
 import type { AnchorEvent, FetchRequest } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
-import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { CASResponseOrError, ErrorResponse, SupportedChainsResponse } from '@ceramicnetwork/codecs'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
@@ -10,6 +9,7 @@ import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { VersionInfo } from '../../ceramic.js'
 
 const MAX_FAILED_REQUESTS = 3
 const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
@@ -20,6 +20,7 @@ const CAS_REQUEST_FAILED = 'cas_request_failed'
 const CAS_REQUEST_CREATE_FAILED = 'cas_request_create_failed'
 const CAS_REQUEST_POLL_FAILED = 'cas_request_poll_failed'
 const CAS_REQUEST_COMPLETED = 'cas_request_completed'
+const CAS_INACCESSIBLE = 'cas_inaccessible'
 
 /**
  * Parse JSON that CAS returns.
@@ -69,6 +70,7 @@ export class RemoteCAS implements CASClient {
   readonly #chainIdApiEndpoint: string
   readonly #sendRequest: FetchRequest
   readonly #stopSignal: Subject<void>
+  readonly #versionInfo: VersionInfo
 
   // Used to track when we fail to reach the CAS at all (e.g. from a network error)
   // Note it does not care about if the status of the request *on* the CAS.  In other words,
@@ -77,11 +79,17 @@ export class RemoteCAS implements CASClient {
   #numFailedRequests: number
   #firstFailedRequestDate: Date | null
 
-  constructor(logger: DiagnosticsLogger, anchorServiceUrl: string, sendRequest: FetchRequest) {
+  constructor(
+    logger: DiagnosticsLogger,
+    anchorServiceUrl: string,
+    sendRequest: FetchRequest,
+    versionInfo: VersionInfo
+  ) {
     this.#logger = logger
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#sendRequest = sendRequest
+    this.#versionInfo = versionInfo
     this.#stopSignal = new Subject()
     this.#numFailedRequests = 0
     this.#firstFailedRequestDate = null
@@ -109,6 +117,7 @@ export class RemoteCAS implements CASClient {
         } times in a row, starting at ${this.#firstFailedRequestDate.toISOString()}. Note that failure to anchor may cause data loss.`
       )
       this.#logger.err(err)
+      Metrics.count(CAS_INACCESSIBLE, 1)
       throw err
     }
   }
@@ -145,19 +154,25 @@ export class RemoteCAS implements CASClient {
   /**
    * Create an anchor request on CAS through `fetch`.
    */
-  async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
-    const response = await firstValueFrom(this.create$(carFileReader))
-    return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+  async createRequest(streamId: StreamID, tip: CID, timestamp): Promise<AnchorEvent> {
+    const response = await firstValueFrom(this.create$(streamId, tip, timestamp))
+    return parseResponse(streamId, tip, response)
   }
 
-  create$(carFileReader: AnchorRequestCarFileReader): Observable<unknown> {
+  create$(streamId: StreamID, tip: CID, timestamp: Date): Observable<unknown> {
     const sendRequest$ = deferAbortable(async (signal) => {
       const response = await this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/vnd.ipld.car',
+          'Content-Type': 'application/json',
         },
-        body: carFileReader.carFile.bytes,
+        body: {
+          streamId: streamId.toString(),
+          cid: tip.toString(),
+          timestamp: timestamp.toISOString(),
+          jsCeramicVersion: this.#versionInfo.cliPackageVersion,
+          ceramicOneVersion: this.#versionInfo.ceramicOneVersion,
+        },
         signal: signal,
       })
 
@@ -175,11 +190,9 @@ export class RemoteCAS implements CASClient {
         Metrics.count(CAS_REQUEST_CREATE_FAILED, 1)
         // clean up the error message to have more context
         throw new Error(
-          `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${
-            carFileReader.tip
-          }. This is failure #${this.#numFailedRequests} attempting to communicate to the CAS: ${
-            error.message
-          }`
+          `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}. This is failure #${
+            this.#numFailedRequests
+          } attempting to communicate to the CAS: ${error.message}`
         )
       }),
       takeUntil(this.#stopSignal)

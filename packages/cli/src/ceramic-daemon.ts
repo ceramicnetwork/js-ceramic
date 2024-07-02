@@ -5,11 +5,7 @@ import {
   DEFAULT_TRACE_SAMPLE_RATIO,
   ServiceMetrics as Metrics,
 } from '@ceramicnetwork/observability'
-import {
-  DEFAULT_PUBLISH_INTERVAL_MS,
-  ModelMetrics,
-  Observable,
-} from '@ceramicnetwork/model-metrics'
+import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics, Observable } from '@ceramicnetwork/node-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -286,8 +282,14 @@ export class CeramicDaemon {
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
       opts.ipfs?.host
     )
+    const ipfsId = await ipfs.id()
 
-    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
+    const versionInfo = {
+      cliPackageVersion: version,
+      gitHash: commitHash,
+      ceramicOneVersion: ipfsId.agentVersion,
+    }
+    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig, versionInfo)
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
     diagnosticsLogger.imp(
       `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${version}, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(
@@ -296,9 +298,10 @@ export class CeramicDaemon {
         2
       )}`
     )
-    const ipfsId = await ipfs.id()
     diagnosticsLogger.imp(
-      `Connecting to IPFS node available as ${ipfsId.addresses.map(String).join(', ')}`
+      `Connecting to IPFS node with version "${ipfsId.agentVersion}" available as ${ipfsId.addresses
+        .map(String)
+        .join(', ')}`
     )
 
     const ceramic = new Ceramic(modules, params)
@@ -322,7 +325,7 @@ export class CeramicDaemon {
     if (provider) {
       await did.authenticate()
       diagnosticsLogger.imp(
-        `Node DID set to '${did.id}. This DID will be used to authenticate to the anchor service'`
+        `Node DID set to '${did.id}'. This DID will be used to authenticate to the anchor service`
       )
     }
     ceramic.did = did
@@ -343,22 +346,33 @@ export class CeramicDaemon {
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
 
-    // Now that ceramic node is set up we can start publishing metrics
-    if (opts.metrics?.metricsPublisherEnabled) {
-      const ipfsVersion = await ipfs.version()
-      ModelMetrics.start({
-        ceramic: ceramic,
-        network: params.networkOptions.name,
-        ceramicVersion: version,
-        ipfsVersion: ipfsVersion.version,
-        intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-        nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-        nodeName: '', // daemon.hostname is not useful
-        nodeAuthDID: did.id,
-        nodeIPAddr: '', // daemon.hostname is not the external name
-        nodePeerId: ipfsId.publicKey,
-        logger: diagnosticsLogger,
-      })
+    if (did.authenticated) {
+      // If authenticated into the node, we can start publishing metrics
+      // publishing metrics is enabled by default, even if no metrics config
+      if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
+        const ipfsVersion = await ipfs.version()
+        NodeMetrics.start({
+          ceramic: ceramic,
+          network: params.networkOptions.name,
+          ceramicVersion: version,
+          ipfsVersion: ipfsVersion.version,
+          intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+          nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+          nodeName: '', // daemon.hostname is not useful
+          nodeAuthDID: did.id,
+          nodeIPAddr: '', // daemon.hostname is not the external name
+          nodePeerId: ipfsId.publicKey,
+          logger: diagnosticsLogger,
+        })
+        diagnosticsLogger.imp(
+          `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+        )
+      }
+    } else {
+      // warn that the node does not have an authenticated did
+      diagnosticsLogger.imp(
+        `The ceramic daemon is running without an authenticated DID.  This means that this node cannot itself publish streams, including node metrics, and cannot use a DID as the method to authenticate with the Ceramic Anchor Service.  See https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet#updating-to-did-based-authentication for instructions on how to update your node to use DID authentication.`
+      )
     }
 
     return daemon
@@ -586,7 +600,7 @@ export class CeramicDaemon {
     } catch (err) {
       this.diagnosticsLogger.err(`Error running collection query: ${err}`)
       Metrics.count(ERROR_QUERYING_COLLECTION, 1)
-      ModelMetrics.recordError(ERROR_QUERYING_COLLECTION)
+      NodeMetrics.recordError(ERROR_QUERYING_COLLECTION)
       throw err
     }
   }
@@ -810,7 +824,7 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModels()
-    ModelMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
+    NodeMetrics.observe(Observable.TOTAL_INDEXED_MODELS, indexedModels.length)
     const body = {
       models: indexedModels.map((id) => id.toString()),
     }

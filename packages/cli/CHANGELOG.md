@@ -3,6 +3,92 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.16.0-rc.1...@ceramicnetwork/cli@5.16.0) (2024-07-01)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [5.16.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.16.0-rc.0...@ceramicnetwork/cli@5.16.0-rc.1) (2024-06-27)
+
+
+### Bug Fixes
+
+* **ceramic-node:** handle case where the admin DID is not authenticated ([#3248](https://github.com/ceramicnetwork/js-ceramic/issues/3248)) ([122b65b](https://github.com/ceramicnetwork/js-ceramic/commit/122b65bf4460ef87b656a730b06e981549969f39))
+
+
+
+
+
+# [5.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.15.0...@ceramicnetwork/cli@5.16.0-rc.0) (2024-06-24)
+
+
+### Bug Fixes
+
+* bump to node-metrics with better non-string handling ([#3247](https://github.com/ceramicnetwork/js-ceramic/issues/3247)) ([f612756](https://github.com/ceramicnetwork/js-ceramic/commit/f612756b6c16e7294190887a1e3a801511f2121e))
+* switch package name to node-metrics / NodeMetrics from model-metrics ([#3243](https://github.com/ceramicnetwork/js-ceramic/issues/3243)) ([ccfb342](https://github.com/ceramicnetwork/js-ceramic/commit/ccfb34203e6218926e213970c9d379b7680f2cea))
+
+
+### Features
+
+* default node metrics publishing to on and add docs ([#3244](https://github.com/ceramicnetwork/js-ceramic/issues/3244)) ([e7feb63](https://github.com/ceramicnetwork/js-ceramic/commit/e7feb637992c6a79c13becc0992363d4f69737a8))
+* Publish js-ceramic and C1 versions as a metric once per hour ([#3245](https://github.com/ceramicnetwork/js-ceramic/issues/3245)) ([6124192](https://github.com/ceramicnetwork/js-ceramic/commit/6124192e8a1426e75a4169ed6da405bd79f40adc))
+* send js-ceramic and ceramic-one versions to CAS when creating requests ([#3246](https://github.com/ceramicnetwork/js-ceramic/issues/3246)) ([bd90887](https://github.com/ceramicnetwork/js-ceramic/commit/bd9088727863f2da847f40aa739d25281a05ffae))
+
+
+
+
+
+# [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.15.0-rc.1...@ceramicnetwork/cli@5.15.0) (2024-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [5.15.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.15.0-rc.0...@ceramicnetwork/cli@5.15.0-rc.1) (2024-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.14.0...@ceramicnetwork/cli@5.15.0-rc.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [5.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.14.0-rc.0...@ceramicnetwork/cli@5.14.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [5.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.13.0...@ceramicnetwork/cli@5.14.0-rc.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [5.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.13.0-rc.0...@ceramicnetwork/cli@5.13.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.12.0...@ceramicnetwork/cli@5.13.0-rc.0) (2024-05-20)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

@@ -33,8 +33,8 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
-import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CARFactory } from 'cartonne'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -686,7 +686,7 @@ describeIfV3('handleAnchorEvent', () => {
         message: 'Last COMPLETED',
         streamId: tile.id,
         cid: tile.tip,
-        witnessCar: generateFakeCarFile(),
+        witnessCar: new CARFactory().build(),
       }
       const handleAnchorCommitSpy = jest.spyOn(repository as any, '_handleAnchorCommit')
       // Work around verification for a fake witness car
@@ -729,7 +729,7 @@ describeIfV3('handleAnchorEvent', () => {
         message: 'First COMPLETED',
         streamId: tile.id,
         cid: tile.state.log[0].cid,
-        witnessCar: generateFakeCarFile(),
+        witnessCar: new CARFactory().build(),
       }
       const handleAnchorCommitSpy = jest.spyOn(repository as any, '_handleAnchorCommit')
       handleAnchorCommitSpy.mockImplementation(async (state$: RunningState) => {

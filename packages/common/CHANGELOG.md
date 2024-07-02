@@ -3,6 +3,66 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.15.0-rc.0...@ceramicnetwork/common@5.15.0) (2024-07-01)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [5.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.14.0...@ceramicnetwork/common@5.15.0-rc.0) (2024-06-24)
+
+
+### Bug Fixes
+
+* bump to node-metrics with better non-string handling ([#3247](https://github.com/ceramicnetwork/js-ceramic/issues/3247)) ([f612756](https://github.com/ceramicnetwork/js-ceramic/commit/f612756b6c16e7294190887a1e3a801511f2121e))
+* switch package name to node-metrics / NodeMetrics from model-metrics ([#3243](https://github.com/ceramicnetwork/js-ceramic/issues/3243)) ([ccfb342](https://github.com/ceramicnetwork/js-ceramic/commit/ccfb34203e6218926e213970c9d379b7680f2cea))
+
+
+
+
+
+# [5.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.14.0-rc.0...@ceramicnetwork/common@5.14.0) (2024-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [5.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.13.0...@ceramicnetwork/common@5.14.0-rc.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [5.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.13.0-rc.0...@ceramicnetwork/common@5.13.0) (2024-06-10)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [5.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.12.0...@ceramicnetwork/common@5.13.0-rc.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [5.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.12.0-rc.0...@ceramicnetwork/common@5.12.0) (2024-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 # [5.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@5.11.0...@ceramicnetwork/common@5.12.0-rc.0) (2024-05-20)
 
 **Note:** Version bump only for package @ceramicnetwork/common
