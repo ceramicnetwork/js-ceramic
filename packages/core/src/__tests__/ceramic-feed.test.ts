@@ -96,8 +96,7 @@ describe('Ceramic feed', () => {
     await doneStreaming
   })
 
-  // TODO (dav1do): Need to understand why this test is failing with callstack overflow with ceramic one.
-  test.skip('add entry after anchoring stream', async () => {
+  test('add entry after anchoring stream', async () => {
     const emissions: Array<FeedDocument> = []
     const readable1 = ceramic1.feed.aggregation.documents()
     const writable1 = new WritableStream({
