@@ -6,6 +6,7 @@ import {
   Stream,
   StreamHandler,
   DiagnosticsLogger,
+  EnvironmentUtils,
   StreamUtils,
   LoadOpts,
   CeramicCommit,
@@ -410,7 +411,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const reconApi = new ReconApi(
       {
-        enabled: Boolean(process.env.CERAMIC_RECON_MODE),
+        enabled: EnvironmentUtils.useRustCeramic(),
         url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
         // TODO: WS1-1487 not an official ceramic config option
         feedEnabled: config.reconFeedEnabled ?? true,
@@ -567,8 +568,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       )
     }
 
-    if (process.env.CERAMIC_RECON_MODE) {
-      this._logger.warn(`Running Ceramic in v4 mode. This mode is still experimental.`)
+    if (EnvironmentUtils.useRustCeramic()) {
+      this._logger.warn(
+        `Running Ceramic using rust-ceramic. If you want to use Ipfs, run with IPFS_FLAVOR=go.`
+      )
     } else {
       if (!this.dispatcher.enableSync) {
         this._logger.warn(

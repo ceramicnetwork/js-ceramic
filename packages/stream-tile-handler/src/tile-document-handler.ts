@@ -6,6 +6,7 @@ import {
   AnchorStatus,
   CommitData,
   EventType,
+  EnvironmentUtils,
   SignatureStatus,
   StreamConstructor,
   StreamHandler,
@@ -61,7 +62,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env['CERAMIC_RECON_MODE']) {
+    if (EnvironmentUtils.useRustCeramic()) {
       throw new Error(`TileDocument is not supported in Ceramic v4 mode`)
     }
 
