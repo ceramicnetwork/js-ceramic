@@ -407,7 +407,6 @@ export class DaemonMetricsConfig {
    */
   @jsonMember(Number, { name: 'metrics-publish-interval-ms' })
   metricsPublishIntervalMS?: number
-
 }
 
 /**

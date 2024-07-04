@@ -11,7 +11,13 @@ import {
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, IpfsApi, StreamUtils, LoggerProvider, EnvironmentUtils } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  IpfsApi,
+  StreamUtils,
+  LoggerProvider,
+  EnvironmentUtils,
+} from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
