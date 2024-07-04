@@ -5,6 +5,7 @@ import type { StreamState, Stream } from '@ceramicnetwork/common'
 import {
   AdminApi,
   AnchorStatus,
+  EnvironmentUtils,
   EventType,
   RunningStateLike,
   SignatureStatus,
@@ -13,8 +14,8 @@ import {
 import first from 'it-first'
 import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
-export const testIfV3 = process.env['CERAMIC_RECON_MODE'] ? test.skip : test
-export const describeIfV3 = process.env['CERAMIC_RECON_MODE'] ? describe.skip : describe
+export const testIfV3 = EnvironmentUtils.useRustCeramic() ? test.skip : test
+export const describeIfV3 = EnvironmentUtils.useRustCeramic() ? describe.skip : describe
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID

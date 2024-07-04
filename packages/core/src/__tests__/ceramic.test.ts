@@ -14,7 +14,7 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
 
@@ -34,7 +34,6 @@ function expectEqualStates(a: StreamState, b: StreamState) {
 }
 
 // These tests are expected to pass when running in V4 mode when recon is integrated if updated from tile documents
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('IPFS caching', () => {
   let ipfs: IpfsApi

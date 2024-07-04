@@ -20,7 +20,7 @@ import { StateManipulator } from '../state-manipulator.js'
 import { HandlersMap } from '../../handlers-map.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const TOPIC = '/ceramic/test12345'
 const CONTENT0 = { step: 0 }
@@ -32,7 +32,6 @@ function makeAppliable(log: Array<CommitData>): AppliableStreamLog {
 }
 
 // Should pass in v4 when test updated from tile document
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('StateManipulator test', () => {
   jest.setTimeout(1000 * 30)

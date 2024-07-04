@@ -9,14 +9,12 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { CID } from 'multiformats/cid'
 import { LogSyncer } from '../log-syncer.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { IpfsApi } from '@ceramicnetwork/common'
 
 const TOPIC = '/ceramic/test12345'
 
 // Should pass in v4 if we update from TileDocument
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
 describeIfV3('LogSyncer test', () => {
   jest.setTimeout(1000 * 30)
 

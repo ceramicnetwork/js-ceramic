@@ -1,5 +1,9 @@
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import {
+  CommonTestUtils as TestUtils,
+  describeIfV3,
+  testIfV3,
+} from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -9,8 +13,6 @@ let ipfs: IpfsApi
 let ceramic: Ceramic
 
 // Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 beforeAll(async () => {
   ipfs = await createIPFS()

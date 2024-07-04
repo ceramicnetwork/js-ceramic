@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { IpfsApi } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, testIfV3 } from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createDispatcher } from './create-dispatcher.js'
@@ -14,7 +14,6 @@ const FAKE_STREAM_ID = StreamID.fromString(
 )
 
 // A different scenario will likely apply in V4 based on changes to loading flow
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 30)

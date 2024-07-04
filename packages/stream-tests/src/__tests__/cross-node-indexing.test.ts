@@ -6,6 +6,7 @@ import {
   StreamState,
   StreamUtils,
   Networks,
+  EnvironmentUtils,
 } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils, testIfV3 } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -184,7 +185,7 @@ describe.each(envs)(
       })
 
       // wait for model to be received
-      if (process.env.CERAMIC_RECON_MODE)
+      if (EnvironmentUtils.useRustCeramic())
         await TestUtils.waitForEvent(ceramic2.repository.recon, model.tip)
 
       await ceramic2.admin.startIndexingModelData([{ streamID: model.id }])

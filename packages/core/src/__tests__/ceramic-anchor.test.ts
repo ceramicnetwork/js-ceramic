@@ -6,7 +6,7 @@ import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const SEED = '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83'
 
@@ -18,7 +18,6 @@ const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Cera
 }
 
 // these should pass in v4 mode when recon integrated (need to be updated from TileDocument)
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Ceramic anchoring', () => {
   jest.setTimeout(60000)

@@ -3,7 +3,7 @@ import { Ceramic, VersionInfo } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import * as u8a from 'uint8arrays'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -84,7 +84,6 @@ async function createDeterministicStream(
 }
 
 // should pass on v4 if updated from tile document (possibly with adjustments for recon)
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Ceramic stream pinning', () => {
   jest.setTimeout(60000)

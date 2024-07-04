@@ -7,6 +7,7 @@ import MockDate from 'mockdate'
 import type { Ceramic } from '../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
+import { describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const DID_USED = 'did:3:bafysdfwefwe'
 const LEGACY_ACCOUNT = '0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337'
@@ -40,7 +41,6 @@ const EMPTY_DID_PROOF = {
 }
 
 // These tests are not expected to run in v4 mode
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('Ceramic API', () => {
   jest.setTimeout(60000)
