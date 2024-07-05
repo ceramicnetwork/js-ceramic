@@ -98,18 +98,8 @@ describe.each(envs)(
     beforeAll(async () => {
       await pgSetup()
 
-      ipfs1 = await createIPFS({
-        rust: {
-          type: 'binary',
-          network: Networks.INMEMORY,
-        },
-      })
-      ipfs2 = await createIPFS({
-        rust: {
-          type: 'binary',
-          network: Networks.INMEMORY,
-        },
-      })
+      ipfs1 = await createIPFS()
+      ipfs2 = await createIPFS()
       await swarmConnect(ipfs1, ipfs2)
 
       // Temporarily start a Ceramic node and use it to create the Model that will be used in the
