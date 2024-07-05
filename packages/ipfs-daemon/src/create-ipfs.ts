@@ -150,7 +150,7 @@ export async function createIPFS(
       await createIPFSFlavor(
         {
           name: 'rust',
-          options: options.rust || { type: 'binary', network: Networks.INMEMORY },
+          options: options.rust,
         } as RustIpfsFlavor,
         disposable
       )
