@@ -72,7 +72,12 @@ async function binary(
   // directly for things we don't need to override for tests.
   let dir
   if (storeDir) {
-    dir = { path: storeDir, cleanup: async () => {} }
+    dir = {
+      path: storeDir,
+      cleanup: async () => {
+        // empty cleanup function to match type without deleting the actual store
+      },
+    }
   } else if (networkName === Networks.INMEMORY) {
     dir = await tmp.dir({ unsafeCleanup: true })
   } else {
@@ -205,9 +210,6 @@ export class RustIpfs {
         break
       case 'local':
         network = Networks.LOCAL
-        break
-      case 'inmemory' || 'in-memory':
-        network = Networks.INMEMORY
         break
       default:
         network = Networks.INMEMORY

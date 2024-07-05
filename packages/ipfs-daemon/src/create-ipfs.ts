@@ -7,7 +7,7 @@ import type { IpfsApi } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { RustIpfsOptions, RustIpfs } from './rust-ipfs.js'
 import { IPFSOptions as GoIpfsOptions } from 'ipfsd-ctl'
-import { DiagnosticsLogger, EnvironmentUtils, Networks } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, EnvironmentUtils } from '@ceramicnetwork/common'
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
