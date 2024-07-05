@@ -36,7 +36,7 @@ If you only want to test a specific package just `cd` into the specific package 
 
 If you want to run the tests in recon mode, you must specify the ceramic-one path, the IPFS flavor as `rust`, and indicate that ceramic will run in recon mode on:
 ```
-CERAMIC_ONE_PATH=<PATH> CERAMIC_RECON_MODE=true IPFS_FLAVOR=rust npm test
+CERAMIC_ONE_PATH=<PATH> IPFS_FLAVOR=rust npm test
 ```
 
 ## Debugging and Local Development
