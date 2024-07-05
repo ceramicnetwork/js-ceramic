@@ -61,6 +61,8 @@ class BinaryRunningIpfs implements RunningIpfs {
   }
 }
 
+/// Currently, an in-memory network without a storeDir is implied to mean "test" mode and we
+/// set ports and swarm to things than can be run in parallel on one machine
 async function binary(
   binary_path: string,
   networkName: Networks,
@@ -70,45 +72,55 @@ async function binary(
 ): Promise<RunningIpfs> {
   // rely on the defaults and let the operator set CERAMIC_ONE_* environment variables
   // directly for things we don't need to override for tests.
-  let dir
-  if (storeDir) {
+  let dir,
+    apiPort,
+    testExtras = []
+
+  const isTest = !storeDir && networkName === Networks.INMEMORY
+
+  if (!isTest) {
+    storeDir = storeDir || '~/.ceramic-one'
     dir = {
       path: storeDir,
       cleanup: async () => {
         // empty cleanup function to match type without deleting the actual store
       },
     }
-  } else if (networkName === Networks.INMEMORY) {
-    dir = await tmp.dir({ unsafeCleanup: true })
+    apiPort = port || 5101
   } else {
-    throw new Error('The ceramic one store must be set when not using an in-memory network')
+    apiPort = port || (await getPort())
+    dir = await tmp.dir({ unsafeCleanup: true })
+    // for tests, we have to use different values to avoid port conflicts
+    // this should probably all be in a custom wrapper for the binary
+    const metricsPort = await getPort()
+    testExtras = [
+      '--metrics-bind-address',
+      `0.0.0.0:${metricsPort}`,
+      // Use quic as it has fewer RTT which makes for lower latencies improving the stability of tests.
+      '--swarm-addresses',
+      '/ip4/0.0.0.0/udp/0/quic-v1',
+    ]
   }
-  let apiPort = port
-  if (!apiPort) {
-    apiPort = await getPort()
-  }
-  const proc = spawn(
-    binary_path,
-    [
-      'daemon',
-      '--bind-address',
-      `0.0.0.0:${apiPort}`,
-      '--store-dir',
-      dir.path,
-      '--network',
-      networkName === Networks.INMEMORY ? 'in-memory' : networkName,
-      // We can use a hard coded local network id since
-      // nodes that should not be in the same network will never discover each other
-      '--local-network-id',
-      networkId.toString(),
-    ],
-    {
-      env: {
-        RUST_LOG: process.env.RUST_LOG || 'info',
-      },
-      stdio: 'inherit',
-    }
-  )
+  const parameters = [
+    'daemon',
+    '--bind-address',
+    `0.0.0.0:${apiPort}`,
+    '--store-dir',
+    dir.path,
+    '--network',
+    networkName === Networks.INMEMORY ? 'in-memory' : networkName,
+    // We can use a hard coded local network id since
+    // nodes that should not be in the same network will never discover each other
+    '--local-network-id',
+    networkId.toString(),
+  ].concat(testExtras)
+
+  const proc = spawn(binary_path, parameters, {
+    env: {
+      RUST_LOG: process.env.RUST_LOG || 'info',
+    },
+    stdio: 'inherit',
+  })
   const ipfs = createIpfsClient({
     host: '127.0.0.1',
     port: apiPort,
@@ -215,16 +227,11 @@ export class RustIpfs {
         network = Networks.INMEMORY
     }
     const storeDir = process.env.CERAMIC_ONE_STORE_DIR
-    let port
-    // for tests we use random ports, but we assume a real store means a real network
-    if (storeDir) {
-      port = 5101
-    }
     return {
       path,
       type: 'binary',
       network,
-      port,
+      port: null,
       storeDir,
     }
   }
