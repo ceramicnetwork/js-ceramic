@@ -35,7 +35,12 @@ export class IpfsConnectionFactory {
       return ipfsApi
     } else {
       if (EnvironmentUtils.useRustCeramic()) {
-        return this.createRustIPFS(network)
+        return ipfs.createIPFS(
+          {
+            rust: ipfs.RustIpfs.defaultOptions(network),
+          },
+          false
+        )
       } else {
         return this.createGoIPFS()
       }
@@ -52,45 +57,6 @@ export class IpfsConnectionFactory {
     } else {
       return new http.Agent(agentOptions)
     }
-  }
-
-  private static async createRustIPFS(desiredNetwork: string): Promise<IpfsApi> {
-    const path = process.env.CERAMIC_ONE_PATH
-    if (!path) {
-      throw new Error(
-        'Missing rust ceramic binary path. Set CERAMIC_ONE_PATH=/path/to/binary or run with --ipfs-url. For example: `CERAMIC_ONE_PATH=/usr/local/bin/ceramic-one`.'
-      )
-    }
-    let network
-    switch (desiredNetwork || process.env.CERAMIC_ONE_NETWORK) {
-      case 'mainnet':
-        network = Networks.MAINNET
-        break
-      case 'testnet-clay':
-        network = Networks.TESTNET_CLAY
-        break
-      case 'dev-unstable':
-        network = Networks.DEV_UNSTABLE
-        break
-      case 'local':
-        network = Networks.LOCAL
-        break
-      default:
-        network = Networks.INMEMORY
-    }
-    const storeDir = process.env.CERAMIC_ONE_STORE_DIR
-    return ipfs.createIPFS(
-      {
-        rust: {
-          path,
-          type: 'binary',
-          network,
-          port: null,
-          storeDir,
-        },
-      },
-      false
-    )
   }
 
   private static async createGoIPFS(

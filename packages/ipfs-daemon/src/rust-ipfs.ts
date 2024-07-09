@@ -194,7 +194,46 @@ export class RustIpfs {
   private api?: RunningIpfs
 
   constructor(opts: RustIpfsOptions) {
-    this.opts = opts
+    let options = opts
+    if (!options || Object.keys(options).length === 0) {
+      options = RustIpfs.defaultOptions()
+    }
+
+    this.opts = options
+  }
+
+  static defaultOptions(desiredNetwork?: string): RustIpfsOptions {
+    const path = process.env.CERAMIC_ONE_PATH
+    if (!path) {
+      throw new Error(
+        'Missing rust ceramic binary path. Set CERAMIC_ONE_PATH=/path/to/binary. For example: `CERAMIC_ONE_PATH=/usr/local/bin/ceramic-one`.'
+      )
+    }
+    let network
+    switch (desiredNetwork || process.env.CERAMIC_ONE_NETWORK) {
+      case 'mainnet':
+        network = Networks.MAINNET
+        break
+      case 'testnet-clay':
+        network = Networks.TESTNET_CLAY
+        break
+      case 'dev-unstable':
+        network = Networks.DEV_UNSTABLE
+        break
+      case 'local':
+        network = Networks.LOCAL
+        break
+      default:
+        network = Networks.INMEMORY
+    }
+    const storeDir = process.env.CERAMIC_ONE_STORE_DIR
+    return {
+      path,
+      type: 'binary',
+      network,
+      port: null,
+      storeDir,
+    }
   }
 
   async start(): Promise<RunningIpfs> {
