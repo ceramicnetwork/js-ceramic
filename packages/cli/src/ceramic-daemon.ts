@@ -9,6 +9,7 @@ import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics, Observable } from '@ceramicne
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
+  EnvironmentUtils,
   FieldsIndex,
   LoggerProvider,
   LogStyle,
@@ -284,6 +285,17 @@ export class CeramicDaemon {
     )
     const ipfsId = await ipfs.id()
 
+    // we need to change the values before processing the config, so we keep track to log the warning after we have logging set up
+    const desiredIpfsClient = EnvironmentUtils.useRustCeramic() ? 'ceramic-one' : 'kubo'
+    const wrongIpfsClient =
+      opts.ipfs.mode == IpfsMode.REMOTE &&
+      EnvironmentUtils.useRustCeramic() &&
+      !ipfsId.agentVersion.includes('ceramic-one')
+
+    if (wrongIpfsClient) {
+      EnvironmentUtils.setIpfsFlavor(EnvironmentUtils.useRustCeramic() ? 'go' : 'rust')
+    }
+
     const versionInfo = {
       cliPackageVersion: version,
       gitHash: commitHash,
@@ -303,6 +315,11 @@ export class CeramicDaemon {
         .map(String)
         .join(', ')}`
     )
+    if (wrongIpfsClient) {
+      diagnosticsLogger.warn(
+        `The daemon expected the remote IPFS node to be running ${desiredIpfsClient} but it was running ${ipfsId.agentVersion}. The daemon config has been modified.`
+      )
+    }
 
     const ceramic = new Ceramic(modules, params)
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic) }

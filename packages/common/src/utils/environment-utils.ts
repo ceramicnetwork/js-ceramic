@@ -8,4 +8,11 @@ export class EnvironmentUtils {
   static useRustCeramic(): boolean {
     return process.env.IPFS_FLAVOR !== 'go'
   }
+
+  /**
+   * Changes the server from expecting rust or go ipfs to the other
+   */
+  static setIpfsFlavor(flavor: 'go' | 'rust') {
+    process.env.IPFS_FLAVOR = flavor
+  }
 }
