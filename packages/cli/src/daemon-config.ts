@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 import { AnchorServiceAuthMethods } from '@ceramicnetwork/common'
 import { StartupError } from './daemon/error-handler.js'
+import { truncateSync } from 'node:fs'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
@@ -499,6 +500,9 @@ export class DaemonConfig {
 
     // Set hidden fields before returning
     const config = serializer.parse(json)
+
+    console.log('metricsPublisherEnabled after parsing:', config.metrics.metricsPublisherEnabled);
+    // Set default values
     if (json.node) {
       if (json.node.privateSeedUrl) {
         config.node.privateSeedUrl = json.node.privateSeedUrl
