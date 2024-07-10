@@ -499,7 +499,6 @@ export class DaemonConfig {
 
     // Set hidden fields before returning
     const config = serializer.parse(json)
-
     if (json.node) {
       if (json.node.privateSeedUrl) {
         config.node.privateSeedUrl = json.node.privateSeedUrl
