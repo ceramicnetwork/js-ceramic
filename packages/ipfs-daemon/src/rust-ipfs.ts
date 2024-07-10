@@ -195,14 +195,14 @@ export class RustIpfs {
 
   constructor(opts: RustIpfsOptions) {
     let options = opts
-    if (!opts || Object.keys(opts).length === 0) {
+    if (!options || Object.keys(options).length === 0) {
       options = RustIpfs.defaultOptions()
     }
 
     this.opts = options
   }
 
-  static defaultOptions(): RustIpfsOptions {
+  static defaultOptions(desiredNetwork?: string): RustIpfsOptions {
     const path = process.env.CERAMIC_ONE_PATH
     if (!path) {
       throw new Error(
@@ -210,7 +210,7 @@ export class RustIpfs {
       )
     }
     let network
-    switch (process.env.CERAMIC_ONE_NETWORK) {
+    switch (desiredNetwork || process.env.CERAMIC_ONE_NETWORK) {
       case 'mainnet':
         network = Networks.MAINNET
         break

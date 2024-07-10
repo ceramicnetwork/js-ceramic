@@ -500,10 +500,16 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    */
   async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
-      this._logger.imp(
-        `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
-      )
-
+      if (EnvironmentUtils.useRustCeramic()) {
+        // this is potentially incorrect if we're running in remote mode as we don't control the network and could mismatch with c1
+        this._logger.imp(
+          `Connecting to ceramic network '${this._networkOptions.name}' using ceramic-one with Recon for data synchronization.`
+        )
+      } else {
+        this._logger.imp(
+          `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
+        )
+      }
       if (this._readOnly) {
         this._logger.warn(`Starting in read-only mode. All write operations will fail`)
       }
@@ -568,16 +574,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       )
     }
 
-    if (EnvironmentUtils.useRustCeramic()) {
+    if (!EnvironmentUtils.useRustCeramic() && !this.dispatcher.enableSync) {
       this._logger.warn(
-        `Running Ceramic using rust-ceramic. If you want to use Ipfs, run with IPFS_FLAVOR=go.`
+        `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
       )
-    } else {
-      if (!this.dispatcher.enableSync) {
-        this._logger.warn(
-          `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
-        )
-      }
     }
   }
 
