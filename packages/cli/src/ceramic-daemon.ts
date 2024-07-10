@@ -289,9 +289,7 @@ export class CeramicDaemon {
     const desiredIpfsClient = EnvironmentUtils.useRustCeramic() ? 'ceramic-one' : 'kubo'
     const wrongIpfsClient =
       opts.ipfs.mode == IpfsMode.REMOTE &&
-      EnvironmentUtils.useRustCeramic() &&
-      !ipfsId.agentVersion.includes('ceramic-one')
-
+      EnvironmentUtils.useRustCeramic() !== ipfsId.agentVersion.includes('ceramic-one')
     if (wrongIpfsClient) {
       EnvironmentUtils.setIpfsFlavor(EnvironmentUtils.useRustCeramic() ? 'go' : 'rust')
     }
@@ -316,9 +314,15 @@ export class CeramicDaemon {
         .join(', ')}`
     )
     if (wrongIpfsClient) {
-      diagnosticsLogger.warn(
-        `The daemon expected the remote IPFS node to be running ${desiredIpfsClient} but it was running ${ipfsId.agentVersion}. The daemon config has been modified.`
-      )
+      if (desiredIpfsClient === 'ceramic-one') {
+        diagnosticsLogger.warn(
+          `Detected ipfs kubo running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. Using kubo for p2p networking is deprecated - we recommend migrating to ceramic-one instead.`
+        )
+      } else {
+        diagnosticsLogger.warn(
+          `Igoring configuration IPFS_FLAVOR='go'. Detected remote ceramic-one running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. If you intended to use ipfs, specify an --ipfs-url for an ipfs node.`
+        )
+      }
     }
 
     const ceramic = new Ceramic(modules, params)
