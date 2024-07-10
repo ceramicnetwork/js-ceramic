@@ -26,17 +26,7 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
         ),
       ]
     case Networks.DEV_UNSTABLE:
-      return [
-        multiaddr(
-          '/dns4/ipfs-ceramic-public-qa-swarm.3boxlabs.com/tcp/4010/p2p/QmPP3RdaSWDkhcxZReGo591FWanLw9ucvgmUZhtSLt9t6D'
-        ),
-        multiaddr(
-          '/dns4/ipfs-ceramic-private-qa-swarm.3boxlabs.com/tcp/4010/p2p/12D3KooWAQvp6Wnqho9ririWvbmtodnNQX9GECQEps2gb6kwBf2h'
-        ),
-        multiaddr(
-          '/dns4/ipfs-ceramic-private-cas-qa-swarm.3boxlabs.com/tcp/4010/p2p/QmRvJ4HX4N6H26NgtqjoJEUyaDyDRUhGESP1aoyCJE1X1b'
-        ),
-      ]
+      return []
     case Networks.LOCAL:
     case Networks.INMEMORY:
       return null
