@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.0.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.16.0...@ceramicnetwork/cli@6.0.0-rc.0) (2024-07-10)
+
+
+### Features
+
+* disable node metrics by default ([#3255](https://github.com/ceramicnetwork/js-ceramic/issues/3255)) ([d562e4a](https://github.com/ceramicnetwork/js-ceramic/commit/d562e4a95e0c06e775036412f6b4d5a926da9374))
+
+
+
+
+
 # [5.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.16.0-rc.1...@ceramicnetwork/cli@5.16.0) (2024-07-01)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
