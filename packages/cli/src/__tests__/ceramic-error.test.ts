@@ -11,6 +11,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as path from 'path'
 import * as fs from 'fs'
 import { DaemonConfig, StateStoreMode } from '../daemon-config.js'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const TOPIC = `/${random.randomString(10)}`
 const SEED = 'Hello, crypto!'
@@ -29,7 +30,6 @@ function safeRead(filepath: string): string {
   }
 }
 // TODO: Tests marked with IfV3 should passed in V' if updated from TileDocuments to Models/MIDs
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 beforeAll(async () => {
   ipfs = await createIPFS()

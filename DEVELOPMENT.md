@@ -36,7 +36,7 @@ If you only want to test a specific package just `cd` into the specific package 
 
 If you want to run the tests in recon mode, you must specify the ceramic-one path, the IPFS flavor as `rust`, and indicate that ceramic will run in recon mode on:
 ```
-CERAMIC_ONE_PATH=<PATH> CERAMIC_RECON_MODE=true IPFS_FLAVOR=rust npm test
+CERAMIC_ONE_PATH=<PATH> IPFS_FLAVOR=rust npm test
 ```
 
 ## Debugging and Local Development
@@ -74,13 +74,13 @@ This repo uses lerna to make releases of all packages which have been changed. T
 After merging the changes you want to release into the relevant branch (main or release-candidate), you should build and verify the docker image before triggering the release to make sure nothing is broken.
 
 First, install Dagger:
-`curl -L https://dl.dagger.io/dagger/install.sh`
+`curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.2.36 sh`
 
 Then, in `js-ceramic` root:
 ```
 dagger project init
 dagger project update
-dagger project update github.com/3box/pipeline-tools@v0.2.0
+dagger project update "github.com/3box/pipeline-tools/ci"
 dagger do verify --log-format=plain -p cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
 dagger do testJs --log-format=plain -p cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
 dagger do testGo --log-format=plain -p cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue

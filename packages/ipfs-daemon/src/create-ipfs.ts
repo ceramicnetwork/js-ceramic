@@ -7,7 +7,7 @@ import type { IpfsApi } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { RustIpfsOptions, RustIpfs } from './rust-ipfs.js'
 import { IPFSOptions as GoIpfsOptions } from 'ipfsd-ctl'
-import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, EnvironmentUtils } from '@ceramicnetwork/common'
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
@@ -134,8 +134,8 @@ export async function createIPFS(
   options: createIpfsOptions = {},
   disposable = true
 ): Promise<IpfsApi> {
-  const env_flavor = process.env.IPFS_FLAVOR || 'go'
-  if (env_flavor == 'go') {
+  const useRustCeramic = EnvironmentUtils.useRustCeramic()
+  if (!useRustCeramic) {
     return (
       await createIPFSFlavor(
         {
@@ -150,7 +150,7 @@ export async function createIPFS(
       await createIPFSFlavor(
         {
           name: 'rust',
-          options: options.rust || { type: 'binary', network: Networks.INMEMORY },
+          options: options.rust,
         } as RustIpfsFlavor,
         disposable
       )

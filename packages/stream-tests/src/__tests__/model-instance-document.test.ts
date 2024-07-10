@@ -1,6 +1,12 @@
 import { jest, test, expect, describe, beforeAll, afterAll } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  EnvironmentUtils,
+  EventType,
+  IpfsApi,
+  StreamState,
+} from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
@@ -514,7 +520,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     model = await Model.create(ceramic0, MODEL_DEFINITION)
     midMetadata = { model: model.id }
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
@@ -531,7 +537,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   test('load basic doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
@@ -549,7 +555,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   test('load updated doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     await doc.replace(CONTENT1)
@@ -572,7 +578,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   test('load updated and anchored doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     await doc.replace(CONTENT1)

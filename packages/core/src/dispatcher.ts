@@ -5,6 +5,7 @@ import {
   IpfsApi,
   ServiceLogger,
   StreamUtils,
+  EnvironmentUtils,
   UnreachableCaseError,
   base64urlToJSON,
   IpfsNodeStatus,
@@ -130,9 +131,10 @@ export class Dispatcher {
     private readonly recon: IReconApi,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
-    this.enableSync = process.env.CERAMIC_RECON_MODE ? false : enableSync
+    const rustCeramic = EnvironmentUtils.useRustCeramic()
+    this.enableSync = rustCeramic ? false : enableSync
 
-    if (!process.env.CERAMIC_RECON_MODE) {
+    if (!rustCeramic) {
       const pubsub = new Pubsub(
         _ipfs,
         topic,
@@ -170,7 +172,7 @@ export class Dispatcher {
   }
 
   async init() {
-    if (process.env.CERAMIC_RECON_MODE) {
+    if (EnvironmentUtils.useRustCeramic()) {
       return
     }
     this.messageBus.subscribe(this.handleMessage.bind(this))
@@ -220,7 +222,8 @@ export class Dispatcher {
    * @param streamId
    */
   importCAR(car: CAR, streamId: StreamID): Promise<void> {
-    const useRecon = process.env.CERAMIC_RECON_MODE && (streamId.type === 2 || streamId.type === 3)
+    const useRecon =
+      EnvironmentUtils.useRustCeramic() && (streamId.type === 2 || streamId.type === 3)
     if (useRecon) {
       return this._shutdownSignal
         .abortable(async (signal) => {
@@ -475,7 +478,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || process.env.CERAMIC_RECON_MODE) {
+    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || EnvironmentUtils.useRustCeramic()) {
       return empty().subscribe()
     }
 
@@ -598,7 +601,7 @@ export class Dispatcher {
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    if (!process.env.CERAMIC_RECON_MODE) {
+    if (!EnvironmentUtils.useRustCeramic()) {
       this.messageBus.unsubscribe()
     }
     await this.tasks.onIdle()

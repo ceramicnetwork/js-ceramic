@@ -38,18 +38,8 @@ describe('Ceramic feed', () => {
   let ceramic1: Ceramic
   let ceramic2: Ceramic
   beforeEach(async () => {
-    ipfs1 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
-    ipfs2 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
+    ipfs1 = await createIPFS()
+    ipfs2 = await createIPFS()
     ceramic1 = await createCeramic(ipfs1)
     ceramic2 = await createCeramic(ipfs2)
     await swarmConnect(ipfs2, ipfs1)

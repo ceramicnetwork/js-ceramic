@@ -29,7 +29,7 @@ import {
   ResponseMessage,
 } from '../../pubsub/pubsub-message.js'
 import { asIpfsMessage } from '../../pubsub/__tests__/as-ipfs-message.js'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const TOPIC = '/ceramic/test12345'
 const CONTENT0 = { step: 0 }
@@ -50,7 +50,6 @@ function expectStatesEqualWithPendingAnchor(
 }
 
 // these should pass in v4 mode when recon integrated (need to be updated from TileDocument)
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Streamloader', () => {
   describe('StreamLoader querying against real Ceramic node', () => {

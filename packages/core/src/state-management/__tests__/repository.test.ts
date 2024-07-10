@@ -33,7 +33,11 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import {
+  CommonTestUtils as TestUtils,
+  describeIfV3,
+  testIfV3,
+} from '@ceramicnetwork/common-test-utils'
 import { CARFactory } from 'cartonne'
 
 const STRING_MAP_SCHEMA = {
@@ -68,8 +72,6 @@ afterEach(async () => {
 })
 
 // All tests should pass with v4 if updated from tile document
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describeIfV3('#load', () => {
   test('from memory', async () => {

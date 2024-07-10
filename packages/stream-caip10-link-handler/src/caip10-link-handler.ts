@@ -10,6 +10,7 @@ import {
   StreamReaderWriter,
   StreamState,
   StreamUtils,
+  EnvironmentUtils,
   toLegacyAccountId,
 } from '@ceramicnetwork/common'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
@@ -38,7 +39,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env.CERAMIC_RECON_MODE) {
+    if (EnvironmentUtils.useRustCeramic()) {
       throw new Error(`Caip10Link is not supported in Ceramic v4 mode`)
     }
 

@@ -21,6 +21,7 @@ import { RunningState } from '../../state-management/running-state.js'
 import { Repository } from '../../state-management/repository.js'
 import { IPLDRecordsCache } from '../ipld-records-cache.js'
 import { LevelKVFactory } from '../level-kv-factory.js'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -38,7 +39,6 @@ const repository = {
 } as unknown as Repository
 
 // should pass when updated from tile document
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describe('Level data store', () => {
   let store: PinStore

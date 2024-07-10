@@ -1,4 +1,4 @@
-import getPort from 'get-port'
+import getPort, { portNumbers } from 'get-port'
 import tmp from 'tmp-promise'
 import { type IpfsApi, Networks } from '@ceramicnetwork/common'
 import { create as createIpfsClient } from 'ipfs-http-client'
@@ -10,16 +10,18 @@ import path from 'node:path'
 
 export type RustIpfsRemoteOptions = {
   type: 'remote'
-  host: string | undefined
-  port: number | undefined
+  host: string
+  port: number
 }
 
 export type RustIpfsBinaryOptions = {
   type: 'binary'
-  path?: string
-  port?: number
-  network?: Networks
+  path: string
+  port: number
+  network: Networks
+  /// Must be set if the network is local
   networkId?: number
+  storeDir: string
 }
 
 export type RustIpfsOptions = RustIpfsRemoteOptions | RustIpfsBinaryOptions
@@ -59,48 +61,66 @@ class BinaryRunningIpfs implements RunningIpfs {
   }
 }
 
+/// Currently, an in-memory network without a storeDir is implied to mean "test" mode and we
+/// set ports and swarm to things than can be run in parallel on one machine
 async function binary(
-  binary_path?: string,
+  binary_path: string,
+  networkName: Networks,
   port?: number,
-  networkName: Networks = Networks.LOCAL,
+  storeDir?: string,
   networkId = 0
 ): Promise<RunningIpfs> {
-  const bin = binary_path || process.env.CERAMIC_ONE_PATH
+  // rely on the defaults and let the operator set CERAMIC_ONE_* environment variables
+  // directly for things we don't need to override for tests.
+  let dir,
+    apiPort,
+    testExtras = []
 
-  const apiPort = port || (await getPort())
-  const metricsPort = await getPort()
-  const dir = await tmp.dir({ unsafeCleanup: true })
+  const isTest = !storeDir && networkName === Networks.INMEMORY
 
-  const out = fs.openSync(path.join(dir.path, '/stdout.log'), 'a')
-  const err = fs.openSync(path.join(dir.path, '/stderr.log'), 'a')
-
-  const proc = spawn(
-    bin,
-    [
-      'daemon',
-      '--bind-address',
-      `127.0.0.1:${apiPort}`,
-      '--store-dir',
-      dir.path,
+  if (!isTest) {
+    storeDir = storeDir || '~/.ceramic-one'
+    dir = {
+      path: storeDir,
+      cleanup: async () => {
+        // empty cleanup function to match type without deleting the actual store
+      },
+    }
+    apiPort = port || 5101
+  } else {
+    apiPort = port || (await getPort())
+    dir = await tmp.dir({ unsafeCleanup: true })
+    // for tests, we have to use different values to avoid port conflicts
+    // this should probably all be in a custom wrapper for the binary
+    const metricsPort = await getPort()
+    testExtras = [
       '--metrics-bind-address',
-      `127.0.0.1:${metricsPort}`,
+      `0.0.0.0:${metricsPort}`,
       // Use quic as it has fewer RTT which makes for lower latencies improving the stability of tests.
       '--swarm-addresses',
       '/ip4/0.0.0.0/udp/0/quic-v1',
-      '--network',
-      networkName === Networks.INMEMORY ? 'in-memory' : networkName,
-      // We can use a hard coded local network id since
-      // nodes that should not be in the same network will never discover each other
-      '--local-network-id',
-      networkId.toString(),
-    ],
-    {
-      env: {
-        RUST_LOG: process.env.RUST_LOG || 'info',
-      },
-      stdio: ['ignore', out, err],
-    }
-  )
+    ]
+  }
+  const parameters = [
+    'daemon',
+    '--bind-address',
+    `0.0.0.0:${apiPort}`,
+    '--store-dir',
+    dir.path,
+    '--network',
+    networkName === Networks.INMEMORY ? 'in-memory' : networkName,
+    // We can use a hard coded local network id since
+    // nodes that should not be in the same network will never discover each other
+    '--local-network-id',
+    networkId.toString(),
+  ].concat(testExtras)
+
+  const proc = spawn(binary_path, parameters, {
+    env: {
+      RUST_LOG: process.env.RUST_LOG || 'info',
+    },
+    stdio: 'inherit',
+  })
   const ipfs = createIpfsClient({
     host: '127.0.0.1',
     port: apiPort,
@@ -147,7 +167,7 @@ class RemoteRunningIpfs {
 
 async function remote(host?: string, port?: number): Promise<RunningIpfs> {
   const resolvedHost = host || 'localhost'
-  const resolvedPort = port || 5001
+  const resolvedPort = port || 5101
   const ipfs = createIpfsClient({
     host: resolvedHost,
     port: resolvedPort,
@@ -174,7 +194,46 @@ export class RustIpfs {
   private api?: RunningIpfs
 
   constructor(opts: RustIpfsOptions) {
-    this.opts = opts
+    let options = opts
+    if (!opts || Object.keys(opts).length === 0) {
+      options = RustIpfs.defaultOptions()
+    }
+
+    this.opts = options
+  }
+
+  static defaultOptions(): RustIpfsOptions {
+    const path = process.env.CERAMIC_ONE_PATH
+    if (!path) {
+      throw new Error(
+        'Missing rust ceramic binary path. Set CERAMIC_ONE_PATH=/path/to/binary. For example: `CERAMIC_ONE_PATH=/usr/local/bin/ceramic-one`.'
+      )
+    }
+    let network
+    switch (process.env.CERAMIC_ONE_NETWORK) {
+      case 'mainnet':
+        network = Networks.MAINNET
+        break
+      case 'testnet-clay':
+        network = Networks.TESTNET_CLAY
+        break
+      case 'dev-unstable':
+        network = Networks.DEV_UNSTABLE
+        break
+      case 'local':
+        network = Networks.LOCAL
+        break
+      default:
+        network = Networks.INMEMORY
+    }
+    const storeDir = process.env.CERAMIC_ONE_STORE_DIR
+    return {
+      path,
+      type: 'binary',
+      network,
+      port: null,
+      storeDir,
+    }
   }
 
   async start(): Promise<RunningIpfs> {
@@ -190,8 +249,9 @@ export class RustIpfs {
         case 'binary': {
           this.api = await binary(
             this.opts.path,
-            this.opts.port,
             this.opts.network,
+            this.opts.port,
+            this.opts.storeDir,
             this.opts.networkId
           )
           break

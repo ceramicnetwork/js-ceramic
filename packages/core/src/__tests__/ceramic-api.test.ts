@@ -11,7 +11,13 @@ import {
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, IpfsApi, StreamUtils, LoggerProvider } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  IpfsApi,
+  StreamUtils,
+  LoggerProvider,
+  EnvironmentUtils,
+} from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
@@ -21,7 +27,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import type { AddOperation } from 'fast-json-patch'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
-import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 /**
  * Generates string of particular size in bytes
@@ -38,7 +44,6 @@ const generateStringOfSize = (size): string => {
   return random_data.join('')
 }
 // Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('Ceramic API', () => {
   jest.setTimeout(1000 * 30)
@@ -320,7 +325,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = EnvironmentUtils.useRustCeramic() ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -352,7 +357,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = EnvironmentUtils.useRustCeramic() ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -379,7 +384,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = EnvironmentUtils.useRustCeramic() ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -412,7 +417,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = EnvironmentUtils.useRustCeramic() ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }

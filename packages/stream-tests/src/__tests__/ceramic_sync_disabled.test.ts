@@ -4,7 +4,7 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon, DaemonConfig, makeDID } from '@ceramicnetwork/cli'
 import { IpfsApi, StreamUtils, SyncOptions } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -36,7 +36,6 @@ const makeCeramicCore = async (
 }
 
 // should pass on v4 when updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Cross node syncing disabled', () => {
   jest.setTimeout(20000)

@@ -2,7 +2,7 @@ import { expect, jest, it, describe, beforeEach, afterEach } from '@jest/globals
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { EventType, StreamState, IpfsApi } from '@ceramicnetwork/common'
+import { EventType, StreamState, IpfsApi, EnvironmentUtils } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils, testIfV3 } from '@ceramicnetwork/common-test-utils'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository } from '../state-management/repository.js'
@@ -56,7 +56,7 @@ const mock_ipfs = {
 
 const carFactory = new CARFactory()
 
-const isV3 = !process.env.CERAMIC_RECON_MODE
+const isV3 = !EnvironmentUtils.useRustCeramic()
 
 describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher
