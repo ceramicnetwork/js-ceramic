@@ -320,7 +320,7 @@ export class CeramicDaemon {
         )
       } else {
         diagnosticsLogger.warn(
-          `Igoring configuration IPFS_FLAVOR='go'. Detected remote ceramic-one running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. If you intended to use ipfs, specify an --ipfs-url for an ipfs node.`
+          `Ignoring configuration IPFS_FLAVOR='go'. Detected remote ceramic-one running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. If you intended to use ipfs, specify an --ipfs-url for an ipfs node.`
         )
       }
     }
