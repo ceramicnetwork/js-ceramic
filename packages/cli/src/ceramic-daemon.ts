@@ -349,7 +349,7 @@ export class CeramicDaemon {
     if (did.authenticated) {
       // If authenticated into the node, we can start publishing metrics
       // publishing metrics is enabled by default, even if no metrics config
-      if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
+      if (opts.metrics?.metricsPublisherEnabled) {
         const ipfsVersion = await ipfs.version()
         NodeMetrics.start({
           ceramic: ceramic,
