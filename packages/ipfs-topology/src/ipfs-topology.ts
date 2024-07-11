@@ -81,7 +81,6 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
             '/dns4/bootstrap-devqa-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWFCf7sKeW8NHoT35EutjJX5vCpPekYqa4hB4tTUpYrcam',
           ),
         ]
-
       case Networks.LOCAL:
       case Networks.INMEMORY:
         return null
