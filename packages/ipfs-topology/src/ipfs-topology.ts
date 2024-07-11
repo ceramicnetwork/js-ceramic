@@ -73,6 +73,15 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
           ),
         ]
       case Networks.DEV_UNSTABLE:
+        return [
+          multiaddr(
+            '/dns4/bootstrap-devqa-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWJmYPnXgst4gW5GoyAYzRB3upLgLVR1oDVGwjiS9Ce7sA',
+          ),
+          multiaddr(
+            '/dns4/bootstrap-devqa-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWFCf7sKeW8NHoT35EutjJX5vCpPekYqa4hB4tTUpYrcam',
+          ),
+        ]
+
       case Networks.LOCAL:
       case Networks.INMEMORY:
         return null
