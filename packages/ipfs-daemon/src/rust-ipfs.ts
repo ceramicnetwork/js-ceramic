@@ -107,6 +107,8 @@ async function binary(
     `0.0.0.0:${apiPort}`,
     '--store-dir',
     dir.path,
+    '--p2p-key-dir',
+    dir.path,
     '--network',
     networkName === Networks.INMEMORY ? 'in-memory' : networkName,
     // We can use a hard coded local network id since
