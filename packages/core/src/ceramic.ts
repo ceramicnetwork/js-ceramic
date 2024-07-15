@@ -231,6 +231,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private _signer: CeramicSigner
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
+  public readonly recon: IReconApi
   public readonly admin: AdminApi
   public readonly feed: PublicFeed
   readonly repository: Repository
@@ -329,6 +330,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     )
     const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
+    this.recon = modules.reconApi
     this.admin = new LocalAdminApi(
       this._logger,
       localIndex,
@@ -562,7 +564,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       }
 
       await this._startupChecks()
-
       await this._startMetrics()
     } catch (err) {
       this._logger.err(err)
@@ -614,6 +615,12 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       // If authenticated into the node, we can start publishing metrics
       // publishing metrics is enabled by default, even if no metrics config
       if (this._metricsConfig?.metricsPublisherEnabled) {
+        // First, subscribe the node to the Model used for NodeMetrics
+        const metricsModel = NodeMetrics.getModel(this._networkOptions.name)
+        await this.repository.index.indexModels([{ streamID: metricsModel }])
+        await this.recon.registerInterest(metricsModel, this.did.id)
+
+        // Now start the NodeMetrics system.
         const ipfsVersion = await this.ipfs.version()
         const ipfsId = await this.ipfs.id()
 
