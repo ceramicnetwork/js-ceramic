@@ -11,6 +11,7 @@ import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
 import { DaemonConfig } from '../daemon-config.js'
 import type { DID } from 'dids'
+import { describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -41,7 +42,6 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
 }
 
 // Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Ceramic interop between multiple daemons and http clients', () => {
   jest.setTimeout(20000)

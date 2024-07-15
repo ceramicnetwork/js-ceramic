@@ -38,18 +38,8 @@ describe('Ceramic feed', () => {
   let ceramic1: Ceramic
   let ceramic2: Ceramic
   beforeEach(async () => {
-    ipfs1 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
-    ipfs2 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
+    ipfs1 = await createIPFS()
+    ipfs2 = await createIPFS()
     ceramic1 = await createCeramic(ipfs1)
     ceramic2 = await createCeramic(ipfs2)
     await swarmConnect(ipfs2, ipfs1)
@@ -96,7 +86,7 @@ describe('Ceramic feed', () => {
     await doneStreaming
   })
 
-  // TODO (dav1do): Need to understand why this test is failing with callstack overflow with ceramic one.
+  // TODO(dav1do): This test is occasionally failing with a stackoverflow and needs investigation
   test.skip('add entry after anchoring stream', async () => {
     const emissions: Array<FeedDocument> = []
     const readable1 = ceramic1.feed.aggregation.documents()

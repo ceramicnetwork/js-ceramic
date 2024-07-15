@@ -1,6 +1,13 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, Networks, StreamState } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  EnvironmentUtils,
+  EventType,
+  IpfsApi,
+  Networks,
+  StreamState,
+} from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
@@ -210,18 +217,8 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeEach(async () => {
-    ipfs0 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
-    ipfs1 = await createIPFS({
-      rust: {
-        type: 'binary',
-        network: Networks.INMEMORY,
-      },
-    })
+    ipfs0 = await createIPFS()
+    ipfs1 = await createIPFS()
     await swarmConnect(ipfs0, ipfs1)
 
     ceramic0 = await createCeramic(ipfs0, { networkName: Networks.INMEMORY })
@@ -230,7 +227,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     model = await Model.create(ceramic0, MODEL_DEFINITION_SINGLE)
     midMetadata = { model: model.id }
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
@@ -248,7 +245,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     const doc = await ModelInstanceDocument.single(ceramic0, midMetadata)
     await doc.replace(CONTENT1)
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)

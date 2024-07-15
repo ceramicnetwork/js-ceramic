@@ -6,6 +6,7 @@ import {
   Stream,
   StreamHandler,
   DiagnosticsLogger,
+  EnvironmentUtils,
   StreamUtils,
   LoadOpts,
   CeramicCommit,
@@ -410,7 +411,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const reconApi = new ReconApi(
       {
-        enabled: Boolean(process.env.CERAMIC_RECON_MODE),
+        enabled: EnvironmentUtils.useRustCeramic(),
         url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
         // TODO: WS1-1487 not an official ceramic config option
         feedEnabled: config.reconFeedEnabled ?? true,
@@ -499,10 +500,16 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    */
   async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
-      this._logger.imp(
-        `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
-      )
-
+      if (EnvironmentUtils.useRustCeramic()) {
+        // this is potentially incorrect if we're running in remote mode as we don't control the network and could mismatch with c1
+        this._logger.imp(
+          `Connecting to ceramic network '${this._networkOptions.name}' using ceramic-one with Recon for data synchronization.`
+        )
+      } else {
+        this._logger.imp(
+          `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
+        )
+      }
       if (this._readOnly) {
         this._logger.warn(`Starting in read-only mode. All write operations will fail`)
       }
@@ -567,14 +574,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       )
     }
 
-    if (process.env.CERAMIC_RECON_MODE) {
-      this._logger.warn(`Running Ceramic in v4 mode. This mode is still experimental.`)
-    } else {
-      if (!this.dispatcher.enableSync) {
-        this._logger.warn(
-          `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
-        )
-      }
+    if (!EnvironmentUtils.useRustCeramic() && !this.dispatcher.enableSync) {
+      this._logger.warn(
+        `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
+      )
     }
   }
 

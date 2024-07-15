@@ -1,6 +1,12 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  EnvironmentUtils,
+  EventType,
+  IpfsApi,
+  StreamState,
+} from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
@@ -755,7 +761,7 @@ describe('Model API multi-node tests', () => {
   test('load basic model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])
@@ -776,7 +782,7 @@ describe('Model API multi-node tests', () => {
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
-    if (process.env.CERAMIC_RECON_MODE)
+    if (EnvironmentUtils.useRustCeramic())
       await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     await ceramic0.admin.startIndexingModelData([{ streamID: model.id }])

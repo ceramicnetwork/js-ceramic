@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@6.0.1-rc.0...@ceramicnetwork/ipfs-topology@6.1.0-rc.0) (2024-07-12)
+
+
+### Features
+
+* add devqa bootstrap peers ([#3256](https://github.com/ceramicnetwork/js-ceramic/issues/3256)) ([5fdcf92](https://github.com/ceramicnetwork/js-ceramic/commit/5fdcf92f985c103a1f41fae2d055b866189d6163))
+
+
+
+
+
+## [6.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@6.0.0-rc.0...@ceramicnetwork/ipfs-topology@6.0.1-rc.0) (2024-07-10)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [6.0.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@5.15.0...@ceramicnetwork/ipfs-topology@6.0.0-rc.0) (2024-07-10)
+
+
+### Features
+
+* add new mainnet and tnet bootstrap peers ([#3254](https://github.com/ceramicnetwork/js-ceramic/issues/3254)) ([d28eeed](https://github.com/ceramicnetwork/js-ceramic/commit/d28eeed06e21041289376b23bda864eee60fe441))
+
+
+
+
+
 # [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@5.15.0-rc.0...@ceramicnetwork/ipfs-topology@5.15.0) (2024-07-01)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology

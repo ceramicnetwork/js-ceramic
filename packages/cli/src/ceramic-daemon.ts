@@ -9,6 +9,7 @@ import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics, Observable } from '@ceramicne
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
+  EnvironmentUtils,
   FieldsIndex,
   LoggerProvider,
   LogStyle,
@@ -284,6 +285,15 @@ export class CeramicDaemon {
     )
     const ipfsId = await ipfs.id()
 
+    // we need to change the values before processing the config, so we keep track to log the warning after we have logging set up
+    const desiredIpfsClient = EnvironmentUtils.useRustCeramic() ? 'ceramic-one' : 'kubo'
+    const wrongIpfsClient =
+      opts.ipfs.mode == IpfsMode.REMOTE &&
+      EnvironmentUtils.useRustCeramic() !== ipfsId.agentVersion.includes('ceramic-one')
+    if (wrongIpfsClient) {
+      EnvironmentUtils.setIpfsFlavor(EnvironmentUtils.useRustCeramic() ? 'go' : 'rust')
+    }
+
     const versionInfo = {
       cliPackageVersion: version,
       gitHash: commitHash,
@@ -303,6 +313,17 @@ export class CeramicDaemon {
         .map(String)
         .join(', ')}`
     )
+    if (wrongIpfsClient) {
+      if (desiredIpfsClient === 'ceramic-one') {
+        diagnosticsLogger.warn(
+          `Detected ipfs kubo running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. Using kubo for p2p networking is deprecated - we recommend migrating to ceramic-one instead.`
+        )
+      } else {
+        diagnosticsLogger.warn(
+          `Ignoring configuration IPFS_FLAVOR='go'. Detected remote ceramic-one running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. If you intended to use ipfs, specify an --ipfs-url for an ipfs node.`
+        )
+      }
+    }
 
     const ceramic = new Ceramic(modules, params)
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic) }
@@ -349,7 +370,7 @@ export class CeramicDaemon {
     if (did.authenticated) {
       // If authenticated into the node, we can start publishing metrics
       // publishing metrics is enabled by default, even if no metrics config
-      if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
+      if (opts.metrics?.metricsPublisherEnabled) {
         const ipfsVersion = await ipfs.version()
         NodeMetrics.start({
           ceramic: ceramic,
