@@ -603,6 +603,9 @@ export class Dispatcher {
   async close(): Promise<void> {
     if (!EnvironmentUtils.useRustCeramic()) {
       this.messageBus.unsubscribe()
+    } else {
+      // this is a no-op for remote c1 nodes and will shutdown the binary if we started it
+      this._ipfs.stop()
     }
     await this.tasks.onIdle()
   }
