@@ -950,6 +950,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     await this.dispatcher.close()
     await this.repository.close()
     this._ipfsTopology.stop()
+    if (EnvironmentUtils.useRustCeramic()) {
+      // this is a no-op for remote c1 nodes and will shutdown the binary if we started it
+      await this.ipfs.stop()
+    }
     await this._kvFactory.close()
     this._logger.imp('Ceramic instance closed successfully')
   }
