@@ -1,6 +1,6 @@
 import mergeOpts from 'merge-options'
 import * as ipfsClient from 'ipfs-http-client'
-import { DiagnosticsLogger, EnvironmentUtils, IpfsApi, Networks } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, EnvironmentUtils, IpfsApi } from '@ceramicnetwork/common'
 import { IpfsMode } from './daemon-config.js'
 import * as http from 'http'
 import * as https from 'https'
@@ -30,6 +30,12 @@ export class IpfsConnectionFactory {
           return ipfsEndpoint
         }
         return ''
+      }
+      // I need to figure out why the proxy overriding this in RemoteRunningIpfs isn't working
+      if (EnvironmentUtils.useRustCeramic()) {
+        ipfsApi.stop = async () => {
+          // no op
+        }
       }
 
       return ipfsApi
