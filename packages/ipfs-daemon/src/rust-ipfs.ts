@@ -5,8 +5,6 @@ import { create as createIpfsClient } from 'ipfs-http-client'
 import { RunningIpfs } from './create-ipfs.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { spawn, ChildProcess } from 'child_process'
-import fs from 'node:fs'
-import path from 'node:path'
 
 export type RustIpfsRemoteOptions = {
   type: 'remote'
@@ -51,11 +49,17 @@ class BinaryRunningIpfs implements RunningIpfs {
 
   async shutdown(logger?: DiagnosticsLogger): Promise<void> {
     try {
-      this.proc.kill()
+      const killed = this.proc.kill()
+      if (!killed) {
+        if (logger) {
+          logger.err('Failed to kill IPFS process with SIGTERM, forcing with SIGKILL')
+        }
+        this.proc.kill('SIGKILL')
+      }
       await this.dir.cleanup()
     } catch (e) {
       if (logger) {
-        logger.err(`Failed to shutdown binary Rust IPFS: ${e}`)
+        logger.err(`Failed to clean up temporary directory used by ceramic-one/ipfs: ${e}`)
       }
     }
   }
@@ -79,7 +83,7 @@ async function binary(
   const isTest = !storeDir && networkName === Networks.INMEMORY
 
   if (!isTest) {
-    storeDir = storeDir || '~/.ceramic-one'
+    storeDir = storeDir || './ceramic-one'
     dir = {
       path: storeDir,
       cleanup: async () => {
