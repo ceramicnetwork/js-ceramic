@@ -132,6 +132,10 @@ export class IpfsTopology {
     if (this.intervalId) {
       clearInterval(this.intervalId)
     }
+    if (EnvironmentUtils.useRustCeramic()) {
+      // this is a no-op for remote c1 nodes and will shutdown the binary if we started it
+      this.ipfs.stop()
+    }
   }
 
   private async _forceBootstrapConnection(
