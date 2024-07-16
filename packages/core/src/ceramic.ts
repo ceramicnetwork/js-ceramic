@@ -437,6 +437,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
         // TODO: WS1-1487 not an official ceramic config option
         feedEnabled: config.reconFeedEnabled ?? true,
+        network: networkOptions.name,
       },
       logger
     )
@@ -524,7 +525,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
       if (EnvironmentUtils.useRustCeramic()) {
-        // this is potentially incorrect if we're running in remote mode as we don't control the network and could mismatch with c1
         this._logger.imp(
           `Connecting to ceramic network '${this._networkOptions.name}' using ceramic-one with Recon for data synchronization.`
         )
