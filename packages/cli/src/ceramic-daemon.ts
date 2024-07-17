@@ -253,7 +253,14 @@ export class CeramicDaemon {
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
       opts.ipfs?.host
     )
-    const ipfsId = await ipfs.id()
+    let ipfsId
+    try {
+      ipfsId = await ipfs.id()
+    } catch (err) {
+      throw new Error(
+        `Error connecting to p2p node. Make sure ceramic-one is running or use --ipfs-api modify the expected http location (currently ${opts.ipfs?.host}): ${err}`
+      )
+    }
 
     // we need to change the values before processing the config, so we keep track to log the warning after we have logging set up
     const desiredIpfsClient = EnvironmentUtils.useRustCeramic() ? 'ceramic-one' : 'kubo'
