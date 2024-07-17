@@ -154,7 +154,9 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
         )
       }
     } else {
-      throw new Error('Recon: failed to verify network as the response was empty')
+      this.#logger.warn(
+        `Recon: failed to verify network as nothing was found. This is likely due to an older version of ceramic-one and you should upgrade.`
+      )
     }
   }
 
