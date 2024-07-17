@@ -79,7 +79,8 @@ describe('ReconApi', () => {
       )
       await reconApi.init()
       await firstValueFrom(race(reconApi, timer(1000)))
-      expect(mockSendRequest).toHaveBeenCalledTimes(1)
+      // interest + network check
+      expect(mockSendRequest).toHaveBeenCalledTimes(2)
     })
 
     test('should register interests on init', async () => {
