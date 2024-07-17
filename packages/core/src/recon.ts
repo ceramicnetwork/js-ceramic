@@ -56,7 +56,7 @@ export interface ReconEventFeedResponse {
  * Recon API Interface
  */
 export interface IReconApi extends Observable<ReconEventFeedResponse> {
-  init(initialCursor?: string): Promise<void>
+  init(initialCursor?: string, initialInterests?: Array<StreamID>): Promise<void>
   registerInterest(model: StreamID): Promise<void>
   put(car: CAR, opts?: AbortOptions): Promise<void>
   enabled: boolean
@@ -96,7 +96,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
    * @param initialCursor
    * @returns
    */
-  async init(initialCursor = ''): Promise<void> {
+  async init(initialCursor = '', initialInterests: Array<StreamID> = []): Promise<void> {
     if (this.#initialized) {
       return
     }
@@ -109,6 +109,10 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
 
     this.#url = await this.#config.url
     await this.registerInterest(Model.MODEL)
+
+    for (const interest of initialInterests) {
+      await this.registerInterest(interest)
+    }
 
     if (this.#config.feedEnabled) {
       this.#eventsSubscription = this.createSubscription(initialCursor).subscribe(this.#feed$)
