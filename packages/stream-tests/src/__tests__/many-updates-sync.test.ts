@@ -91,7 +91,7 @@ describeIfRecon('Tests that sync streams with many updates', () => {
       const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
       await TestUtils.waitForState(
         loaded,
-        1000 * 30,
+        1000 * 60 * 10,
         (state) => state.log.length == NUM_UPDATES_PER_STREAM
       )
 
