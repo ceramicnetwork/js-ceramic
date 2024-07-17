@@ -36,7 +36,7 @@ export class IpfsConnectionFactory {
     } else {
       if (EnvironmentUtils.useRustCeramic()) {
         throw new Error(
-          `Rust Ceramic does not support running in bundled mode. Pass --ipfs-api to connect to an external ceramic-one node.`
+          `Running ceramic-one in bundled mode is not supported. Pass --ipfs-api to connect to an external ceramic-one node.`
         )
       } else {
         return this.createGoIPFS()

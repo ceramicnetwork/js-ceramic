@@ -2,10 +2,6 @@ FROM node:20 as ceramic
 
 RUN apt-get update && apt-get install -y netcat-traditional gettext-base jq
 
-COPY ci-scripts/install-rust-ceramic.sh ./
-
-ARG RUST_CERAMIC_VERSION=latest
-RUN ./install-rust-ceramic.sh ${RUST_CERAMIC_VERSION}
 
 WORKDIR /js-ceramic
 
@@ -25,8 +21,6 @@ ARG GIT_COMMIT_HASH=docker
 
 RUN lerna run build
 
-ENV CERAMIC_ONE_PATH=/usr/local/bin/ceramic-one CERAMIC_ONE_STORE_DIR=~/.ceramic-one
-
 EXPOSE 7007
 
 ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
@@ -34,5 +28,4 @@ ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
 FROM ceramic as composedb
 
 ARG COMPOSEDB_VERSION=latest
-ENV CERAMIC_ONE_PATH=/usr/local/bin/ceramic-one CERAMIC_ONE_STORE_DIR=~/.ceramic-one
 RUN npm install --location=global @composedb/cli@${COMPOSEDB_VERSION}
