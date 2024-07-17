@@ -35,11 +35,8 @@ export class IpfsConnectionFactory {
       return ipfsApi
     } else {
       if (EnvironmentUtils.useRustCeramic()) {
-        return ipfs.createIPFS(
-          {
-            rust: ipfs.RustIpfs.defaultOptions(network),
-          },
-          false
+        throw new Error(
+          `Rust Ceramic does not support running in bundled mode. Pass --ipfs-api to connect to an external ceramic-one node.`
         )
       } else {
         return this.createGoIPFS()
