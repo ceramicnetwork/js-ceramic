@@ -25,8 +25,11 @@ import {
   StreamStateLoader,
   StreamReaderWriter,
 } from '@ceramicnetwork/common'
-import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { NodeMetrics } from '@ceramicnetwork/node-metrics'
+import {
+  DEFAULT_TRACE_SAMPLE_RATIO,
+  ServiceMetrics as Metrics,
+} from '@ceramicnetwork/observability'
+import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics } from '@ceramicnetwork/node-metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -60,6 +63,7 @@ import { IReconApi, ReconApi } from './recon.js'
 import { IKVFactory } from './store/ikv-store.js'
 import { LevelKVFactory } from './store/level-kv-factory.js'
 
+const METRICS_CALLER_NAME = 'js-ceramic'
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const DEFAULT_MULTIQUERY_TIMEOUT_MS = 30 * 1000
@@ -115,6 +119,7 @@ export interface CeramicConfig {
   readOnly?: boolean
 
   indexing?: IndexingConfig
+  metrics?: MetricsConfig
 
   networkName?: string
   pubsubTopic?: string
@@ -159,6 +164,18 @@ export interface VersionInfo {
 }
 
 /**
+ * Ceramic core type corresponding to the DaemonMetricsConfig in the cli package
+ */
+interface MetricsConfig {
+  prometheusExporterEnabled?: boolean
+  prometheusExporterPort?: number
+  metricsExporterEnabled?: boolean
+  collectorHost?: string
+  metricsPublisherEnabled?: boolean
+  metricsPublishIntervalMS?: number
+}
+
+/**
  * Parameters that control internal Ceramic behavior.
  * Most users will not provide this directly but will let it be derived automatically from the
  * `CeramicConfig` via `Ceramic.create()`.
@@ -172,6 +189,7 @@ export interface CeramicParameters {
   loadOptsOverride: LoadOpts
   anchorLoopMinDurationMs?: number
   versionInfo?: VersionInfo
+  metrics?: MetricsConfig
 }
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
@@ -224,6 +242,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly _readOnly: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
+  private readonly _metricsConfig: MetricsConfig
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
@@ -247,6 +266,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this.providersCache = modules.providersCache
 
     this._readOnly = params.readOnly
+    this._metricsConfig = params.metrics
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
     this._versionInfo = params.versionInfo
@@ -447,6 +467,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       readOnly: config.readOnly,
       stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
+      metrics: config.metrics,
       networkOptions,
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
@@ -542,10 +563,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
       await this._startupChecks()
 
-      this._versionMetricInterval = setInterval(
-        this._publishVersionMetrics.bind(this),
-        PUBLISH_VERSION_INTERVAL_MS
-      )
+      await this._startMetrics()
     } catch (err) {
       this._logger.err(err)
       await this.close()
@@ -559,6 +577,75 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       jsCeramicGitHash: this._versionInfo.gitHash,
       ceramicOneVersion: this._versionInfo.ceramicOneVersion,
     })
+  }
+
+  async _startMetrics(): Promise<void> {
+    // Handle base OTLP metrics
+    const metricsExporterEnabled =
+      this._metricsConfig?.metricsExporterEnabled && this._metricsConfig?.collectorHost
+    const prometheusExporterEnabled =
+      this._metricsConfig?.prometheusExporterEnabled && this._metricsConfig?.prometheusExporterPort
+
+    // If desired, enable OTLP metrics
+    if (metricsExporterEnabled && prometheusExporterEnabled) {
+      Metrics.start(
+        this._metricsConfig.collectorHost,
+        METRICS_CALLER_NAME,
+        DEFAULT_TRACE_SAMPLE_RATIO,
+        null,
+        true,
+        this._metricsConfig.prometheusExporterPort
+      )
+    } else if (metricsExporterEnabled) {
+      Metrics.start(this._metricsConfig.collectorHost, METRICS_CALLER_NAME)
+    } else if (prometheusExporterEnabled) {
+      Metrics.start(
+        '',
+        METRICS_CALLER_NAME,
+        DEFAULT_TRACE_SAMPLE_RATIO,
+        null,
+        true,
+        this._metricsConfig.prometheusExporterPort
+      )
+    }
+
+    // Handle NodeMetrics that are published to a Model on Ceramic
+    if (this.did?.authenticated) {
+      // If authenticated into the node, we can start publishing metrics
+      // publishing metrics is enabled by default, even if no metrics config
+      if (this._metricsConfig?.metricsPublisherEnabled) {
+        const ipfsVersion = await this.ipfs.version()
+        const ipfsId = await this.ipfs.id()
+
+        NodeMetrics.start({
+          ceramic: this,
+          network: this._networkOptions.name,
+          ceramicVersion: this._versionInfo.cliPackageVersion,
+          ipfsVersion: ipfsVersion.version,
+          intervalMS: this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+          nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+          nodeName: '', // daemon.hostname is not useful
+          nodeAuthDID: this.did.id,
+          nodeIPAddr: '', // daemon.hostname is not the external name
+          nodePeerId: ipfsId.publicKey,
+          logger: this._logger,
+        })
+        this._logger.imp(
+          `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+        )
+      }
+    } else {
+      // warn that the node does not have an authenticated did
+      this._logger.imp(
+        `The ceramic daemon is running without an authenticated DID.  This means that this node cannot itself publish streams, including node metrics, and cannot use a DID as the method to authenticate with the Ceramic Anchor Service.  See https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet#updating-to-did-based-authentication for instructions on how to update your node to use DID authentication.`
+      )
+    }
+
+    // Start background job to publish periodic metrics
+    this._versionMetricInterval = setInterval(
+      this._publishVersionMetrics.bind(this),
+      PUBLISH_VERSION_INTERVAL_MS
+    )
   }
 
   /**
