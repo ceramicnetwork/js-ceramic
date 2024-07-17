@@ -16,6 +16,7 @@ import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
 export const testIfV3 = EnvironmentUtils.useRustCeramic() ? test.skip : test
 export const describeIfV3 = EnvironmentUtils.useRustCeramic() ? describe.skip : describe
+export const describeIfRecon = EnvironmentUtils.useRustCeramic() ? describe : describe.skip
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID

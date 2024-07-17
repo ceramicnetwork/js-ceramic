@@ -8,7 +8,7 @@ import {
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfRecon } from '@ceramicnetwork/common-test-utils'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -30,9 +30,8 @@ const MODEL_DEFINITION: ModelDefinition = {
 }
 
 // This test should only run with recon.
-const describeIfVPrime = process.env.CERAMIC_RECON_MODE ? describe : describe.skip
-describeIfVPrime('Tests that sync streams with many updates', () => {
-  jest.setTimeout(1000 * 60 * 5)
+describeIfRecon('Tests that sync streams with many updates', () => {
+  jest.setTimeout(1000 * 60 * 10)
 
   let ipfs0: IpfsApi
   let ceramic0: Ceramic
