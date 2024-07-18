@@ -258,7 +258,7 @@ export class CeramicDaemon {
       ipfsId = await ipfs.id()
     } catch (err) {
       throw new Error(
-        `Error connecting to p2p node. Make sure ceramic-one is running or use --ipfs-api modify the expected http location (currently ${opts.ipfs?.host}): ${err}`
+        `Error connecting to p2p node. Make sure ceramic-one is running or use --ipfs-api to modify the expected http location (currently ${opts.ipfs?.host}): ${err}`
       )
     }
 
