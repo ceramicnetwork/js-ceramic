@@ -47,7 +47,7 @@ const generateDefaultDaemonConfig = () => {
       'auth-method': AnchorServiceAuthMethods.DID,
     },
     'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
-    ipfs: { mode: IpfsMode.BUNDLED },
+    ipfs: { mode: IpfsMode.REMOTE, host: 'http://localhost:5101' },
     logger: { 'log-level': LogLevel.important, 'log-to-files': false },
     metrics: {
       'metrics-exporter-enabled': false,
