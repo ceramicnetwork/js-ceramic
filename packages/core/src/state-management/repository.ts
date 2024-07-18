@@ -186,7 +186,9 @@ export class Repository {
     const cursor = (await reconStore.exists(RECON_STORE_CURSOR_KEY))
       ? await reconStore.get(RECON_STORE_CURSOR_KEY)
       : '0'
-    await this.recon.init(cursor)
+
+    const interests = this.index.indexedModels().map((modelData) => modelData.streamID)
+    await this.recon.init(cursor, interests)
     this.reconEventFeedSubscription = this.recon
       .pipe(concatMap(this.handleReconEvents.bind(this)))
       .subscribe()
