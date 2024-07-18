@@ -61,19 +61,6 @@ jobs:
         name: Merge rc -> main
         run: git merge release-candidate
       -
-        name: Install Dagger
-        uses: dagger/dagger-for-github@v3
-        with:
-          install-only: true
-          version: "0.2.36"
-      -
-        name: Verify Docker image
-        run: |
-          dagger project init
-          dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci"
-          dagger do verify -p ${{ env.DAGGER_PLAN }}
-      -
         name: Initialize and build code
         run: npm ci && npm run build
       -
@@ -140,19 +127,6 @@ jobs:
         name: Merge develop -> rc
         run: git merge develop
       -
-        name: Install Dagger
-        uses: dagger/dagger-for-github@v3
-        with:
-          install-only: true
-          version: "0.2.36"
-      -
-        name: Verify Docker image
-        run: |
-          dagger project init
-          dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci"
-          dagger do verify -p ${{ env.DAGGER_PLAN }}
-      -
         name: Initialize and build code
         run: npm ci && npm run build
       -
@@ -217,19 +191,6 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
       -
-        name: Install Dagger
-        uses: dagger/dagger-for-github@v3
-        with:
-          install-only: true
-          version: "0.2.36"
-      -
-        name: Verify Docker image
-        run: |
-          dagger project init
-          dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci"
-          dagger do verify -p ${{ env.DAGGER_PLAN }}
-      -
         name: Initialize and build code
         run: npm ci && npm run build
       -
@@ -289,19 +250,6 @@ jobs:
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
-      -
-        name: Install Dagger
-        uses: dagger/dagger-for-github@v3
-        with:
-          install-only: true
-          version: "0.2.36"
-      -
-        name: Verify Docker image
-        run: |
-          dagger project init
-          dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci"
-          dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
         run: npm ci && npm run build
