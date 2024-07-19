@@ -617,6 +617,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       if (this._metricsConfig?.metricsPublisherEnabled) {
         // First, subscribe the node to the Model used for NodeMetrics
         const metricsModel = NodeMetrics.getModel(this._networkOptions.name)
+        await this._waitForMetricsModel(metricsModel)
         await this.repository.index.indexModels([{ streamID: metricsModel }])
         await this.recon.registerInterest(metricsModel, this.did.id)
 
@@ -653,6 +654,47 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       this._publishVersionMetrics.bind(this),
       PUBLISH_VERSION_INTERVAL_MS
     )
+  }
+
+  /**
+   * Waits for Model used to publish NodeMetrics to be available locally.
+   * Since we subscribe to the metamodel at startup, so long as some connected node on the network
+   * has the model, it should eventually be available locally.
+   * @param model
+   */
+  async _waitForMetricsModel(model: StreamID): Promise<void> {
+    let attemptNum = 0
+    let backoffMs = 100
+    const maxBackoffMs = 1000 * 10
+    const delay = async function (ms) {
+      return new Promise<void>((resolve) => setTimeout(() => resolve(), ms))
+    }
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        await this.dispatcher.getFromIpfs(model.cid)
+        if (attemptNum > 0) {
+          this._logger.imp(`Model ${model} used to publish NodeMetrics loaded successfully`)
+        }
+        return
+      } catch (err) {
+        if (attemptNum == 0) {
+          this._logger.imp(
+            `Waiting for Model ${model} used to publish NodeMetrics to be available locally`
+          )
+        }
+        if (attemptNum >= 5) {
+          this._logger.err(`Error loading Model ${model} used to publish NodeMetrics: ${err}`)
+        }
+
+        await delay(backoffMs)
+        attemptNum++
+        if (backoffMs <= maxBackoffMs) {
+          backoffMs *= 2
+        }
+      }
+    }
   }
 
   /**
