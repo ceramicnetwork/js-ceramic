@@ -19,6 +19,7 @@ import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import tmp from 'tmp-promise'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -508,6 +509,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let ceramic1: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let ceramic1StateStore: string
 
   beforeAll(async () => {
     ipfs0 = await createIPFS()
@@ -515,7 +517,16 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     await swarmConnect(ipfs0, ipfs1)
 
     ceramic0 = await createCeramic(ipfs0)
-    ceramic1 = await createCeramic(ipfs1)
+    ceramic1StateStore = await tmp.tmpName()
+    ceramic1 = await createCeramic(ipfs1, {
+      indexing: {
+        db: `sqlite://${ceramic1StateStore}/ceramic.sqlite`,
+        allowQueriesBeforeHistoricalSync: false,
+        disableComposedb: false,
+        enableHistoricalSync: false,
+      },
+      stateStoreDirectory: ceramic1StateStore,
+    })
 
     model = await Model.create(ceramic0, MODEL_DEFINITION)
     midMetadata = { model: model.id }
@@ -592,5 +603,34 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(3)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(doc.state))
+  })
+
+  test('can load doc after restart', async () => {
+    //restart ceramic1
+    await ceramic1.close()
+    ceramic1 = await createCeramic(ipfs1, {
+      indexing: {
+        db: `sqlite://${ceramic1StateStore}/ceramic.sqlite`,
+        allowQueriesBeforeHistoricalSync: false,
+        disableComposedb: false,
+        enableHistoricalSync: false,
+      },
+      stateStoreDirectory: ceramic1StateStore,
+    })
+
+    const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
+    if (EnvironmentUtils.useRustCeramic())
+      await TestUtils.waitForEvent(ceramic1.repository.recon, doc.tip)
+
+    const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
+
+    const docState = doc.state
+    const loadedState = loaded.state
+    expect(docState.anchorStatus).toEqual(AnchorStatus.PENDING)
+    expect(loadedState.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+    delete docState.anchorStatus
+    delete loadedState.anchorStatus
+    expect(loadedState.log.length).toEqual(1)
+    expect(JSON.stringify(loadedState)).toEqual(JSON.stringify(docState))
   })
 })
