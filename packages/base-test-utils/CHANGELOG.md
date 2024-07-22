@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.11.0-rc.0...@ceramicnetwork/base-test-utils@3.11.0) (2024-07-22)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
 # [3.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.10.0...@ceramicnetwork/base-test-utils@3.11.0-rc.0) (2024-07-22)
 
 
