@@ -61,7 +61,7 @@
     "dids": "^5.0.0",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
-    "multiformats": "^13.0.0"
+    "multiformats": "13.1.3"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

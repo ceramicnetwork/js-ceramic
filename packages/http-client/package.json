@@ -54,7 +54,7 @@
     "@ceramicnetwork/common-test-utils": "^4.1.0",
     "dids": "^5.0.0",
     "key-did-resolver": "^4.0.0",
-    "multiformats": "^13.0.0"
+    "multiformats": "13.1.3"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
