@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@6.1.0...@ceramicnetwork/stream-tests@6.2.0-rc.0) (2024-07-22)
+
+
+### Features
+
+* recon resubscribes to interests on startup ([#3262](https://github.com/ceramicnetwork/js-ceramic/issues/3262)) ([0682179](https://github.com/ceramicnetwork/js-ceramic/commit/06821791617872b6cec58ab5a74135c63159211b))
+
+
+
+
+
 # [6.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@6.0.1-rc.1...@ceramicnetwork/stream-tests@6.1.0) (2024-07-15)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests
