@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.2.0-rc.0...@ceramicnetwork/core@6.2.0) (2024-07-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [6.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.1.0...@ceramicnetwork/core@6.2.0-rc.0) (2024-07-22)
+
+
+### Bug Fixes
+
+* pin multiformats to patches of v13.1.x ([#3267](https://github.com/ceramicnetwork/js-ceramic/issues/3267)) ([da64078](https://github.com/ceramicnetwork/js-ceramic/commit/da6407810961b94105fd9b54eba4f3500b4a4bc5))
+
+
+### Features
+
+* more observability for import CAR and CAS polling ([#3266](https://github.com/ceramicnetwork/js-ceramic/issues/3266)) ([e12bd61](https://github.com/ceramicnetwork/js-ceramic/commit/e12bd6116c5c329f8894f1f4642a514fbb2f9c51))
+* recon resubscribes to interests on startup ([#3262](https://github.com/ceramicnetwork/js-ceramic/issues/3262)) ([0682179](https://github.com/ceramicnetwork/js-ceramic/commit/06821791617872b6cec58ab5a74135c63159211b))
+
+
+
+
+
 # [6.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.0.1-rc.1...@ceramicnetwork/core@6.1.0) (2024-07-15)
 
 **Note:** Version bump only for package @ceramicnetwork/core

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.11.0-rc.0...@ceramicnetwork/base-test-utils@3.11.0) (2024-07-22)
+
+**Note:** Version bump only for package @ceramicnetwork/base-test-utils
+
+
+
+
+
+# [3.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.10.0...@ceramicnetwork/base-test-utils@3.11.0-rc.0) (2024-07-22)
+
+
+### Bug Fixes
+
+* pin multiformats to patches of v13.1.x ([#3267](https://github.com/ceramicnetwork/js-ceramic/issues/3267)) ([da64078](https://github.com/ceramicnetwork/js-ceramic/commit/da6407810961b94105fd9b54eba4f3500b4a4bc5))
+
+
+
+
+
 # [3.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/base-test-utils@3.9.1-rc.0...@ceramicnetwork/base-test-utils@3.10.0) (2024-07-15)
 
 **Note:** Version bump only for package @ceramicnetwork/base-test-utils

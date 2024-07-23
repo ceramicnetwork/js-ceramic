@@ -50,6 +50,12 @@ const PUBSUB_CACHE_SIZE = 500
 const ERROR_IPFS_TIMEOUT = 'ipfs_timeout'
 const ERROR_STORING_COMMIT = 'error_storing_commit'
 const COMMITS_STORED = 'commits_stored'
+const IMPORT_CAR_INIT_EVENT_REQUESTED = 'import_car_init_event_requested'
+const IMPORT_CAR_STORE_EVENT_REQUESTED = 'import_car_store_event_requested'
+const IMPORT_CAR_INIT_EVENT_TIME = 'import_car_init_event_time'
+const IMPORT_CAR_STORE_EVENT_TIME = 'import_car_store_event_time'
+const CREATE_CAR_INIT_EVENT_TIME = 'create_car_init_event_time'
+const CREATE_CAR_STORE_EVENT_TIME = 'create_car_store_event_time'
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -296,9 +302,16 @@ export class Dispatcher {
    */
   async storeInitEvent(data: any, streamType: number): Promise<CID> {
     try {
+      const timeStartCreate = Date.now()
       const car = this._createCAR(data)
+      const timeEndCreate = Date.now()
+      Metrics.observe(CREATE_CAR_INIT_EVENT_TIME, timeEndCreate - timeStartCreate)
       const streamId = new StreamID(streamType, car.roots[0])
+      Metrics.count(IMPORT_CAR_INIT_EVENT_REQUESTED, 1)
+      const timeStartImport = Date.now()
       await this.importCAR(car, streamId)
+      const timeEndImport = Date.now()
+      Metrics.observe(IMPORT_CAR_INIT_EVENT_TIME, timeEndImport - timeStartImport)
       Metrics.count(COMMITS_STORED, 1)
       return car.roots[0]
     } catch (e) {
@@ -317,8 +330,15 @@ export class Dispatcher {
    */
   async storeEvent(data: any, streamId: StreamID): Promise<CID> {
     try {
+      const timeStartCreate = Date.now()
       const car = this._createCAR(data)
+      const timeEndCreate = Date.now()
+      Metrics.observe(CREATE_CAR_STORE_EVENT_TIME, timeEndCreate - timeStartCreate)
+      Metrics.count(IMPORT_CAR_STORE_EVENT_REQUESTED, 1)
+      const timeStartImport = Date.now()
       await this.importCAR(car, streamId)
+      const timeEndImport = Date.now()
+      Metrics.observe(IMPORT_CAR_STORE_EVENT_TIME, timeEndImport - timeStartImport)
       Metrics.count(COMMITS_STORED, 1)
       return car.roots[0]
     } catch (e) {
