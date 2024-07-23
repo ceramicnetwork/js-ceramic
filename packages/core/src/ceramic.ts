@@ -671,7 +671,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * @returns whether or not the model was loaded successfully
    */
   async _waitForMetricsModel(model: StreamID): Promise<boolean> {
-    const maxWaitDuration = 1000 * 15 // 10 seconds
+    const maxWaitDuration = 1000 * 15 // 15 seconds
     const retryInterval = 100
     const maxRetries = maxWaitDuration / retryInterval
     const delay = async function (ms) {
