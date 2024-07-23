@@ -617,30 +617,37 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       if (this._metricsConfig?.metricsPublisherEnabled) {
         // First, subscribe the node to the Model used for NodeMetrics
         const metricsModel = NodeMetrics.getModel(this._networkOptions.name)
-        await this._waitForMetricsModel(metricsModel)
-        await this.repository.index.indexModels([{ streamID: metricsModel }])
-        await this.recon.registerInterest(metricsModel, this.did.id)
+        const modelLoaded = await this._waitForMetricsModel(metricsModel)
+        if (modelLoaded) {
+          await this.repository.index.indexModels([{ streamID: metricsModel }])
+          await this.recon.registerInterest(metricsModel, this.did.id)
 
-        // Now start the NodeMetrics system.
-        const ipfsVersion = await this.ipfs.version()
-        const ipfsId = await this.ipfs.id()
+          // Now start the NodeMetrics system.
+          const ipfsVersion = await this.ipfs.version()
+          const ipfsId = await this.ipfs.id()
 
-        NodeMetrics.start({
-          ceramic: this,
-          network: this._networkOptions.name,
-          ceramicVersion: this._versionInfo.cliPackageVersion,
-          ipfsVersion: ipfsVersion.version,
-          intervalMS: this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-          nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-          nodeName: '', // daemon.hostname is not useful
-          nodeAuthDID: this.did.id,
-          nodeIPAddr: '', // daemon.hostname is not the external name
-          nodePeerId: ipfsId.publicKey,
-          logger: this._logger,
-        })
-        this._logger.imp(
-          `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
-        )
+          NodeMetrics.start({
+            ceramic: this,
+            network: this._networkOptions.name,
+            ceramicVersion: this._versionInfo.cliPackageVersion,
+            ipfsVersion: ipfsVersion.version,
+            intervalMS:
+              this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+            nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+            nodeName: '', // daemon.hostname is not useful
+            nodeAuthDID: this.did.id,
+            nodeIPAddr: '', // daemon.hostname is not the external name
+            nodePeerId: ipfsId.publicKey,
+            logger: this._logger,
+          })
+          this._logger.imp(
+            `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+          )
+        } else {
+          await this._logger.warn(
+            `Could not load Model ${metricsModel} used to publish Node Metrics, disabling metrics publishing`
+          )
+        }
       }
     } else {
       // warn that the node does not have an authenticated did
@@ -661,40 +668,38 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * Since we subscribe to the metamodel at startup, so long as some connected node on the network
    * has the model, it should eventually be available locally.
    * @param model
+   * @returns whether or not the model was loaded successfully
    */
-  async _waitForMetricsModel(model: StreamID): Promise<void> {
-    let attemptNum = 0
-    let backoffMs = 100
-    const maxBackoffMs = 1000 * 10
+  async _waitForMetricsModel(model: StreamID): Promise<boolean> {
+    const maxWaitDuration = 1000 * 10 // 10 seconds
+    const retryInterval = 100
+    const maxRetries = maxWaitDuration / retryInterval
     const delay = async function (ms) {
       return new Promise<void>((resolve) => setTimeout(() => resolve(), ms))
     }
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (let attemptNum = 0; attemptNum < maxRetries; attemptNum++) {
       try {
         await this.dispatcher.getFromIpfs(model.cid)
         if (attemptNum > 0) {
-          this._logger.imp(`Model ${model} used to publish NodeMetrics loaded successfully`)
+          this._logger.imp(`Model ${model} used to publish Node Metrics loaded successfully`)
         }
-        return
+        return true
       } catch (err) {
         if (attemptNum == 0) {
           this._logger.imp(
-            `Waiting for Model ${model} used to publish NodeMetrics to be available locally`
+            `Waiting for Model ${model} used to publish Node Metrics to be available locally`
           )
-        }
-        if (attemptNum >= 5) {
-          this._logger.err(`Error loading Model ${model} used to publish NodeMetrics: ${err}`)
+        } else if (attemptNum % 10 == 0) {
+          // log error once a second
+          this._logger.err(`Error loading Model ${model} used to publish Node Metrics: ${err}`)
         }
 
-        await delay(backoffMs)
+        await delay(retryInterval)
         attemptNum++
-        if (backoffMs <= maxBackoffMs) {
-          backoffMs *= 2
-        }
       }
     }
+    return false
   }
 
   /**
