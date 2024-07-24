@@ -359,7 +359,7 @@ export class Dispatcher {
    */
   async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
     try {
-      return await this._getFromIpfs(cid)
+      return await this.getFromIpfs(cid)
     } catch (e) {
       if (streamId) {
         this._logger.err(
@@ -380,7 +380,7 @@ export class Dispatcher {
    */
   async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
     try {
-      return await this._getFromIpfs(cid, path)
+      return await this.getFromIpfs(cid, path)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
@@ -416,7 +416,7 @@ export class Dispatcher {
   /**
    * Helper function for loading a CID from IPFS
    */
-  private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {
+  async getFromIpfs(cid: CID | string, path?: string): Promise<any> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
 
     // Lookup CID in cache before looking it up IPFS
