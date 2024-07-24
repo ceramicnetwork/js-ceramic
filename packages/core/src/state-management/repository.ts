@@ -56,6 +56,12 @@ const STREAM_SYNC = 'stream_sync'
 const RECON_STORE_USECASE_NAME = 'recon'
 const RECON_STORE_CURSOR_KEY = 'cursor'
 
+// TODO : Use spans instead of observe when reporting for spans is ready
+const IMPORT_CAR_ANCHOR_COMMIT_REQUESTED = 'import_car_anchor_commit'
+// const IMPORT_CAR_ANCHOR_COMMIT_SPAN = 'import_car_anchor_commit_span'
+const IMPORT_CAR_ANCHOR_COMMIT_COMPLETED = 'import_car_anchor_commit_completed'
+const IMPORT_CAR_ANCHOR_COMMIT_TIME = 'import_car_anchor_commit_time'
+
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
@@ -762,9 +768,17 @@ export class Repository {
       remainingRetries--
     ) {
       try {
+        // TODO : Remove observe and use Spans for richer reporting when Spans support is ready
         if (witnessCAR) {
+          // const importCARAnchorCommitSpan = Metrics.startSpan(IMPORT_CAR_ANCHOR_COMMIT_SPAN)
+          const timeStart = Date.now()
+          Metrics.count(IMPORT_CAR_ANCHOR_COMMIT_REQUESTED, 1)
           await this.dispatcher.importCAR(witnessCAR, streamId)
+          Metrics.count(IMPORT_CAR_ANCHOR_COMMIT_COMPLETED, 1)
+          const timeEnd = Date.now()
+          Metrics.observe(IMPORT_CAR_ANCHOR_COMMIT_TIME, timeEnd - timeStart)
           this.logger.verbose(`successfully imported CAR file for ${streamId}`)
+          // importCARAnchorCommitSpan.end()
         }
 
         const applied = await this._handleTip(state$, anchorCommitCID)

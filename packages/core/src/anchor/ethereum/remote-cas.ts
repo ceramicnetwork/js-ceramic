@@ -22,6 +22,9 @@ const CAS_REQUEST_POLL_FAILED = 'cas_request_poll_failed'
 const CAS_REQUEST_COMPLETED = 'cas_request_completed'
 const CAS_INACCESSIBLE = 'cas_inaccessible'
 
+const CAS_CREATE_REQUEST_TIME = 'cas_create_request_time'
+const CAS_POLL_STATUS_TIME = 'cas_poll_status_time'
+
 /**
  * Parse JSON that CAS returns.
  */
@@ -161,6 +164,7 @@ export class RemoteCAS implements CASClient {
 
   create$(streamId: StreamID, tip: CID, timestamp: Date): Observable<unknown> {
     const sendRequest$ = deferAbortable(async (signal) => {
+      const timeStart = Date.now()
       const response = await this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
         headers: {
@@ -175,6 +179,8 @@ export class RemoteCAS implements CASClient {
         },
         signal: signal,
       })
+      const timeEnd = Date.now()
+      Metrics.observe(CAS_CREATE_REQUEST_TIME, timeEnd - timeStart)
 
       // We successfully contacted the CAS
       this._recordCASContactSuccess('created')
@@ -201,12 +207,15 @@ export class RemoteCAS implements CASClient {
 
   async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
+    const timeStart = Date.now()
     const sendRequest$ = deferAbortable(async (signal) => {
       const response = await this.#sendRequest(requestUrl, { signal: signal })
 
       // We successfully contacted the CAS
       this._recordCASContactSuccess('polled')
       Metrics.count(CAS_REQUEST_POLLED, 1)
+      const timeEnd = Date.now()
+      Metrics.observe(CAS_POLL_STATUS_TIME, timeEnd - timeStart)
       return response
     })
     const response = await firstValueFrom(
