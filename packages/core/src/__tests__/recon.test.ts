@@ -115,7 +115,7 @@ describe('ReconApi', () => {
       await reconApi.registerInterest(MODEL)
       expect(mockSendRequest).toHaveBeenCalledWith(
         `${RECON_URL}/ceramic/interests/model/${MODEL.toString()}`,
-        { method: 'POST' }
+        { method: 'POST', body: {}, headers: { 'Content-Type': 'application/json' } }
       )
     })
   })

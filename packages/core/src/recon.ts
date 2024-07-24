@@ -57,7 +57,7 @@ export interface ReconEventFeedResponse {
  */
 export interface IReconApi extends Observable<ReconEventFeedResponse> {
   init(initialCursor?: string, initialInterests?: Array<StreamID>): Promise<void>
-  registerInterest(model: StreamID): Promise<void>
+  registerInterest(model: StreamID, controller?: string): Promise<void>
   put(car: CAR, opts?: AbortOptions): Promise<void>
   enabled: boolean
   stop(): void
@@ -122,14 +122,19 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
   /**
    * Registers interest in a model
    * @param model stream id of the model to register interest in
+   * @param controller restrict the interest range to just events with this controller
    */
-  async registerInterest(model: StreamID): Promise<void> {
+  async registerInterest(model: StreamID, controller?: string): Promise<void> {
     if (!this.enabled) {
       throw new Error(`Recon: disabled, not registering interest in model ${model.toString()}`)
     }
     try {
+      const headers = { 'Content-Type': 'application/json' }
+      const body = { ...(controller && { controller }) }
       await this.#sendRequest(this.#url + `/ceramic/interests/model/${model.toString()}`, {
         method: 'POST',
+        headers,
+        body,
       })
       this.#logger.debug(`Recon: added interest for model ${model.toString()}`)
     } catch (err) {
