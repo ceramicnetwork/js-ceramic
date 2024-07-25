@@ -118,6 +118,7 @@ describe('Ceramic feed', () => {
     expect(String(emissions[1].commitId)).toEqual(String(document.allCommitIds[0]))
     // model.anchor
     expect(String(emissions[2].commitId.baseID)).toEqual(String(model.id))
+
     expect(emissions[2].eventType).toEqual(EventType.TIME)
     // document.anchor
     expect(String(emissions[3].commitId)).toEqual(String(document.allCommitIds[1]))
