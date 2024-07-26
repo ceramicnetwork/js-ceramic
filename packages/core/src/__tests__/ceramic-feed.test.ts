@@ -141,7 +141,6 @@ describe('Ceramic feed', () => {
       .catch(() => {
         // Abort Signal, hence ignore
       })
-
     // create model on different node
     const model = await Model.create(ceramic2, modelDefinition())
     await doneStreaming
