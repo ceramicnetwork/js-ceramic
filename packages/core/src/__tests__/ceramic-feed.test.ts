@@ -136,6 +136,7 @@ describe('Ceramic feed', () => {
         abortController.abort()
       },
     })
+
     const doneStreaming = readable
       .pipeTo(writable, { signal: abortController.signal })
       .catch(() => {
