@@ -57,28 +57,28 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
       case Networks.MAINNET:
         return [
           multiaddr(
-            '/dns4/bootstrap-mainnet-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWJC1yR4KiCnocV9kuAEwtsMNh7Xmu2vzqpBvk2o3MrYd6',
+            '/dns4/bootstrap-mainnet-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWJC1yR4KiCnocV9kuAEwtsMNh7Xmu2vzqpBvk2o3MrYd6'
           ),
           multiaddr(
-            '/dns4/bootstrap-mainnet-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWCuS388c1im7KkmdrpsLMziihF8mbcv2w6HPCp4Qmww6m',
+            '/dns4/bootstrap-mainnet-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWCuS388c1im7KkmdrpsLMziihF8mbcv2w6HPCp4Qmww6m'
           ),
         ]
       case Networks.TESTNET_CLAY:
         return [
           multiaddr(
-            '/dns4/bootstrap-tnet-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWMqCFj5bnwuNi6D6KLhYiK4C8Eh9xSUKv2E6Jozs4nWEE',
+            '/dns4/bootstrap-tnet-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWMqCFj5bnwuNi6D6KLhYiK4C8Eh9xSUKv2E6Jozs4nWEE'
           ),
           multiaddr(
-            '/dns4/bootstrap-tnet-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWPFGbRHWfDaWt5MFFeqAHBBq3v5BqeJ4X7pmn2V1t6uNs',
+            '/dns4/bootstrap-tnet-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWPFGbRHWfDaWt5MFFeqAHBBq3v5BqeJ4X7pmn2V1t6uNs'
           ),
         ]
       case Networks.DEV_UNSTABLE:
         return [
           multiaddr(
-            '/dns4/bootstrap-devqa-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWJmYPnXgst4gW5GoyAYzRB3upLgLVR1oDVGwjiS9Ce7sA',
+            '/dns4/bootstrap-devqa-rust-ceramic-1.3box.io/tcp/4101/p2p/12D3KooWJmYPnXgst4gW5GoyAYzRB3upLgLVR1oDVGwjiS9Ce7sA'
           ),
           multiaddr(
-            '/dns4/bootstrap-devqa-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWFCf7sKeW8NHoT35EutjJX5vCpPekYqa4hB4tTUpYrcam',
+            '/dns4/bootstrap-devqa-rust-ceramic-2.3box.io/tcp/4101/p2p/12D3KooWFCf7sKeW8NHoT35EutjJX5vCpPekYqa4hB4tTUpYrcam'
           ),
         ]
       case Networks.LOCAL:
@@ -106,7 +106,7 @@ export class IpfsTopology {
     readonly ceramicNetwork: string,
     readonly logger: DiagnosticsLogger,
     readonly period: number = DEFAULT_BOOTSTRAP_CONNECTION_PERIOD
-  ) { }
+  ) {}
 
   async forceConnection(): Promise<void> {
     const bootstrapList: Multiaddr[] = BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || []

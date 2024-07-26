@@ -79,7 +79,8 @@ describe('ReconApi', () => {
       )
       await reconApi.init()
       await firstValueFrom(race(reconApi, timer(1000)))
-      expect(mockSendRequest).toHaveBeenCalledTimes(1)
+      // interest + network check
+      expect(mockSendRequest).toHaveBeenCalledTimes(2)
     })
 
     test('should register interests on init', async () => {
@@ -92,9 +93,9 @@ describe('ReconApi', () => {
       const fakeInterest0 = TestUtils.randomStreamID()
       const fakeInterest1 = TestUtils.randomStreamID()
       await reconApi.init('testInitialCursor', [fakeInterest0, fakeInterest1])
-      expect(mockSendRequest).toHaveBeenCalledTimes(3)
-      expect(mockSendRequest.mock.calls[1][0]).toContain(fakeInterest0.toString())
-      expect(mockSendRequest.mock.calls[2][0]).toContain(fakeInterest1.toString())
+      expect(mockSendRequest).toHaveBeenCalledTimes(4)
+      expect(mockSendRequest.mock.calls[2][0]).toContain(fakeInterest0.toString())
+      expect(mockSendRequest.mock.calls[3][0]).toContain(fakeInterest1.toString())
       reconApi.stop()
     })
   })

@@ -15,7 +15,13 @@ import {
   TeardownLogic,
 } from 'rxjs'
 
-import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
+import {
+  DiagnosticsLogger,
+  FetchRequest,
+  fetchJson,
+  AbortOptions,
+  Networks,
+} from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 import { CID } from 'multiformats/cid'
@@ -34,6 +40,8 @@ export type ReconApiConfig = {
   url: string | Promise<string>
   // Whether the event feed is enabled
   feedEnabled: boolean
+  /// which network are we configured to use
+  network: Networks
 }
 
 /**
@@ -108,6 +116,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     }
 
     this.#url = await this.#config.url
+    await this.verifyNetwork()
     await this.registerInterest(Model.MODEL)
 
     for (const interest of initialInterests) {
@@ -116,6 +125,36 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
 
     if (this.#config.feedEnabled) {
       this.#eventsSubscription = this.createSubscription(initialCursor).subscribe(this.#feed$)
+    }
+  }
+
+  private async verifyNetwork(): Promise<void> {
+    let response
+    try {
+      response = await this.#sendRequest(this.#url + '/ceramic/config/network', {
+        method: 'GET',
+      })
+    } catch (err) {
+      this.#logger.warn(
+        `Recon: failed to verify network with error ${err}. This is likely due to an older version of ceramic-one and you should upgrade.`
+      )
+      return
+    }
+    if (response?.name) {
+      // this works for all types but is a bit odd for local which is 'local-X'
+      // where X is the --local-network-id. As we either started the binary (in tests) and passed
+      // in the network, or don't use it at all and just rely on c1, we're okay ignoring that piece
+      if (!response.name.includes(this.#config.network)) {
+        throw new Error(
+          `Recon: failed to verify network as js-ceramic is using ${this.#config.network
+          } but ceramic-one is on ${response.name
+          }. Pass --network to the js-ceramic or ceramic-one daemon to make them match.`
+        )
+      }
+    } else {
+      this.#logger.warn(
+        `Recon: failed to verify network as nothing was found. This is likely due to an older version of ceramic-one and you should upgrade.`
+      )
     }
   }
 
@@ -229,8 +268,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
               retry({
                 delay: (err) => {
                   this.#logger.warn(
-                    `Recon: event feed failed, due to error ${err}; attempting to retry in ${
-                      this.#pollInterval
+                    `Recon: event feed failed, due to error ${err}; attempting to retry in ${this.#pollInterval
                     }ms`
                   )
                   return timer(this.#pollInterval)
