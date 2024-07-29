@@ -54,6 +54,7 @@ export class BaseTestUtils {
     throw new Error(baseErrMsg + ': ' + customMsg)
   }
 
+  // TODO: De-dupe this with `delayOrAbort` in abort-signal-utils.ts
   static async delay(ms: number, signal?: AbortSignal): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => resolve(), ms)

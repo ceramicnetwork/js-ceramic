@@ -24,6 +24,7 @@ import {
   CeramicSigner,
   StreamStateLoader,
   StreamReaderWriter,
+  delayOrAbort,
 } from '@ceramicnetwork/common'
 import {
   DEFAULT_TRACE_SAMPLE_RATIO,
@@ -683,12 +684,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     let attemptNum = 0
     let backoffMs = 100
     const maxBackoffMs = 1000 * 60 // Caps off at checking once per minute
-    const delay = async function (ms) {
-      return new Promise<void>((resolve) => setTimeout(() => resolve(), ms))
-    }
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    while (!this._shutdownSignal.isShuttingDown()) {
       try {
         await this.dispatcher.getFromIpfs(model.cid)
         if (attemptNum > 0) {
@@ -704,7 +701,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
           this._logger.err(`Error loading Model ${model} used to publish Node Metrics: ${err}`)
         }
 
-        await delay(backoffMs)
+        await this._shutdownSignal.abortable((signal) => delayOrAbort(backoffMs, signal))
         attemptNum++
         if (backoffMs <= maxBackoffMs) {
           backoffMs *= 2
