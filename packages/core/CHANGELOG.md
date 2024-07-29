@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.2.0...@ceramicnetwork/core@6.3.0-rc.0) (2024-07-29)
+
+
+### Bug Fixes
+
+* Subscribe to node metrics model before publishing to it ([#3260](https://github.com/ceramicnetwork/js-ceramic/issues/3260)) ([3a3bb99](https://github.com/ceramicnetwork/js-ceramic/commit/3a3bb99fc1de3a23393aa30129da8ab8bc702216))
+
+
+### Features
+
+* verify ceramic-one network matches js-ceramic at startup ([#3259](https://github.com/ceramicnetwork/js-ceramic/issues/3259)) ([1b1dc49](https://github.com/ceramicnetwork/js-ceramic/commit/1b1dc4963936d02c22928b64225b6093b8186e27))
+
+
+
+
+
 # [6.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.2.0-rc.0...@ceramicnetwork/core@6.2.0) (2024-07-22)
 
 **Note:** Version bump only for package @ceramicnetwork/core
