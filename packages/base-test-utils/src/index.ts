@@ -1,10 +1,6 @@
 import type { CID } from 'multiformats/cid'
 import { randomCID, StreamID } from '@ceramicnetwork/streamid'
 
-const delay = async function (ms: number) {
-  return new Promise<void>((resolve) => setTimeout(() => resolve(), ms))
-}
-
 export class BaseTestUtils {
   static randomCID(version: 0 | 1 = 1, codec = 0x71, hasher = 0x12): CID {
     return randomCID(version, codec, hasher)
@@ -36,7 +32,7 @@ export class BaseTestUtils {
     const deadline = new Date(startTime.getTime() + timeoutMs)
     let now = startTime
     while (now < deadline) {
-      await delay(100)
+      await BaseTestUtils.delay(100)
       now = new Date()
 
       try {
@@ -56,5 +52,21 @@ export class BaseTestUtils {
 
     const customMsg = typeof errMsgGenerator == 'string' ? errMsgGenerator : errMsgGenerator()
     throw new Error(baseErrMsg + ': ' + customMsg)
+  }
+
+  // TODO: De-dupe this with `delayOrAbort` in abort-signal-utils.ts
+  static async delay(ms: number, signal?: AbortSignal): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => resolve(), ms)
+      if (signal) {
+        const handleAbort = () => {
+          clearTimeout(timeout)
+          signal.removeEventListener('abort', handleAbort)
+          reject(signal.reason)
+        }
+        if (signal.aborted) handleAbort()
+        signal.addEventListener('abort', handleAbort)
+      }
+    })
   }
 }

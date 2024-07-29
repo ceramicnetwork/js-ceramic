@@ -5,7 +5,6 @@ import type { StreamState, Stream } from '@ceramicnetwork/common'
 import {
   AdminApi,
   AnchorStatus,
-  delayOrAbort,
   EnvironmentUtils,
   EventType,
   RunningStateLike,
@@ -46,7 +45,7 @@ export class CommonTestUtils {
   }
 
   static async delay(ms: number, signal?: AbortSignal): Promise<void> {
-    return delayOrAbort(ms, signal)
+    return BaseTestUtils.delay(ms, signal)
   }
 
   /**
