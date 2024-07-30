@@ -146,7 +146,7 @@ export class InMemoryAnchorService implements AnchorService {
 
   async close(): Promise<void> {
     await this.#cas.close()
-    await this.#store.close()
-    await this.#loop.stop()
+    await this.#store?.close()
+    await this.#loop?.stop()
   }
 }
