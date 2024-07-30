@@ -662,11 +662,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       ceramicVersion: this._versionInfo.cliPackageVersion,
       ipfsVersion: ipfsVersion.version,
       intervalMS: this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-      nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+      nodeId: ipfsId.id.toString(),
       nodeName: '', // daemon.hostname is not useful
       nodeAuthDID: this.did.id,
       nodeIPAddr: '', // daemon.hostname is not the external name
-      nodePeerId: ipfsId.publicKey,
+      nodePeerId: ipfsId.id.toString(),
       logger: this._logger,
     })
     this._logger.imp(
