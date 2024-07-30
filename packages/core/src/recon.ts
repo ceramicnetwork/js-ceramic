@@ -146,8 +146,10 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
       // in the network, or don't use it at all and just rely on c1, we're okay ignoring that piece
       if (!response.name.includes(this.#config.network)) {
         throw new Error(
-          `Recon: failed to verify network as js-ceramic is using ${this.#config.network
-          } but ceramic-one is on ${response.name
+          `Recon: failed to verify network as js-ceramic is using ${
+            this.#config.network
+          } but ceramic-one is on ${
+            response.name
           }. Pass --network to the js-ceramic or ceramic-one daemon to make them match.`
         )
       }
@@ -268,7 +270,8 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
               retry({
                 delay: (err) => {
                   this.#logger.warn(
-                    `Recon: event feed failed, due to error ${err}; attempting to retry in ${this.#pollInterval
+                    `Recon: event feed failed, due to error ${err}; attempting to retry in ${
+                      this.#pollInterval
                     }ms`
                   )
                   return timer(this.#pollInterval)
