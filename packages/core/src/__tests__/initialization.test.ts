@@ -74,7 +74,7 @@ describe('Ceramic integration', () => {
     const ceramic = new Ceramic(modules, params)
     if (EnvironmentUtils.useRustCeramic()) {
       await expect(ceramic._init(false)).rejects.toThrow(
-        "Recon: failed to verify network as js-ceramic is using local but ceramic-one is on inmemory. Pass --network to the js-ceramic or ceramic-one daemon to make them match."
+        'Recon: failed to verify network as js-ceramic is using local but ceramic-one is on inmemory. Pass --network to the js-ceramic or ceramic-one daemon to make them match.'
       )
     } else {
       await expect(ceramic._init(false)).rejects.toThrow(
