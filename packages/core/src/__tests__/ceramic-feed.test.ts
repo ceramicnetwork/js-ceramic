@@ -77,17 +77,16 @@ describe('Ceramic feed', () => {
     await TestUtils.waitForConditionOrTimeout(async () => emissions.length === 3, 5000)
 
     // Model.create
-    expect(emissions[0].commitId).toEqual(model.commitId)
+    expect(String(emissions[0].commitId)).toEqual(String(model.commitId))
     // document.create
-    expect(emissions[1].commitId).toEqual(document.allCommitIds[0])
+    expect(String(emissions[1].commitId)).toEqual(String(document.allCommitIds[0].toString()))
     // document.replace
-    expect(emissions[2].commitId).toEqual(document.allCommitIds[1])
+    expect(String(emissions[2].commitId)).toEqual(String(document.allCommitIds[1]))
     abortController.abort()
     await doneStreaming
   })
 
-  // TODO(dav1do): This test is occasionally failing with a stackoverflow and needs investigation
-  test.skip('add entry after anchoring stream', async () => {
+  test('add entry after anchoring stream', async () => {
     const emissions: Array<FeedDocument> = []
     const readable1 = ceramic1.feed.aggregation.documents()
     const writable1 = new WritableStream({
@@ -114,14 +113,14 @@ describe('Ceramic feed', () => {
       return emissions.length >= 4 // Recon gives you more events :(
     }, 5000)
     // model.create
-    expect(emissions[0].commitId).toEqual(model.allCommitIds[0])
+    expect(String(emissions[0].commitId)).toEqual(String(model.allCommitIds[0]))
     // document.create
-    expect(emissions[1].commitId).toEqual(document.allCommitIds[0])
+    expect(String(emissions[1].commitId)).toEqual(String(document.allCommitIds[0]))
     // model.anchor
-    expect(emissions[2].commitId.baseID).toEqual(model.id)
+    expect(String(emissions[2].commitId.baseID)).toEqual(String(model.id))
     expect(emissions[2].eventType).toEqual(EventType.TIME)
     // document.anchor
-    expect(emissions[3].commitId).toEqual(document.allCommitIds[1])
+    expect(String(emissions[3].commitId)).toEqual(String(document.allCommitIds[1]))
     abortController.abort()
     await doneStreaming
   })
@@ -142,7 +141,6 @@ describe('Ceramic feed', () => {
       .catch(() => {
         // Abort Signal, hence ignore
       })
-
     // create model on different node
     const model = await Model.create(ceramic2, modelDefinition())
     await doneStreaming
