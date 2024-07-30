@@ -24,6 +24,7 @@ import {
   CeramicSigner,
   StreamStateLoader,
   StreamReaderWriter,
+  delayOrAbort,
 } from '@ceramicnetwork/common'
 import {
   DEFAULT_TRACE_SAMPLE_RATIO,
@@ -615,35 +616,21 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       // If authenticated into the node, we can start publishing metrics
       // publishing metrics is enabled by default, even if no metrics config
       if (this._metricsConfig?.metricsPublisherEnabled) {
-        // First, subscribe the node to the Model used for NodeMetrics
-        const metricsModel = NodeMetrics.getModel(this._networkOptions.name)
-        await this.repository.index.indexModels([{ streamID: metricsModel }])
-        await this.recon.registerInterest(metricsModel, this.did.id)
-
-        // Now start the NodeMetrics system.
-        const ipfsVersion = await this.ipfs.version()
-        const ipfsId = await this.ipfs.id()
-
-        NodeMetrics.start({
-          ceramic: this,
-          network: this._networkOptions.name,
-          ceramicVersion: this._versionInfo.cliPackageVersion,
-          ipfsVersion: ipfsVersion.version,
-          intervalMS: this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-          nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-          nodeName: '', // daemon.hostname is not useful
-          nodeAuthDID: this.did.id,
-          nodeIPAddr: '', // daemon.hostname is not the external name
-          nodePeerId: ipfsId.publicKey,
-          logger: this._logger,
-        })
-        this._logger.imp(
-          `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
-        )
+        if (EnvironmentUtils.useRustCeramic()) {
+          // Start a background job that will wait for the Model to be available (synced over Recon)
+          // and then start publishing to it.
+          const metricsModel = NodeMetrics.getModel(this._networkOptions.name)
+          void this._waitForMetricsModel(metricsModel).then(
+            this._startPublishingNodeMetrics.bind(this, metricsModel)
+          )
+        } else {
+          this._logger.warn(
+            `Disabling publishing of Node Metrics because we are not connected to a Recon-compatible p2p node`
+          )
+        }
       }
     } else {
-      // warn that the node does not have an authenticated did
-      this._logger.imp(
+      this._logger.warn(
         `The ceramic daemon is running without an authenticated DID.  This means that this node cannot itself publish streams, including node metrics, and cannot use a DID as the method to authenticate with the Ceramic Anchor Service.  See https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet#updating-to-did-based-authentication for instructions on how to update your node to use DID authentication.`
       )
     }
@@ -653,6 +640,74 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       this._publishVersionMetrics.bind(this),
       PUBLISH_VERSION_INTERVAL_MS
     )
+  }
+
+  /**
+   * Starts up the subsystem to periodically publish Node Metrics to a Stream.
+   * Requires the data for the NodeMetrics Model to already be available locally
+   * in the ceramic-one blockstore.
+   * @param metricsModel - the StreamID of the Model that Node Metrics should be published to.
+   */
+  async _startPublishingNodeMetrics(metricsModel: StreamID): Promise<void> {
+    await this.repository.index.indexModels([{ streamID: metricsModel }])
+    await this.recon.registerInterest(metricsModel, this.did.id)
+
+    // Now start the NodeMetrics system.
+    const ipfsVersion = await this.ipfs.version()
+    const ipfsId = await this.ipfs.id()
+
+    NodeMetrics.start({
+      ceramic: this,
+      network: this._networkOptions.name,
+      ceramicVersion: this._versionInfo.cliPackageVersion,
+      ipfsVersion: ipfsVersion.version,
+      intervalMS: this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+      nodeId: ipfsId.publicKey, // what makes the best ID for the node?
+      nodeName: '', // daemon.hostname is not useful
+      nodeAuthDID: this.did.id,
+      nodeIPAddr: '', // daemon.hostname is not the external name
+      nodePeerId: ipfsId.publicKey,
+      logger: this._logger,
+    })
+    this._logger.imp(
+      `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+    )
+  }
+
+  /**
+   * Waits for Model used to publish NodeMetrics to be available locally.
+   * Since we subscribe to the metamodel at startup, so long as some connected node on the network
+   * has the model, it should eventually be available locally.
+   * @param model
+   */
+  async _waitForMetricsModel(model: StreamID): Promise<void> {
+    let attemptNum = 0
+    let backoffMs = 100
+    const maxBackoffMs = 1000 * 60 // Caps off at checking once per minute
+
+    while (!this._shutdownSignal.isShuttingDown()) {
+      try {
+        await this.dispatcher.getFromIpfs(model.cid)
+        if (attemptNum > 0) {
+          this._logger.imp(`Model ${model} used to publish Node Metrics loaded successfully`)
+        }
+        return
+      } catch (err) {
+        if (attemptNum == 0) {
+          this._logger.imp(
+            `Waiting for Model ${model} used to publish Node Metrics to be available locally`
+          )
+        } else if (attemptNum % 5 == 0) {
+          this._logger.err(`Error loading Model ${model} used to publish Node Metrics: ${err}`)
+        }
+
+        await this._shutdownSignal.abortable((signal) => delayOrAbort(backoffMs, signal))
+        attemptNum++
+        if (backoffMs <= maxBackoffMs) {
+          backoffMs *= 2
+        }
+      }
+    }
   }
 
   /**
