@@ -171,10 +171,11 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     }
     try {
       const headers = { 'Content-Type': 'application/json' }
-      const query = controller ? `controller=${controller}` : ''
-      await this.#sendRequest(this.#url + `/ceramic/interests/model/${model.toString()}?${query}`, {
+      const body = { sep: "model", sepValue: model.toString(), ...(controller && { controller }) }
+      await this.#sendRequest(this.#url + `/ceramic/interests`, {
         method: 'POST',
         headers,
+        body,
       })
       this.#logger.debug(`Recon: added interest for model ${model.toString()}`)
     } catch (err) {
