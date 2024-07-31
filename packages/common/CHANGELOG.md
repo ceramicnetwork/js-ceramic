@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@6.3.0-rc.0...@ceramicnetwork/common@6.3.0-rc.1) (2024-07-31)
+
+
+### Features
+
+* Start up Node Metrics publishing after the Model becomes available locally ([#3268](https://github.com/ceramicnetwork/js-ceramic/issues/3268)) ([679b8f8](https://github.com/ceramicnetwork/js-ceramic/commit/679b8f892d529ce665dd77561bcfc10dee5a8f1f))
+
+
+
+
+
 # [6.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@6.2.0...@ceramicnetwork/common@6.3.0-rc.0) (2024-07-29)
 
 
