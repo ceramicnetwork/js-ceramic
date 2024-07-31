@@ -94,8 +94,16 @@ describe('ReconApi', () => {
       const fakeInterest1 = TestUtils.randomStreamID()
       await reconApi.init('testInitialCursor', [fakeInterest0, fakeInterest1])
       expect(mockSendRequest).toHaveBeenCalledTimes(4)
-      expect(mockSendRequest.mock.calls[2][0]).toContain(fakeInterest0.toString())
-      expect(mockSendRequest.mock.calls[3][0]).toContain(fakeInterest1.toString())
+      expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/interests`, {
+        method: 'POST',
+        body: { sep: 'model', sepValue: fakeInterest0.toString() },
+        headers: { 'Content-Type': 'application/json' },
+      })
+      expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/interests`, {
+        method: 'POST',
+        body: { sep: 'model', sepValue: fakeInterest1.toString() },
+        headers: { 'Content-Type': 'application/json' },
+      })
       reconApi.stop()
     })
   })
@@ -114,10 +122,11 @@ describe('ReconApi', () => {
 
     test('should be able to register interest in a model', async () => {
       await reconApi.registerInterest(MODEL)
-      expect(mockSendRequest).toHaveBeenCalledWith(
-        `${RECON_URL}/ceramic/interests/model/${MODEL.toString()}`,
-        { method: 'POST', body: {}, headers: { 'Content-Type': 'application/json' } }
-      )
+      expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/interests`, {
+        method: 'POST',
+        body: { sep: 'model', sepValue: MODEL.toString() },
+        headers: { 'Content-Type': 'application/json' },
+      })
     })
   })
 
