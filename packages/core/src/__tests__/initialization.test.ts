@@ -2,7 +2,7 @@ import { expect, jest, describe, test, it, beforeEach, afterEach } from '@jest/g
 import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import type { IpfsApi } from '@ceramicnetwork/common'
-import { Networks } from '@ceramicnetwork/common'
+import { EnvironmentUtils, Networks } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
@@ -55,7 +55,7 @@ describe('Ceramic integration', () => {
     await ceramic.close()
   })
 
-  it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
+  it('cannot create Ceramic instance on network different from ceramic one or cas', async () => {
     const tmpDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
     const [modules, params] = Ceramic._processConfig(
@@ -72,9 +72,15 @@ describe('Ceramic integration', () => {
       modules.loggerProvider.getDiagnosticsLogger()
     )
     const ceramic = new Ceramic(modules, params)
-    await expect(ceramic._init(false)).rejects.toThrow(
-      "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']"
-    )
+    if (EnvironmentUtils.useRustCeramic()) {
+      await expect(ceramic._init(false)).rejects.toThrow(
+        'Recon: failed to verify network as js-ceramic is using local but ceramic-one is on inmemory. Pass --network to the js-ceramic or ceramic-one daemon to make them match.'
+      )
+    } else {
+      await expect(ceramic._init(false)).rejects.toThrow(
+        "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']"
+      )
+    }
   })
 
   it('cannot create Ceramic instance on invalid network', async () => {

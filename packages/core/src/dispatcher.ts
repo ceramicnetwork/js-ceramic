@@ -5,6 +5,7 @@ import {
   IpfsApi,
   ServiceLogger,
   StreamUtils,
+  EnvironmentUtils,
   UnreachableCaseError,
   base64urlToJSON,
   IpfsNodeStatus,
@@ -49,6 +50,12 @@ const PUBSUB_CACHE_SIZE = 500
 const ERROR_IPFS_TIMEOUT = 'ipfs_timeout'
 const ERROR_STORING_COMMIT = 'error_storing_commit'
 const COMMITS_STORED = 'commits_stored'
+const IMPORT_CAR_INIT_EVENT_REQUESTED = 'import_car_init_event_requested'
+const IMPORT_CAR_STORE_EVENT_REQUESTED = 'import_car_store_event_requested'
+const IMPORT_CAR_INIT_EVENT_TIME = 'import_car_init_event_time'
+const IMPORT_CAR_STORE_EVENT_TIME = 'import_car_store_event_time'
+const CREATE_CAR_INIT_EVENT_TIME = 'create_car_init_event_time'
+const CREATE_CAR_STORE_EVENT_TIME = 'create_car_store_event_time'
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -130,9 +137,10 @@ export class Dispatcher {
     private readonly recon: IReconApi,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
-    this.enableSync = process.env.CERAMIC_RECON_MODE ? false : enableSync
+    const rustCeramic = EnvironmentUtils.useRustCeramic()
+    this.enableSync = rustCeramic ? false : enableSync
 
-    if (!process.env.CERAMIC_RECON_MODE) {
+    if (!rustCeramic) {
       const pubsub = new Pubsub(
         _ipfs,
         topic,
@@ -170,7 +178,7 @@ export class Dispatcher {
   }
 
   async init() {
-    if (process.env.CERAMIC_RECON_MODE) {
+    if (EnvironmentUtils.useRustCeramic()) {
       return
     }
     this.messageBus.subscribe(this.handleMessage.bind(this))
@@ -220,7 +228,8 @@ export class Dispatcher {
    * @param streamId
    */
   importCAR(car: CAR, streamId: StreamID): Promise<void> {
-    const useRecon = process.env.CERAMIC_RECON_MODE && (streamId.type === 2 || streamId.type === 3)
+    const useRecon =
+      EnvironmentUtils.useRustCeramic() && (streamId.type === 2 || streamId.type === 3)
     if (useRecon) {
       return this._shutdownSignal
         .abortable(async (signal) => {
@@ -293,9 +302,16 @@ export class Dispatcher {
    */
   async storeInitEvent(data: any, streamType: number): Promise<CID> {
     try {
+      const timeStartCreate = Date.now()
       const car = this._createCAR(data)
+      const timeEndCreate = Date.now()
+      Metrics.observe(CREATE_CAR_INIT_EVENT_TIME, timeEndCreate - timeStartCreate)
       const streamId = new StreamID(streamType, car.roots[0])
+      Metrics.count(IMPORT_CAR_INIT_EVENT_REQUESTED, 1)
+      const timeStartImport = Date.now()
       await this.importCAR(car, streamId)
+      const timeEndImport = Date.now()
+      Metrics.observe(IMPORT_CAR_INIT_EVENT_TIME, timeEndImport - timeStartImport)
       Metrics.count(COMMITS_STORED, 1)
       return car.roots[0]
     } catch (e) {
@@ -314,8 +330,15 @@ export class Dispatcher {
    */
   async storeEvent(data: any, streamId: StreamID): Promise<CID> {
     try {
+      const timeStartCreate = Date.now()
       const car = this._createCAR(data)
+      const timeEndCreate = Date.now()
+      Metrics.observe(CREATE_CAR_STORE_EVENT_TIME, timeEndCreate - timeStartCreate)
+      Metrics.count(IMPORT_CAR_STORE_EVENT_REQUESTED, 1)
+      const timeStartImport = Date.now()
       await this.importCAR(car, streamId)
+      const timeEndImport = Date.now()
+      Metrics.observe(IMPORT_CAR_STORE_EVENT_TIME, timeEndImport - timeStartImport)
       Metrics.count(COMMITS_STORED, 1)
       return car.roots[0]
     } catch (e) {
@@ -336,7 +359,7 @@ export class Dispatcher {
    */
   async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
     try {
-      return await this._getFromIpfs(cid)
+      return await this.getFromIpfs(cid)
     } catch (e) {
       if (streamId) {
         this._logger.err(
@@ -357,7 +380,7 @@ export class Dispatcher {
    */
   async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
     try {
-      return await this._getFromIpfs(cid, path)
+      return await this.getFromIpfs(cid, path)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
@@ -393,7 +416,7 @@ export class Dispatcher {
   /**
    * Helper function for loading a CID from IPFS
    */
-  private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {
+  async getFromIpfs(cid: CID | string, path?: string): Promise<any> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
 
     // Lookup CID in cache before looking it up IPFS
@@ -475,7 +498,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || process.env.CERAMIC_RECON_MODE) {
+    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || EnvironmentUtils.useRustCeramic()) {
       return empty().subscribe()
     }
 
@@ -598,7 +621,7 @@ export class Dispatcher {
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    if (!process.env.CERAMIC_RECON_MODE) {
+    if (!EnvironmentUtils.useRustCeramic()) {
       this.messageBus.unsubscribe()
     }
     await this.tasks.onIdle()

@@ -22,7 +22,11 @@ import { makeDID } from './make-did.js'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { DID } from 'dids'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import {
+  CommonTestUtils as TestUtils,
+  describeIfV3,
+  testIfV3,
+} from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
 import { AggregationDocument, JsonAsString } from '@ceramicnetwork/codecs'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
@@ -30,10 +34,6 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { decode } from 'codeco'
 
 const seed = 'SEED'
-
-// Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)

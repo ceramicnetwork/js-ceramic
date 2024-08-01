@@ -6,6 +6,7 @@ import {
   Stream,
   StreamHandler,
   DiagnosticsLogger,
+  EnvironmentUtils,
   StreamUtils,
   LoadOpts,
   CeramicCommit,
@@ -23,9 +24,13 @@ import {
   CeramicSigner,
   StreamStateLoader,
   StreamReaderWriter,
+  delayOrAbort,
 } from '@ceramicnetwork/common'
-import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { NodeMetrics } from '@ceramicnetwork/node-metrics'
+import {
+  DEFAULT_TRACE_SAMPLE_RATIO,
+  ServiceMetrics as Metrics,
+} from '@ceramicnetwork/observability'
+import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics } from '@ceramicnetwork/node-metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -59,6 +64,7 @@ import { IReconApi, ReconApi } from './recon.js'
 import { IKVFactory } from './store/ikv-store.js'
 import { LevelKVFactory } from './store/level-kv-factory.js'
 
+const METRICS_CALLER_NAME = 'js-ceramic'
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const DEFAULT_MULTIQUERY_TIMEOUT_MS = 30 * 1000
@@ -114,6 +120,7 @@ export interface CeramicConfig {
   readOnly?: boolean
 
   indexing?: IndexingConfig
+  metrics?: MetricsConfig
 
   networkName?: string
   pubsubTopic?: string
@@ -158,6 +165,18 @@ export interface VersionInfo {
 }
 
 /**
+ * Ceramic core type corresponding to the DaemonMetricsConfig in the cli package
+ */
+interface MetricsConfig {
+  prometheusExporterEnabled?: boolean
+  prometheusExporterPort?: number
+  metricsExporterEnabled?: boolean
+  collectorHost?: string
+  metricsPublisherEnabled?: boolean
+  metricsPublishIntervalMS?: number
+}
+
+/**
  * Parameters that control internal Ceramic behavior.
  * Most users will not provide this directly but will let it be derived automatically from the
  * `CeramicConfig` via `Ceramic.create()`.
@@ -171,6 +190,7 @@ export interface CeramicParameters {
   loadOptsOverride: LoadOpts
   anchorLoopMinDurationMs?: number
   versionInfo?: VersionInfo
+  metrics?: MetricsConfig
 }
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
@@ -212,6 +232,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private _signer: CeramicSigner
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
+  public readonly recon: IReconApi
   public readonly admin: AdminApi
   public readonly feed: PublicFeed
   readonly repository: Repository
@@ -223,6 +244,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly _readOnly: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
+  private readonly _metricsConfig: MetricsConfig
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
@@ -246,6 +268,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     this.providersCache = modules.providersCache
 
     this._readOnly = params.readOnly
+    this._metricsConfig = params.metrics
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
     this._versionInfo = params.versionInfo
@@ -308,6 +331,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     )
     const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
+    this.recon = modules.reconApi
     this.admin = new LocalAdminApi(
       this._logger,
       localIndex,
@@ -410,10 +434,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const reconApi = new ReconApi(
       {
-        enabled: Boolean(process.env.CERAMIC_RECON_MODE),
+        enabled: EnvironmentUtils.useRustCeramic(),
         url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
         // TODO: WS1-1487 not an official ceramic config option
         feedEnabled: config.reconFeedEnabled ?? true,
+        network: networkOptions.name,
       },
       logger
     )
@@ -446,6 +471,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       readOnly: config.readOnly,
       stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
+      metrics: config.metrics,
       networkOptions,
       loadOptsOverride,
       sync: config.indexing?.enableHistoricalSync,
@@ -499,10 +525,15 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    */
   async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
-      this._logger.imp(
-        `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
-      )
-
+      if (EnvironmentUtils.useRustCeramic()) {
+        this._logger.imp(
+          `Connecting to ceramic network '${this._networkOptions.name}' using ceramic-one with Recon for data synchronization.`
+        )
+      } else {
+        this._logger.imp(
+          `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
+        )
+      }
       if (this._readOnly) {
         this._logger.warn(`Starting in read-only mode. All write operations will fail`)
       }
@@ -534,11 +565,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       }
 
       await this._startupChecks()
-
-      this._versionMetricInterval = setInterval(
-        this._publishVersionMetrics.bind(this),
-        PUBLISH_VERSION_INTERVAL_MS
-      )
+      await this._startMetrics()
     } catch (err) {
       this._logger.err(err)
       await this.close()
@@ -554,6 +581,137 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     })
   }
 
+  async _startMetrics(): Promise<void> {
+    // Handle base OTLP metrics
+    const metricsExporterEnabled =
+      this._metricsConfig?.metricsExporterEnabled && this._metricsConfig?.collectorHost
+    const prometheusExporterEnabled =
+      this._metricsConfig?.prometheusExporterEnabled && this._metricsConfig?.prometheusExporterPort
+
+    // If desired, enable OTLP metrics
+    if (metricsExporterEnabled && prometheusExporterEnabled) {
+      Metrics.start(
+        this._metricsConfig.collectorHost,
+        METRICS_CALLER_NAME,
+        DEFAULT_TRACE_SAMPLE_RATIO,
+        null,
+        true,
+        this._metricsConfig.prometheusExporterPort
+      )
+    } else if (metricsExporterEnabled) {
+      Metrics.start(this._metricsConfig.collectorHost, METRICS_CALLER_NAME)
+    } else if (prometheusExporterEnabled) {
+      Metrics.start(
+        '',
+        METRICS_CALLER_NAME,
+        DEFAULT_TRACE_SAMPLE_RATIO,
+        null,
+        true,
+        this._metricsConfig.prometheusExporterPort
+      )
+    }
+
+    // Handle NodeMetrics that are published to a Model on Ceramic
+    if (this.did?.authenticated) {
+      // If authenticated into the node, we can start publishing metrics.
+      // Publishing metrics is enabled by default, even if no metrics config is provided
+      if (!this._metricsConfig || this._metricsConfig?.metricsPublisherEnabled) {
+        if (EnvironmentUtils.useRustCeramic()) {
+          // Start a background job that will wait for the Model to be available (synced over Recon)
+          // and then start publishing to it.
+          const metricsModel = NodeMetrics.getModel(this._networkOptions.name)
+          void this._waitForMetricsModel(metricsModel).then(
+            this._startPublishingNodeMetrics.bind(this, metricsModel)
+          )
+        } else {
+          this._logger.warn(
+            `Disabling publishing of Node Metrics because we are not connected to a Recon-compatible p2p node`
+          )
+        }
+      } else {
+        this._logger.imp(`Node Metrics publishing disabled by config`)
+      }
+    } else {
+      this._logger.warn(
+        `The ceramic daemon is running without an authenticated DID.  This means that this node cannot itself publish streams, including node metrics, and cannot use a DID as the method to authenticate with the Ceramic Anchor Service.  See https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet#updating-to-did-based-authentication for instructions on how to update your node to use DID authentication.`
+      )
+    }
+
+    // Start background job to publish periodic metrics
+    this._versionMetricInterval = setInterval(
+      this._publishVersionMetrics.bind(this),
+      PUBLISH_VERSION_INTERVAL_MS
+    )
+  }
+
+  /**
+   * Starts up the subsystem to periodically publish Node Metrics to a Stream.
+   * Requires the data for the NodeMetrics Model to already be available locally
+   * in the ceramic-one blockstore.
+   * @param metricsModel - the StreamID of the Model that Node Metrics should be published to.
+   */
+  async _startPublishingNodeMetrics(metricsModel: StreamID): Promise<void> {
+    await this.repository.index.indexModels([{ streamID: metricsModel }])
+    await this.recon.registerInterest(metricsModel, this.did.id)
+
+    // Now start the NodeMetrics system.
+    const ipfsVersion = await this.ipfs.version()
+    const ipfsId = await this.ipfs.id()
+
+    NodeMetrics.start({
+      ceramic: this,
+      network: this._networkOptions.name,
+      ceramicVersion: this._versionInfo.cliPackageVersion,
+      ipfsVersion: ipfsVersion.version,
+      intervalMS: this._metricsConfig?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
+      nodeId: ipfsId.id.toString(),
+      nodeName: '', // daemon.hostname is not useful
+      nodeAuthDID: this.did.id,
+      nodeIPAddr: '', // daemon.hostname is not the external name
+      nodePeerId: ipfsId.id.toString(),
+      logger: this._logger,
+    })
+    this._logger.imp(
+      `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
+    )
+  }
+
+  /**
+   * Waits for Model used to publish NodeMetrics to be available locally.
+   * Since we subscribe to the metamodel at startup, so long as some connected node on the network
+   * has the model, it should eventually be available locally.
+   * @param model
+   */
+  async _waitForMetricsModel(model: StreamID): Promise<void> {
+    let attemptNum = 0
+    let backoffMs = 100
+    const maxBackoffMs = 1000 * 60 // Caps off at checking once per minute
+
+    while (!this._shutdownSignal.isShuttingDown()) {
+      try {
+        await this.dispatcher.getFromIpfs(model.cid)
+        if (attemptNum > 0) {
+          this._logger.imp(`Model ${model} used to publish Node Metrics loaded successfully`)
+        }
+        return
+      } catch (err) {
+        if (attemptNum == 0) {
+          this._logger.imp(
+            `Waiting for Model ${model} used to publish Node Metrics to be available locally`
+          )
+        } else if (attemptNum % 5 == 0) {
+          this._logger.err(`Error loading Model ${model} used to publish Node Metrics: ${err}`)
+        }
+
+        await this._shutdownSignal.abortable((signal) => delayOrAbort(backoffMs, signal))
+        attemptNum++
+        if (backoffMs <= maxBackoffMs) {
+          backoffMs *= 2
+        }
+      }
+    }
+  }
+
   /**
    * Runs some checks at node startup to ensure that the node is healthy and properly configured.
    * Throws an Error if any issues are detected
@@ -567,14 +725,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       )
     }
 
-    if (process.env.CERAMIC_RECON_MODE) {
-      this._logger.warn(`Running Ceramic in v4 mode. This mode is still experimental.`)
-    } else {
-      if (!this.dispatcher.enableSync) {
-        this._logger.warn(
-          `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
-        )
-      }
+    if (!EnvironmentUtils.useRustCeramic() && !this.dispatcher.enableSync) {
+      this._logger.warn(
+        `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
+      )
     }
   }
 

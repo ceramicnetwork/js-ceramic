@@ -14,6 +14,7 @@ import {
   SignedCommitContainer,
   StreamState,
 } from '../stream.js'
+import { EnvironmentUtils } from '../utils/environment-utils.js'
 import type { DagJWS } from 'dids'
 import { CommitID, StreamID, StreamType } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
@@ -282,7 +283,7 @@ export class StreamUtils {
     if (StreamUtils.isSignedCommit(commit)) {
       const block = await ipfs.block.get(toCID((commit as DagJWS).link), {
         // @ts-ignore
-        offline: process.env.CERAMIC_RECON_MODE == 'true',
+        offline: EnvironmentUtils.useRustCeramic(),
       })
       return {
         jws: commit as DagJWS,

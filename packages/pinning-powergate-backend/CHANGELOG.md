@@ -3,6 +3,65 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@6.3.0-rc.0...@ceramicnetwork/pinning-powergate-backend@6.3.0-rc.1) (2024-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+# [6.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@6.2.0...@ceramicnetwork/pinning-powergate-backend@6.3.0-rc.0) (2024-07-29)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+# [6.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@6.2.0-rc.0...@ceramicnetwork/pinning-powergate-backend@6.2.0) (2024-07-22)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+# [6.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@6.1.0...@ceramicnetwork/pinning-powergate-backend@6.2.0-rc.0) (2024-07-22)
+
+
+### Bug Fixes
+
+* pin multiformats to patches of v13.1.x ([#3267](https://github.com/ceramicnetwork/js-ceramic/issues/3267)) ([da64078](https://github.com/ceramicnetwork/js-ceramic/commit/da6407810961b94105fd9b54eba4f3500b4a4bc5))
+
+
+
+
+
+# [6.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@6.0.1-rc.0...@ceramicnetwork/pinning-powergate-backend@6.1.0) (2024-07-15)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+## [6.0.1-rc.0](/compare/@ceramicnetwork/pinning-powergate-backend@6.0.0-rc.0...@ceramicnetwork/pinning-powergate-backend@6.0.1-rc.0) (2024-07-10)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+# [6.0.0-rc.0](/compare/@ceramicnetwork/pinning-powergate-backend@5.15.0...@ceramicnetwork/pinning-powergate-backend@6.0.0-rc.0) (2024-07-10)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
 # [5.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@5.15.0-rc.0...@ceramicnetwork/pinning-powergate-backend@5.15.0) (2024-07-01)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend

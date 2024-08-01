@@ -3,6 +3,7 @@ import {
   AnchorEvent,
   AnchorOpts,
   AnchorStatus,
+  EnvironmentUtils,
   EventType,
   CreateOpts,
   DiagnosticsLogger,
@@ -54,6 +55,12 @@ const STREAM_SYNC = 'stream_sync'
 
 const RECON_STORE_USECASE_NAME = 'recon'
 const RECON_STORE_CURSOR_KEY = 'cursor'
+
+// TODO : Use spans instead of observe when reporting for spans is ready
+const IMPORT_CAR_ANCHOR_COMMIT_REQUESTED = 'import_car_anchor_commit'
+// const IMPORT_CAR_ANCHOR_COMMIT_SPAN = 'import_car_anchor_commit_span'
+const IMPORT_CAR_ANCHOR_COMMIT_COMPLETED = 'import_car_anchor_commit_completed'
+const IMPORT_CAR_ANCHOR_COMMIT_TIME = 'import_car_anchor_commit_time'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -185,7 +192,9 @@ export class Repository {
     const cursor = (await reconStore.exists(RECON_STORE_CURSOR_KEY))
       ? await reconStore.get(RECON_STORE_CURSOR_KEY)
       : '0'
-    await this.recon.init(cursor)
+
+    const interests = this.index.indexedModels().map((modelData) => modelData.streamID)
+    await this.recon.init(cursor, interests)
     this.reconEventFeedSubscription = this.recon
       .pipe(concatMap(this.handleReconEvents.bind(this)))
       .subscribe()
@@ -237,8 +246,8 @@ export class Repository {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
     const [state$, syncStatus] = await this.loadingQ.forStream(streamId).run(async () => {
-      if (process.env.CERAMIC_RECON_MODE) {
-        // When in v4 mode we are never syncing the stream but acting as if it
+      if (EnvironmentUtils.useRustCeramic()) {
+        // When using recon/rust-ceramic we are never syncing the stream but acting as if it
         // was already synced previously. This is safe because we know Recon will always be syncing
         // the stream in the background (or the stream isn't part of an indexed model in which case
         // we still don't want to sync it).
@@ -759,9 +768,17 @@ export class Repository {
       remainingRetries--
     ) {
       try {
+        // TODO : Remove observe and use Spans for richer reporting when Spans support is ready
         if (witnessCAR) {
+          // const importCARAnchorCommitSpan = Metrics.startSpan(IMPORT_CAR_ANCHOR_COMMIT_SPAN)
+          const timeStart = Date.now()
+          Metrics.count(IMPORT_CAR_ANCHOR_COMMIT_REQUESTED, 1)
           await this.dispatcher.importCAR(witnessCAR, streamId)
+          Metrics.count(IMPORT_CAR_ANCHOR_COMMIT_COMPLETED, 1)
+          const timeEnd = Date.now()
+          Metrics.observe(IMPORT_CAR_ANCHOR_COMMIT_TIME, timeEnd - timeStart)
           this.logger.verbose(`successfully imported CAR file for ${streamId}`)
+          // importCARAnchorCommitSpan.end()
         }
 
         const applied = await this._handleTip(state$, anchorCommitCID)

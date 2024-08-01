@@ -3,6 +3,73 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.3.0-rc.0...@ceramicnetwork/ipfs-daemon@6.3.0-rc.1) (2024-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [6.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.2.0...@ceramicnetwork/ipfs-daemon@6.3.0-rc.0) (2024-07-29)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [6.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.2.0-rc.0...@ceramicnetwork/ipfs-daemon@6.2.0) (2024-07-22)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [6.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.1.0...@ceramicnetwork/ipfs-daemon@6.2.0-rc.0) (2024-07-22)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [6.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.1.0-rc.0...@ceramicnetwork/ipfs-daemon@6.1.0) (2024-07-15)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [6.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.0.1-rc.0...@ceramicnetwork/ipfs-daemon@6.1.0-rc.0) (2024-07-12)
+
+
+### Features
+
+* add devqa bootstrap peers ([#3256](https://github.com/ceramicnetwork/js-ceramic/issues/3256)) ([5fdcf92](https://github.com/ceramicnetwork/js-ceramic/commit/5fdcf92f985c103a1f41fae2d055b866189d6163))
+
+
+
+
+
+## [6.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.0.0-rc.0...@ceramicnetwork/ipfs-daemon@6.0.1-rc.0) (2024-07-10)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [6.0.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@5.16.0...@ceramicnetwork/ipfs-daemon@6.0.0-rc.0) (2024-07-10)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
 # [5.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@5.16.0-rc.0...@ceramicnetwork/ipfs-daemon@5.16.0) (2024-07-01)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

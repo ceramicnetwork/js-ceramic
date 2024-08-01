@@ -7,7 +7,7 @@ import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import all from 'it-all'
 import { AnchorRequestStore } from '../../store/anchor-request-store.js'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 /**
  * Returns a list of all StreamIDs stored in the AnchorRequestStore.
@@ -26,7 +26,6 @@ let ipfs: IpfsApi
 let stateStoreDirectoryName: string
 
 // Should  pass on v4 if updated from TileDocument
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 beforeAll(async () => {
   ipfs = await createIPFS()

@@ -7,6 +7,7 @@ import { Observer, Subject } from 'rxjs'
  */
 export class ShutdownSignal {
   private subject: Subject<void> = new Subject()
+  private shuttingDown = false
 
   /**
    * Subscribers to the signal.
@@ -20,6 +21,11 @@ export class ShutdownSignal {
    */
   abort(): void {
     this.subject.complete()
+    this.shuttingDown = true
+  }
+
+  isShuttingDown(): boolean {
+    return this.shuttingDown
   }
 
   /**

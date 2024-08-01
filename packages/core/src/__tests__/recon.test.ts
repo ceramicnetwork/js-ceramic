@@ -5,6 +5,7 @@ import { jest } from '@jest/globals'
 import { CARFactory, type CAR } from 'cartonne'
 import { toArray, take, lastValueFrom, firstValueFrom, race, timer } from 'rxjs'
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
+import { BaseTestUtils as TestUtils } from '@ceramicnetwork/base-test-utils'
 
 const RECON_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
@@ -78,7 +79,32 @@ describe('ReconApi', () => {
       )
       await reconApi.init()
       await firstValueFrom(race(reconApi, timer(1000)))
-      expect(mockSendRequest).toHaveBeenCalledTimes(1)
+      // interest + network check
+      expect(mockSendRequest).toHaveBeenCalledTimes(2)
+    })
+
+    test('should register interests on init', async () => {
+      const mockSendRequest = jest.fn(() => Promise.resolve())
+      const reconApi = new ReconApi(
+        { enabled: true, url: RECON_URL, feedEnabled: false },
+        LOGGER,
+        mockSendRequest
+      )
+      const fakeInterest0 = TestUtils.randomStreamID()
+      const fakeInterest1 = TestUtils.randomStreamID()
+      await reconApi.init('testInitialCursor', [fakeInterest0, fakeInterest1])
+      expect(mockSendRequest).toHaveBeenCalledTimes(4)
+      expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/interests`, {
+        method: 'POST',
+        body: { sep: 'model', sepValue: fakeInterest0.toString() },
+        headers: { 'Content-Type': 'application/json' },
+      })
+      expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/interests`, {
+        method: 'POST',
+        body: { sep: 'model', sepValue: fakeInterest1.toString() },
+        headers: { 'Content-Type': 'application/json' },
+      })
+      reconApi.stop()
     })
   })
 
@@ -96,10 +122,11 @@ describe('ReconApi', () => {
 
     test('should be able to register interest in a model', async () => {
       await reconApi.registerInterest(MODEL)
-      expect(mockSendRequest).toHaveBeenCalledWith(
-        `${RECON_URL}/ceramic/interests/model/${MODEL.toString()}`,
-        { method: 'POST' }
-      )
+      expect(mockSendRequest).toHaveBeenCalledWith(`${RECON_URL}/ceramic/interests`, {
+        method: 'POST',
+        body: { sep: 'model', sepValue: MODEL.toString() },
+        headers: { 'Content-Type': 'application/json' },
+      })
     })
   })
 

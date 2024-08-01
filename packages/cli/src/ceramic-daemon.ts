@@ -1,14 +1,12 @@
 import express, { Request, Response, NextFunction } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
-import {
-  DEFAULT_TRACE_SAMPLE_RATIO,
-  ServiceMetrics as Metrics,
-} from '@ceramicnetwork/observability'
-import { DEFAULT_PUBLISH_INTERVAL_MS, NodeMetrics, Observable } from '@ceramicnetwork/node-metrics'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { NodeMetrics, Observable } from '@ceramicnetwork/node-metrics'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
+  EnvironmentUtils,
   FieldsIndex,
   LoggerProvider,
   LogStyle,
@@ -49,7 +47,6 @@ import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
-const CALLER_NAME = 'js-ceramic'
 
 const ADMIN_CODE_EXPIRATION_TIMEOUT = 1000 * 60 * 1 // 1 min
 const ADMIN_CODE_CACHE_CAPACITY = 50
@@ -81,33 +78,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     return new RotatingFileStream(logPath, true)
   })
 
-  const metricsExporterEnabled = opts.metrics?.metricsExporterEnabled && opts.metrics?.collectorHost
-  const prometheusExporterEnabled =
-    opts.metrics?.prometheusExporterEnabled && opts.metrics?.prometheusExporterPort
-
-  // If desired, enable OTLP metrics
-  if (metricsExporterEnabled && prometheusExporterEnabled) {
-    Metrics.start(
-      opts.metrics.collectorHost,
-      CALLER_NAME,
-      DEFAULT_TRACE_SAMPLE_RATIO,
-      null,
-      true,
-      opts.metrics.prometheusExporterPort
-    )
-  } else if (metricsExporterEnabled) {
-    Metrics.start(opts.metrics.collectorHost, CALLER_NAME)
-  } else if (prometheusExporterEnabled) {
-    Metrics.start(
-      '',
-      CALLER_NAME,
-      DEFAULT_TRACE_SAMPLE_RATIO,
-      null,
-      true,
-      opts.metrics.prometheusExporterPort
-    )
-  }
-
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     readOnly: opts.node.readOnly || false,
@@ -121,6 +91,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
     disablePeerDataSync: opts.ipfs.disablePeerDataSync,
+    metrics: opts.metrics,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
@@ -286,7 +257,23 @@ export class CeramicDaemon {
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
       opts.ipfs?.host
     )
-    const ipfsId = await ipfs.id()
+    let ipfsId
+    try {
+      ipfsId = await ipfs.id()
+    } catch (err) {
+      throw new Error(
+        `Error connecting to p2p node. Make sure ceramic-one is running or use --ipfs-api to modify the expected http location (currently ${opts.ipfs?.host}): ${err}`
+      )
+    }
+
+    // we need to change the values before processing the config, so we keep track to log the warning after we have logging set up
+    const desiredIpfsClient = EnvironmentUtils.useRustCeramic() ? 'ceramic-one' : 'kubo'
+    const wrongIpfsClient =
+      opts.ipfs.mode == IpfsMode.REMOTE &&
+      EnvironmentUtils.useRustCeramic() !== ipfsId.agentVersion.includes('ceramic-one')
+    if (wrongIpfsClient) {
+      EnvironmentUtils.setIpfsFlavor(EnvironmentUtils.useRustCeramic() ? 'go' : 'rust')
+    }
 
     const versionInfo = {
       cliPackageVersion: version,
@@ -307,6 +294,17 @@ export class CeramicDaemon {
         .map(String)
         .join(', ')}`
     )
+    if (wrongIpfsClient) {
+      if (desiredIpfsClient === 'ceramic-one') {
+        diagnosticsLogger.warn(
+          `Detected ipfs kubo running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. Using kubo for p2p networking is deprecated - we recommend migrating to ceramic-one instead.`
+        )
+      } else {
+        diagnosticsLogger.warn(
+          `Ignoring configuration IPFS_FLAVOR='go'. Detected remote ceramic-one running at ${ipfsId.addresses} with agent version ${ipfsId.agentVersion}. If you intended to use ipfs, specify an --ipfs-url for an ipfs node.`
+        )
+      }
+    }
 
     const ceramic = new Ceramic(modules, params)
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic) }
@@ -349,35 +347,6 @@ export class CeramicDaemon {
 
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
-
-    if (did.authenticated) {
-      // If authenticated into the node, we can start publishing metrics
-      // publishing metrics is enabled by default, even if no metrics config
-      if (!opts.metrics || opts.metrics?.metricsPublisherEnabled) {
-        const ipfsVersion = await ipfs.version()
-        NodeMetrics.start({
-          ceramic: ceramic,
-          network: params.networkOptions.name,
-          ceramicVersion: version,
-          ipfsVersion: ipfsVersion.version,
-          intervalMS: opts.metrics?.metricsPublishIntervalMS || DEFAULT_PUBLISH_INTERVAL_MS,
-          nodeId: ipfsId.publicKey, // what makes the best ID for the node?
-          nodeName: '', // daemon.hostname is not useful
-          nodeAuthDID: did.id,
-          nodeIPAddr: '', // daemon.hostname is not the external name
-          nodePeerId: ipfsId.publicKey,
-          logger: diagnosticsLogger,
-        })
-        diagnosticsLogger.imp(
-          `Publishing Node Metrics publicly to the Ceramic Network.  To learn more, including how to disable publishing, please see the NODE_METRICS.md file for your branch, e.g. https://github.com/ceramicnetwork/js-ceramic/blob/develop/docs-dev/NODE_METRICS.md`
-        )
-      }
-    } else {
-      // warn that the node does not have an authenticated did
-      diagnosticsLogger.imp(
-        `The ceramic daemon is running without an authenticated DID.  This means that this node cannot itself publish streams, including node metrics, and cannot use a DID as the method to authenticate with the Ceramic Anchor Service.  See https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet#updating-to-did-based-authentication for instructions on how to update your node to use DID authentication.`
-      )
-    }
 
     return daemon
   }

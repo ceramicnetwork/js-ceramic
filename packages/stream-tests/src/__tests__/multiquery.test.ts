@@ -9,9 +9,9 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { jest } from '@jest/globals'
 import { createCeramic } from '../create-ceramic.js'
 import MockDate from 'mockdate'
+import { describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 // Should pass in V' if updated from TileDocument although without sync options
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('multiquery API http-client tests', () => {
   let ipfs: IpfsApi

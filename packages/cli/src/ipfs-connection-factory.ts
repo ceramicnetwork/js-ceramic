@@ -1,6 +1,6 @@
 import mergeOpts from 'merge-options'
 import * as ipfsClient from 'ipfs-http-client'
-import { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, EnvironmentUtils, IpfsApi, Networks } from '@ceramicnetwork/common'
 import { IpfsMode } from './daemon-config.js'
 import * as http from 'http'
 import * as https from 'https'
@@ -34,7 +34,13 @@ export class IpfsConnectionFactory {
 
       return ipfsApi
     } else {
-      return this.createGoIPFS()
+      if (EnvironmentUtils.useRustCeramic()) {
+        throw new Error(
+          `Running ceramic-one in bundled mode is not supported. Pass --ipfs-api to connect to an external ceramic-one node.`
+        )
+      } else {
+        return this.createGoIPFS()
+      }
     }
   }
 

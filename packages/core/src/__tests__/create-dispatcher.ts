@@ -32,6 +32,7 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   } as unknown as AnchorRequestStore
   const index = {
     init: () => Promise.resolve(),
+    indexedModels: () => [],
   } as unknown as IndexApi
   repository.setDeps({
     pinStore,

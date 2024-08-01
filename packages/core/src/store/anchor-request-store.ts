@@ -147,7 +147,13 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
             resolve(null)
           }, this.#infiniteListBatchTimeoutMs)
         })
-        this.#logger.verbose(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
+        if (gt) {
+          this.#logger.verbose(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
+        } else {
+          this.#logger.verbose(
+            `Fetching batch from AnchorRequestStore starting at the beginning of the keys`
+          )
+        }
         const batchPromise = this.store.find({
           limit: batchSize,
           gt: generateKey(gt),

@@ -2,10 +2,6 @@ FROM node:20 as ceramic
 
 RUN apt-get update && apt-get install -y netcat-traditional gettext-base jq
 
-COPY ci-scripts/install-rust-ceramic.sh ./
-
-ARG RUST_CERAMIC_VERSION=latest
-RUN ./install-rust-ceramic.sh ${RUST_CERAMIC_VERSION}
 
 WORKDIR /js-ceramic
 
@@ -32,5 +28,4 @@ ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
 FROM ceramic as composedb
 
 ARG COMPOSEDB_VERSION=latest
-
 RUN npm install --location=global @composedb/cli@${COMPOSEDB_VERSION}

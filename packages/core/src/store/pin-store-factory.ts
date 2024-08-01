@@ -1,5 +1,11 @@
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { DiagnosticsLogger, IpfsApi, PinningBackendStatic, toCID } from '@ceramicnetwork/common'
+import {
+  DiagnosticsLogger,
+  EnvironmentUtils,
+  IpfsApi,
+  PinningBackendStatic,
+  toCID,
+} from '@ceramicnetwork/common'
 import { PinningAggregation } from '@ceramicnetwork/pinning-aggregation'
 import { PinStore } from './pin-store.js'
 import type { CID } from 'multiformats/cid'
@@ -52,7 +58,7 @@ export class PinStoreFactory {
       const blob = await ipfs.dag.get(cid, {
         timeout: IPFS_GET_TIMEOUT,
         // @ts-ignore
-        offline: process.env.CERAMIC_RECON_MODE == 'true',
+        offline: EnvironmentUtils.useRustCeramic(),
       })
       if (blob && blob.value) {
         const record = blob.value
@@ -66,7 +72,7 @@ export class PinStoreFactory {
         (
           await ipfs.dag.resolve(path, {
             // @ts-ignore
-            offline: process.env.CERAMIC_RECON_MODE == 'true',
+            offline: EnvironmentUtils.useRustCeramic(),
           })
         ).cid.toString()
       ) // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version

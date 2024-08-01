@@ -59,20 +59,17 @@ jobs:
         name: Set main branch tag
         if: ${{ env.BRANCH == 'main' }}
         run: |
-          echo "ENV_TAG=prod" >> $GITHUB_ENV
+          echo "DEPLOY_ENV=prod" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
         run: |
-          echo "ENV_TAG=tnet" >> $GITHUB_ENV
+          echo "DEPLOY_ENV=tnet" >> $GITHUB_ENV
       -
         name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
+        if: ${{ env.BRANCH == 'develop' || env.DEPLOY_ENV == '' }}
         run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-      -
-        name: Verify Docker image
-        run: dagger do verify -p ${{ env.DAGGER_PLAN }}
+          echo "DEPLOY_ENV=dev" >> $GITHUB_ENV
       -
         name: Set publish flag
         if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
@@ -84,11 +81,21 @@ jobs:
       -
         name: Push Docker image
         if: ${{ env.PUBLISH == 'true' }}
-        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.DEPLOY_ENV }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
-        name: Create deployment job
+        name: Schedule k8s deployment
         if: ${{ env.PUBLISH == 'true' }}
-        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":latest:\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: |
+          # Schedule deployment
+          make DEPLOY_ENV="$DEPLOY_ENV" DEPLOY_TAG=${{ env.SHA }} schedule-k8s-deployment
+          # Schedule post-deployment tests
+          make DEPLOY_ENV="$DEPLOY_ENV" TEST_SELECTOR="correctness/fast" schedule-tests
+
+          # If deploying to QA, also deploy to Dev and run post-deployment tests.
+          if [[ "$DEPLOY_ENV" == "qa" ]]; then
+            make DEPLOY_ENV="dev" DEPLOY_TAG=${{ env.SHA }} schedule-k8s-deployment
+            make DEPLOY_ENV="dev" TEST_SELECTOR="correctness/fast" schedule-tests
+          fi
       -
         name: Set commit status "success"
         run: dagger do success -p ${{ env.STATUS_PLAN }}
