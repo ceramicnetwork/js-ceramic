@@ -54,6 +54,10 @@ const ADMIN_CODE_CACHE_CAPACITY = 50
 const STREAM_PINNED = 'stream_pinned'
 const STREAM_UNPINNED = 'stream_unpinned'
 const ERROR_QUERYING_COLLECTION = 'error_querying_collection'
+const METRIC_HTTP_REQUEST_CREATE_STREAM_SPAN = 'http_request_create_stream_span'
+const METRIC_HTTP_REQUEST_CREATE_STREAM_DURATION = 'http_request_create_stream_duration'
+const METRIC_CREATE_STREAM_DURATION_BEFORE_CLOSE =
+  'http_request_create_stream_duration_before_close'
 
 type AdminCode = string
 type Timestamp = number
@@ -493,6 +497,16 @@ export class CeramicDaemon {
    * @dev Useful when the streamId is unknown, but you have the init contents
    */
   async createStreamFromGenesis(req: Request, res: Response): Promise<void> {
+    const span = Metrics.startSpan(METRIC_HTTP_REQUEST_CREATE_STREAM_SPAN)
+    const start = new Date()
+    let closedAt
+
+    const recordClosedAt = () => {
+      const now = new Date()
+      closedAt = now.getTime() - start.getTime()
+    }
+    res.on('close', recordClosedAt)
+
     const { type, genesis, opts } = req.body
     const stream = await this.ceramic.createStreamFromGenesis(
       type,
@@ -500,6 +514,16 @@ export class CeramicDaemon {
       opts
     )
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+
+    res.removeListener('close', recordClosedAt)
+    const now = new Date()
+    const createDuration = now.getTime() - start.getTime()
+    Metrics.record(METRIC_HTTP_REQUEST_CREATE_STREAM_DURATION, createDuration)
+    if (closedAt && createDuration > closedAt + 100) {
+      Metrics.record(METRIC_CREATE_STREAM_DURATION_BEFORE_CLOSE, closedAt)
+    }
+
+    span.end()
   }
 
   /**
