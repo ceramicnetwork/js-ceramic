@@ -10,8 +10,8 @@ const mockNodeConfig = {
   'private-seed-url':
     'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad',
 }
-const mockMetricsPublishOn = {
-  'metrics-publisher-enabled': true,
+const mockMetricsPublishOff = {
+  'metrics-publisher-enabled': false,
 }
 
 describe('reading from file', () => {
@@ -45,18 +45,18 @@ describe('reading from file', () => {
     const daemonConfig = await DaemonConfig.fromFile(configFilepath)
     expect(daemonConfig.node.sensitive_privateSeedUrl()).toEqual(mockNodeConfig['private-seed-url'])
   })
-  test('publish metrics off by default', async () => {
+  test('publish metrics on by default', async () => {
     const config = { metrics: {} }
     await writeFile(configFilepath, JSON.stringify(config))
     const daemonConfig = await DaemonConfig.fromFile(configFilepath)
-    expect(daemonConfig.metrics?.metricsPublisherEnabled).toBeFalsy()
+    expect(daemonConfig.metrics?.metricsPublisherEnabled).toBeTruthy()
   })
-  test('setting publish metrics to true overrides default', async () => {
+  test('setting publish metrics to false overrides default', async () => {
     console.log('in publish metrics')
-    const config = { metrics: mockMetricsPublishOn }
+    const config = { metrics: mockMetricsPublishOff }
     await writeFile(configFilepath, JSON.stringify(config))
     const daemonConfig = await DaemonConfig.fromFile(configFilepath)
-    expect(daemonConfig.metrics.metricsPublisherEnabled).toBeTruthy()
+    expect(daemonConfig.metrics.metricsPublisherEnabled).toBeFalsy()
   })
   test('expand relative path', async () => {
     const config = {
