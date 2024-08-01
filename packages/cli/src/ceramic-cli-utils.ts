@@ -51,6 +51,7 @@ const generateDefaultDaemonConfig = () => {
     logger: { 'log-level': LogLevel.important, 'log-to-files': false },
     metrics: {
       'metrics-exporter-enabled': false,
+      'metrics-publisher-enabled': true,
     },
     network: { name: Networks.TESTNET_CLAY },
     node: {

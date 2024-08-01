@@ -613,9 +613,9 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
     // Handle NodeMetrics that are published to a Model on Ceramic
     if (this.did?.authenticated) {
-      // If authenticated into the node, we can start publishing metrics
-      // publishing metrics is enabled by default, even if no metrics config
-      if (this._metricsConfig?.metricsPublisherEnabled) {
+      // If authenticated into the node, we can start publishing metrics.
+      // Publishing metrics is enabled by default, even if no metrics config is provided
+      if (!this._metricsConfig || this._metricsConfig?.metricsPublisherEnabled) {
         if (EnvironmentUtils.useRustCeramic()) {
           // Start a background job that will wait for the Model to be available (synced over Recon)
           // and then start publishing to it.
@@ -628,6 +628,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
             `Disabling publishing of Node Metrics because we are not connected to a Recon-compatible p2p node`
           )
         }
+      } else {
+        this._logger.imp(`Node Metrics publishing disabled by config`)
       }
     } else {
       this._logger.warn(
