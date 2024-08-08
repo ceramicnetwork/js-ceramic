@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.3.0...@ceramicnetwork/core@6.4.0-rc.0) (2024-08-08)
+
+
+### Bug Fixes
+
+* correctly use controller when registering interest and correctly use node's ID when publishing metrics. ([#3273](https://github.com/ceramicnetwork/js-ceramic/issues/3273)) ([e719816](https://github.com/ceramicnetwork/js-ceramic/commit/e719816a0f339d06e5d8d5d947452f04c1ac486b))
+* skip sporadically failing feed test ([#3276](https://github.com/ceramicnetwork/js-ceramic/issues/3276)) ([64490e8](https://github.com/ceramicnetwork/js-ceramic/commit/64490e88165590f56e13b5a87efe499a894d60e1))
+
+
+### Features
+
+* Enable publishing of Node Metrics to the network by default ([#3275](https://github.com/ceramicnetwork/js-ceramic/issues/3275)) ([d36829b](https://github.com/ceramicnetwork/js-ceramic/commit/d36829b2f1179374bb5428f1b077ba2cbfcf160f))
+
+
+
+
+
 # [6.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.3.0-rc.1...@ceramicnetwork/core@6.3.0) (2024-08-08)
 
 **Note:** Version bump only for package @ceramicnetwork/core
