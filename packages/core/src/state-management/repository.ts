@@ -815,6 +815,8 @@ export class Repository {
           if (tip.equals(state$.tip)) {
             state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
           }
+
+          throw error
         }
       }
     }

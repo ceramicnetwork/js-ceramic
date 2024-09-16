@@ -776,6 +776,26 @@ describeIfV3('handleAnchorEvent', () => {
       expect(shouldRemove).toBeTruthy()
       expect(nextSpy).not.toBeCalled()
     })
+
+    test('Throw error if unable to handle anchor commit APPLY_ANCHOR_COMMIT_ATTEMPTS times', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const witnessCar = new CARFactory().build()
+      witnessCar.put('root', { isRoot: true })
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.COMPLETED,
+        message: 'Last COMPLETED',
+        streamId: tile.id,
+        cid: tile.tip,
+        witnessCar,
+      }
+      const dispatcherImportCarSpy = jest.spyOn(ceramic.dispatcher as any, 'importCAR')
+      dispatcherImportCarSpy.mockImplementation(async () => {
+        throw new Error('Fake error')
+      })
+      await expect(repository.handleAnchorEvent(state$, event)).rejects.toThrow('Fake error')
+      expect(dispatcherImportCarSpy).toBeCalledTimes(3)
+    })
   })
 })
 
