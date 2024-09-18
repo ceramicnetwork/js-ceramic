@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.4.0...@ceramicnetwork/core@6.5.0-rc.0) (2024-09-18)
+
+
+### Bug Fixes
+
+* Don't remove entries from AnchorRequestStore if applying the anchor commit fails ([#3277](https://github.com/ceramicnetwork/js-ceramic/issues/3277)) ([c2282b7](https://github.com/ceramicnetwork/js-ceramic/commit/c2282b7b0fa23b2cc8c33e56c4c760a6edd2c86f))
+
+
+
+
+
 # [6.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.4.0-rc.0...@ceramicnetwork/core@6.4.0) (2024-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/core
