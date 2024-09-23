@@ -47,6 +47,11 @@ export class StateCache<T> implements Iterable<[string, T]> {
     this.volatile.delete(key)
   }
 
+  clear() {
+    this.durable.clear()
+    this.volatile.clear()
+  }
+
   /**
    * Set value to durable bucket. Remove from volatile.
    */

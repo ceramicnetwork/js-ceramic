@@ -341,6 +341,15 @@ export class Repository {
   }
 
   /**
+   * Only used for testing.
+   * Clears the in-memory cache of stream states.
+   * @private
+   */
+  _clearCache() {
+    this.inmemory.clear()
+  }
+
+  /**
    * Must be called from within the ExecutionQueue to be safe.
    */
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
@@ -487,28 +496,40 @@ export class Repository {
     // We also skip CACAO expiration checking during this initial load as its possible
     // that the CommitID we are being asked to load may in fact be an anchor commit with
     // the timestamp information that will reveal to us that the CACAO didn't actually expire.
-    const base$ = await this.load(commitId.baseID, opts, false)
+    let existingState$ = null
+    try {
+      existingState$ = await this.load(commitId.baseID, opts, false)
+    } catch (err) {
+      this.logger.warn(
+        `Error loading existing state for stream ${commitId.baseID} while loading stream at commit ${commitId.commit}`
+      )
+    }
 
-    return this._atCommit(commitId, base$)
-  }
-
-  private async _atCommit(
-    commitId: CommitID,
-    existingState$: RunningState
-  ): Promise<SnapshotState> {
     return this.executionQ.forStream(commitId).run(async () => {
-      const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
+      const stateAtCommit = existingState$
+        ? await this.streamLoader.resetStateToCommit(existingState$.state, commitId)
+        : await this.streamLoader.stateAtCommit(commitId)
 
       // Since we skipped CACAO expiration checking earlier when we loaded the current stream state,
       // we need to make sure to do it here.
       SignatureUtils.checkForCacaoExpiration(stateAtCommit)
 
-      // If the provided CommitID is ahead of what we have in the cache and state store, then we
-      // should update them to include it.
-      if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
-        existingState$.next(stateAtCommit)
-        await this._updateStateIfPinned(existingState$)
+      // Check if we need to update what state is stored in our state store based on any
+      // information learned from this CommitID.
+      if (existingState$) {
+        if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
+          // If the provided CommitID is ahead of what we have in the cache and state store, then we
+          // should update them to include it.
+          existingState$.next(stateAtCommit)
+          await this._updateStateIfPinned(existingState$)
+        }
+      } else {
+        // No existing state for this stream exists, so save it now.
+        const newState$ = new RunningState(stateAtCommit, false)
+        this._registerRunningState(newState$)
+        await this._updateStateIfPinned(newState$)
       }
+
       return new SnapshotState(stateAtCommit)
     })
   }
@@ -522,7 +543,7 @@ export class Repository {
   async loadAtTime(streamId: StreamID, opts: LoadOpts): Promise<SnapshotState> {
     const base$ = await this.load(streamId.baseID, opts)
     const commitId = commitAtTime(base$.state, opts.atTime)
-    return this._atCommit(commitId, base$)
+    return this.loadAtCommit(commitId, opts)
   }
 
   /**

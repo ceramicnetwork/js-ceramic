@@ -180,31 +180,31 @@ describeIfV3('Streamloader', () => {
           expect(doc.id.toString()).toEqual(commit.baseID.toString())
         }
 
-        const stateV0 = await streamLoader.stateAtCommit(doc.state, commits[0])
+        const stateV0 = await streamLoader.resetStateToCommit(doc.state, commits[0])
         expect(stateV0.log.length).toEqual(1)
         expect(stateV0.content).toEqual(CONTENT0)
         expect(stateV0.next).toBeUndefined()
         expect(stateV0.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-        const stateV1 = await streamLoader.stateAtCommit(doc.state, commits[1])
+        const stateV1 = await streamLoader.resetStateToCommit(doc.state, commits[1])
         expect(stateV1.log.length).toEqual(2)
         expect(stateV1.content).toEqual(CONTENT0)
         expect(stateV1.next).toBeUndefined()
         expect(stateV1.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-        const stateV2 = await streamLoader.stateAtCommit(doc.state, commits[2])
+        const stateV2 = await streamLoader.resetStateToCommit(doc.state, commits[2])
         expect(stateV2.log.length).toEqual(3)
         expect(stateV2.content).toEqual(CONTENT0)
         expect(stateV2.next.content).toEqual(CONTENT1)
         expect(stateV2.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-        const stateV3 = await streamLoader.stateAtCommit(doc.state, commits[3])
+        const stateV3 = await streamLoader.resetStateToCommit(doc.state, commits[3])
         expect(stateV3.log.length).toEqual(4)
         expect(stateV3.content).toEqual(CONTENT0)
         expect(stateV3.next.content).toEqual(CONTENT2)
         expect(stateV3.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-        const stateV4 = await streamLoader.stateAtCommit(doc.state, commits[4])
+        const stateV4 = await streamLoader.resetStateToCommit(doc.state, commits[4])
         expect(stateV4.log.length).toEqual(5)
         expect(stateV4.content).toEqual(CONTENT2)
         expect(stateV4.next).toBeUndefined()
@@ -218,13 +218,19 @@ describeIfV3('Streamloader', () => {
         await CoreUtils.anchorUpdate(ceramic, stream)
 
         // Now load the stream at a commitID ahead of what is currently in the state
-        const updatedState1 = await streamLoader.stateAtCommit(initialState, stream.allCommitIds[1])
+        const updatedState1 = await streamLoader.resetStateToCommit(
+          initialState,
+          stream.allCommitIds[1]
+        )
         expect(updatedState1.log.length).toEqual(2)
         expect(updatedState1.content).toEqual(CONTENT0)
         expect(updatedState1.next.content).toEqual(CONTENT1)
         expect(updatedState1.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-        const updatedState2 = await streamLoader.stateAtCommit(initialState, stream.allCommitIds[2])
+        const updatedState2 = await streamLoader.resetStateToCommit(
+          initialState,
+          stream.allCommitIds[2]
+        )
         expect(updatedState2.log.length).toEqual(3)
         expect(updatedState2.content).toEqual(CONTENT1)
         expect(updatedState2.next).toBeUndefined()
@@ -236,9 +242,9 @@ describeIfV3('Streamloader', () => {
 
         const nonExistentCommitID = CommitID.make(doc.id, TestUtils.randomCID())
 
-        await expect(streamLoader.stateAtCommit(doc.state, nonExistentCommitID)).rejects.toThrow(
-          /Timeout error while loading CID/
-        )
+        await expect(
+          streamLoader.resetStateToCommit(doc.state, nonExistentCommitID)
+        ).rejects.toThrow(/Timeout error while loading CID/)
       })
 
       test('throw if commit rejected by conflict resolution', async () => {
@@ -250,7 +256,10 @@ describeIfV3('Streamloader', () => {
         const conflictingUpdateCID = await dispatcher.storeEvent(conflictingUpdate, stream.id)
 
         await expect(
-          streamLoader.stateAtCommit(stream.state, CommitID.make(stream.id, conflictingUpdateCID))
+          streamLoader.resetStateToCommit(
+            stream.state,
+            CommitID.make(stream.id, conflictingUpdateCID)
+          )
         ).rejects.toThrow(/rejected by conflict resolution/)
       })
     })

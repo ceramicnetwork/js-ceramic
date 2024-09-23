@@ -26,7 +26,8 @@ export class StreamLoader {
   async _loadStateFromTip(
     streamID: StreamID,
     tip: CID,
-    allowSyncErrors: boolean
+    allowSyncErrors: boolean,
+    opts = { throwOnInvalidCommit: false }
   ): Promise<StreamState | null> {
     let logWithoutTimestamps
     try {
@@ -44,9 +45,7 @@ export class StreamLoader {
       streamID,
       logWithoutTimestamps
     )
-    return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, {
-      throwOnInvalidCommit: false,
-    })
+    return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, opts)
   }
 
   async _applyTips(streamID: StreamID, tipSource$: Observable<CID>): Promise<StreamState> {
@@ -135,7 +134,7 @@ export class StreamLoader {
    * @param initialState
    * @param commitId
    */
-  async stateAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
+  async resetStateToCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
     // Throw if any commit fails to apply as we are trying to load at a specific commit and want
     // to error if we can't.
     const opts = { throwOnInvalidCommit: true, throwOnConflict: true, throwIfStale: false }
@@ -159,6 +158,18 @@ export class StreamLoader {
     return this.stateManipulator.resetStateToCommit(baseState, commitId.commit, {
       copyTimestampsFromRemovedAnchors: true,
     })
+  }
+
+  /**
+   * Return the state of a stream at a specific CommitID.
+   * @param commitId
+   */
+  async stateAtCommit(commitId: CommitID): Promise<StreamState> {
+    // Throw if any commit fails to apply as we are trying to load at a specific commit and want
+    // to error if we can't.
+    const opts = { throwOnInvalidCommit: true, throwOnConflict: true, throwIfStale: false }
+
+    return this._loadStateFromTip(commitId.baseID, commitId.commit, false, opts)
   }
 
   /**
