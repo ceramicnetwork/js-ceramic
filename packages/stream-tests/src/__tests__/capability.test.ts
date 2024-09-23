@@ -746,7 +746,74 @@ describe('CACAO Integration test', () => {
       1000 * 30
     )
 
-    test('Load at anchor CommitID to inform node of anchor meaning CACAO isnt actually expired', async () => {
+    test('Load at anchor CommitID to inform node of anchor meaning CACAO from genesis isnt actually expired', async () => {
+      const tile = await TileDocument.create(
+        ceramic,
+        CONTENT0,
+        {
+          controllers: [PARENT_WALLET_ADDRESS],
+        },
+        { asDID: didKeyWithCapability, anchor: true, publish: false }
+      )
+
+      // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
+      const dispatcher = ceramic.dispatcher
+      const handleAnchorSpy = jest.spyOn(ceramic.repository, '_handleAnchorCommit')
+      const anchorCommitPromise = new Promise<CID>((resolve) => {
+        handleAnchorSpy.mockImplementation(async (_, tip, witnessCar: CAR) => {
+          // Import CAR but do not apply the commit
+          if (tile.tip.equals(tip)) {
+            await dispatcher.importCAR(witnessCar)
+            const anchorCommit = witnessCar.roots[0]
+            resolve(anchorCommit)
+          }
+        })
+      })
+
+      const anchorService = ceramic.anchorService
+      await anchorService.anchor()
+
+      const anchorCommitCID = await anchorCommitPromise
+
+      await tile.sync({ sync: SyncOptions.NEVER_SYNC })
+      expect(tile.state.log).toHaveLength(1) // no anchor commit found
+
+      // Expire the CACAO, loading should fail
+      expireCacao()
+      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/)
+      const commitIdBeforeAnchor = tile.commitId
+      await expect(TileDocument.load(ceramic, commitIdBeforeAnchor)).rejects.toThrow(
+        /CACAO expired/
+      )
+
+      // Loading at the anchor commits CommitID should succeed
+      const commitIDAtAnchor = CommitID.make(tile.id, anchorCommitCID)
+      const loadedAtAnchorCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
+      expect(loadedAtAnchorCommit.state.log).toHaveLength(2)
+      expect(loadedAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Now loading the stream should work because the node now knows about the anchor
+      const loaded = await TileDocument.load(ceramic, tile.id)
+      expect(loaded.state.log).toHaveLength(2)
+      expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Loading at the CommitID before the AnchorCommit should still work because the timestamp
+      // information from the anchor is copied over even though the anchor commit itself isn't
+      // included in the state.
+      const loadedAtCommitBeforeAnchor = await TileDocument.load(ceramic, commitIdBeforeAnchor)
+      expect(loadedAtCommitBeforeAnchor.state.log).toHaveLength(1)
+      expect(loadedAtCommitBeforeAnchor.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // Resyncing outdated handle with the server should pick up the anchor commit
+      expect(tile.state.log).toHaveLength(1)
+      expect(tile.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
+      await tile.sync()
+      expect(tile.state.log).toHaveLength(2)
+      expect(tile.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      jest.restoreAllMocks()
+    }, 30000)
+
+    test('Load at anchor CommitID to inform node of anchor meaning CACAO from update isnt actually expired', async () => {
       const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
       const tile = await TileDocument.create(
         ceramic,
