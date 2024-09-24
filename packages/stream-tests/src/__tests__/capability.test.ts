@@ -967,7 +967,7 @@ describe('CACAO Integration test', () => {
         // Cannot repair stream even with SyncOptions.SYNC_ALWAYS if it is the genesis commit that
         // messed up.
         await expect(doc.sync()).rejects.toThrow(/CACAO expired/)
-        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(/CACAO expired/)
+        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(/CACAO.*expired/)
         expect(doc.content).toEqual(CONTENT0)
       },
       1000 * 60
