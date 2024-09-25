@@ -497,7 +497,7 @@ describe('CACAO Integration test', () => {
     )
   })
 
-  describeIfV3('CACAO Expiration', () => {
+  describe('CACAO Expiration', () => {
     let didKeyWithCapability
     let opts
     const CACAO_EXPIRATION_WINDOW = 1000 * 60 * 10 // 10 minutes
@@ -530,11 +530,12 @@ describe('CACAO Integration test', () => {
         expireCacao()
 
         await expect(
-          TileDocument.create(
+          ModelInstanceDocument.create(
             ceramic,
             CONTENT0,
             {
-              controllers: [PARENT_WALLET_ADDRESS],
+              model: METADATA.model,
+              controller: PARENT_WALLET_ADDRESS,
             },
             opts
           )
@@ -547,11 +548,12 @@ describe('CACAO Integration test', () => {
       'Cannot apply genesis commit with expired capability',
       async () => {
         // Create genesis commit before capability is expired
-        const genesis = await TileDocument.makeGenesis(
+        const genesis = await ModelInstanceDocument.makeGenesis(
           CeramicSigner.fromDID(didKeyWithCapability),
           CONTENT0,
           {
-            controllers: [PARENT_WALLET_ADDRESS],
+            model: METADATA.model,
+            controller: PARENT_WALLET_ADDRESS,
           }
         )
 
@@ -559,7 +561,7 @@ describe('CACAO Integration test', () => {
 
         // Now attempt to apply genesis commit after capability has expired.
         await expect(
-          ceramic.createStreamFromGenesis(TileDocument.STREAM_TYPE_ID, genesis, opts)
+          ceramic.createStreamFromGenesis(ModelInstanceDocument.STREAM_TYPE_ID, genesis, opts)
         ).rejects.toThrow(/Can not verify signature for commit .* CACAO has expired/)
       },
       1000 * 60
@@ -568,18 +570,19 @@ describe('CACAO Integration test', () => {
     test(
       'Cannot create update with expired capability',
       async () => {
-        const doc = await TileDocument.create(
+        const doc = await ModelInstanceDocument.create(
           ceramic,
           CONTENT0,
           {
-            controllers: [PARENT_WALLET_ADDRESS],
+            model: METADATA.model,
+            controller: PARENT_WALLET_ADDRESS,
           },
           opts
         )
 
         expireCacao()
 
-        await expect(doc.update(CONTENT1, null, opts)).rejects.toThrow(
+        await expect(doc.replace(CONTENT1, null, opts)).rejects.toThrow(
           /Capability is expired, cannot create a valid signature/
         )
       },
@@ -589,11 +592,12 @@ describe('CACAO Integration test', () => {
     test(
       'Cannot apply update with expired capability',
       async () => {
-        const doc = await TileDocument.create(
+        const doc = await ModelInstanceDocument.create(
           ceramic,
           CONTENT0,
           {
-            controllers: [PARENT_WALLET_ADDRESS],
+            model: METADATA.model,
+            controller: PARENT_WALLET_ADDRESS,
           },
           { ...opts, anchor: true }
         )
@@ -602,7 +606,12 @@ describe('CACAO Integration test', () => {
         await CoreUtils.anchorUpdate(ceramic, doc)
 
         // Make the commit before the CACAO has expired
-        const commit = await doc.makeCommit(CeramicSigner.fromDID(didKeyWithCapability), CONTENT1)
+        const commit = await ModelInstanceDocument.makeUpdateCommit(
+          CeramicSigner.fromDID(didKeyWithCapability),
+          doc.commitId,
+          doc.content,
+          CONTENT1
+        )
 
         expireCacao()
 
@@ -617,17 +626,23 @@ describe('CACAO Integration test', () => {
     test(
       'Can update with expired capability within 24 hour grace period',
       async () => {
-        const doc = await TileDocument.create(
+        const doc = await ModelInstanceDocument.create(
           ceramic,
           CONTENT0,
           {
-            controllers: [PARENT_WALLET_ADDRESS],
+            model: METADATA.model,
+            controller: PARENT_WALLET_ADDRESS,
           },
           opts
         )
 
         // Make the commit before the CACAO has expired
-        const commit = await doc.makeCommit(CeramicSigner.fromDID(didKeyWithCapability), CONTENT1)
+        const commit = await ModelInstanceDocument.makeUpdateCommit(
+          CeramicSigner.fromDID(didKeyWithCapability),
+          doc.commitId,
+          doc.content,
+          CONTENT1
+        )
 
         // Ceramic uses a 24 hour grace period during which it continues to accept expired CACAOs.
         // So we set the current time to 12 hours past the CACAO expiration time, which should still
@@ -646,117 +661,132 @@ describe('CACAO Integration test', () => {
       1000 * 60
     )
 
-    test('overwrite expired capability when SYNC_ALWAYS', async () => {
-      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
-      const tile = await TileDocument.deterministic(
-        ceramic,
-        { controllers: [PARENT_WALLET_ADDRESS], family: 'loving-one' },
-        opts
-      )
-      await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await CoreUtils.anchorUpdate(ceramic, tile)
-      await tile.update({ a: 3 }, null, opts)
+    testIfV3(
+      'overwrite expired capability when SYNC_ALWAYS',
+      async () => {
+        const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+        const tile = await TileDocument.deterministic(
+          ceramic,
+          { controllers: [PARENT_WALLET_ADDRESS], family: 'loving-one' },
+          opts
+        )
+        await tile.update({ a: 2 }, null, { ...opts, anchor: true })
+        await CoreUtils.anchorUpdate(ceramic, tile)
+        await tile.update({ a: 3 }, null, opts)
 
-      // 1. While CACAO is valid: Loading is ok
-      const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
-      const loaded1 = await TileDocument.load(ceramic, tile.id)
-      expect(tile.content['a']).toEqual(3)
-      expect(loaded0.state).toEqual(tile.state)
-      expect(loaded1.state).toEqual(tile.state)
-      // 2. It is expired: Rewrite the state!
-      expireCacao()
-      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
-      const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
-      expect(loaded3.content['a']).toEqual(2)
-      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
-      const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
-      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
-    }, 30000)
+        // 1. While CACAO is valid: Loading is ok
+        const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+        const loaded1 = await TileDocument.load(ceramic, tile.id)
+        expect(tile.content['a']).toEqual(3)
+        expect(loaded0.state).toEqual(tile.state)
+        expect(loaded1.state).toEqual(tile.state)
+        // 2. It is expired: Rewrite the state!
+        expireCacao()
+        await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+        const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+        expect(loaded3.content['a']).toEqual(2)
+        expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
+        const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
+        expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+      },
+      30000
+    )
 
-    test('overwrite expired capability when using SYNC_ON_ERROR', async () => {
-      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
-      const tile = await TileDocument.deterministic(
-        ceramic,
-        { controllers: [PARENT_WALLET_ADDRESS], family: 'loving-two' },
-        opts
-      )
-      await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await CoreUtils.anchorUpdate(ceramic, tile)
-      await tile.update({ a: 3 }, null, opts)
+    testIfV3(
+      'overwrite expired capability when using SYNC_ON_ERROR',
+      async () => {
+        const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+        const tile = await TileDocument.deterministic(
+          ceramic,
+          { controllers: [PARENT_WALLET_ADDRESS], family: 'loving-two' },
+          opts
+        )
+        await tile.update({ a: 2 }, null, { ...opts, anchor: true })
+        await CoreUtils.anchorUpdate(ceramic, tile)
+        await tile.update({ a: 3 }, null, opts)
 
-      // 1. While CACAO is valid: Loading is ok
-      const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
-      const loaded1 = await TileDocument.load(ceramic, tile.id)
-      expect(tile.content['a']).toEqual(3)
-      expect(loaded0.state).toEqual(tile.state)
-      expect(loaded1.state).toEqual(tile.state)
-      // 2. It is expired: Rewrite the state!
-      expireCacao()
-      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
-      const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ON_ERROR })
-      expect(loaded3.content['a']).toEqual(2)
-      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
-      const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
-      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
-    }, 30000)
+        // 1. While CACAO is valid: Loading is ok
+        const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+        const loaded1 = await TileDocument.load(ceramic, tile.id)
+        expect(tile.content['a']).toEqual(3)
+        expect(loaded0.state).toEqual(tile.state)
+        expect(loaded1.state).toEqual(tile.state)
+        // 2. It is expired: Rewrite the state!
+        expireCacao()
+        await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+        const loaded3 = await TileDocument.load(ceramic, tile.id, {
+          sync: SyncOptions.SYNC_ON_ERROR,
+        })
+        expect(loaded3.content['a']).toEqual(2)
+        expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
+        const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
+        expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+      },
+      30000
+    )
 
     test(
       'Load anchored stream at CommitID after CACAO expiration',
       async () => {
-        const content0 = { a: 0 }
-        const content1 = { a: 1 }
         const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
-        const doc = await TileDocument.create(
+        const doc = await ModelInstanceDocument.create(
           ceramic,
-          content0,
-          { controllers: [PARENT_WALLET_ADDRESS] },
+          CONTENT0,
+          { model: METADATA.model, controller: PARENT_WALLET_ADDRESS },
           opts
         )
-        await doc.update(content1, null, { ...opts, anchor: true })
+        await doc.replace(CONTENT1, null, { ...opts, anchor: true })
         await CoreUtils.anchorUpdate(ceramic, doc)
 
         expireCacao()
 
         // Updating the doc with an expired CACAO should fail
-        await expect(doc.update({ invalidUpdate: 'shouldFail' }, null, opts)).rejects.toThrow(
+        await expect(doc.replace({ invalidUpdate: 'shouldFail' }, null, opts)).rejects.toThrow(
           /Capability is expired/
         )
 
-        const docCopy = await TileDocument.load(ceramic, doc.id, { sync: SyncOptions.SYNC_ALWAYS })
-        const docAtGenesisCommit = await TileDocument.load(ceramic, doc.allCommitIds[0])
-        const docAtUpdateCommit = await TileDocument.load(ceramic, doc.allCommitIds[1])
-        const docAtAnchorCommit = await TileDocument.load(ceramic, doc.allCommitIds[2])
+        const docCopy = await ModelInstanceDocument.load(ceramic, doc.id, {
+          sync: SyncOptions.SYNC_ALWAYS,
+        })
+        const docAtGenesisCommit = await ModelInstanceDocument.load(ceramic, doc.allCommitIds[0])
+        const docAtUpdateCommit = await ModelInstanceDocument.load(ceramic, doc.allCommitIds[1])
+        const docAtAnchorCommit = await ModelInstanceDocument.load(ceramic, doc.allCommitIds[2])
 
-        expect(docCopy.content).toEqual(content1)
+        expect(docCopy.content).toEqual(CONTENT1)
         expect(docCopy.state.log.length).toEqual(3)
         expect(docCopy.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-        expect(docAtGenesisCommit.content).toEqual(content0)
+        expect(docAtGenesisCommit.content).toEqual(CONTENT0)
         expect(docAtGenesisCommit.state.log.length).toEqual(1)
         expect(docAtGenesisCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-        expect(docAtUpdateCommit.content).toEqual(content1)
+        expect(docAtUpdateCommit.content).toEqual(CONTENT1)
         expect(docAtUpdateCommit.state.log.length).toEqual(2)
         expect(docAtUpdateCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-        expect(docAtAnchorCommit.content).toEqual(content1)
+        expect(docAtAnchorCommit.content).toEqual(CONTENT1)
         expect(docAtAnchorCommit.state.log.length).toEqual(3)
         expect(docAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       },
       1000 * 30
     )
 
-    test('Load at anchor CommitID to inform node of anchor meaning CACAO isnt actually expired', async () => {
-      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
-      const tile = await TileDocument.create(
+    test('Load at anchor CommitID to inform node of anchor meaning CACAO from genesis isnt actually expired', async () => {
+      const updateStateIfPinnedSpy = jest.spyOn(ceramic.repository, '_updateStateIfPinned')
+      const pinStateSpy = jest.spyOn(ceramic.repository, '_pin_UNSAFE')
+      // Override repository so nothing gets stored in the state store
+      updateStateIfPinnedSpy.mockImplementation((_) => Promise.resolve())
+      pinStateSpy.mockImplementation((_) => Promise.resolve())
+
+      const doc = await ModelInstanceDocument.create(
         ceramic,
         CONTENT0,
         {
-          controllers: [PARENT_WALLET_ADDRESS],
+          model: METADATA.model,
+          controller: PARENT_WALLET_ADDRESS,
         },
-        opts
+        { asDID: didKeyWithCapability, anchor: true, publish: false }
       )
-      await tile.update(CONTENT1, null, { ...opts, anchor: true })
 
       // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
       const dispatcher = ceramic.dispatcher
@@ -764,8 +794,8 @@ describe('CACAO Integration test', () => {
       const anchorCommitPromise = new Promise<CID>((resolve) => {
         handleAnchorSpy.mockImplementation(async (_, tip, witnessCar: CAR) => {
           // Import CAR but do not apply the commit
-          if (tile.tip.equals(tip)) {
-            await dispatcher.importCAR(witnessCar)
+          if (doc.tip.equals(tip)) {
+            await dispatcher.importCAR(witnessCar, doc.id)
             const anchorCommit = witnessCar.roots[0]
             resolve(anchorCommit)
           }
@@ -777,52 +807,141 @@ describe('CACAO Integration test', () => {
 
       const anchorCommitCID = await anchorCommitPromise
 
-      await tile.sync({ sync: SyncOptions.NEVER_SYNC })
-      expect(tile.state.log).toHaveLength(2) // no anchor commit found
+      await doc.sync({ sync: SyncOptions.NEVER_SYNC })
+      expect(doc.state.log).toHaveLength(1) // no anchor commit found
 
       // Expire the CACAO, loading should fail
       expireCacao()
-      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/)
-      const commitIdBeforeAnchor = tile.commitId
-      await expect(TileDocument.load(ceramic, commitIdBeforeAnchor)).rejects.toThrow(
-        /CACAO expired/
+      // Make sure the node doesn't have state saved in memory for the stream
+      ceramic.repository._clearCache()
+
+      await expect(ModelInstanceDocument.load(ceramic, doc.id)).rejects.toThrow(/CACAO has expired/)
+      const commitIdBeforeAnchor = doc.commitId
+      await expect(ModelInstanceDocument.load(ceramic, commitIdBeforeAnchor)).rejects.toThrow(
+        /CACAO has expired/
       )
 
       // Loading at the anchor commits CommitID should succeed
-      const commitIDAtAnchor = CommitID.make(tile.id, anchorCommitCID)
-      const loadedAtAnchorCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
+      const commitIDAtAnchor = CommitID.make(doc.id, anchorCommitCID)
+      const loadedAtAnchorCommit = await ModelInstanceDocument.load(ceramic, commitIDAtAnchor)
+      expect(loadedAtAnchorCommit.state.log).toHaveLength(2)
+      expect(loadedAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Now loading the stream should work because the node now knows about the anchor
+      const loaded = await ModelInstanceDocument.load(ceramic, doc.id)
+      expect(loaded.state.log).toHaveLength(2)
+      expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Loading at the CommitID before the AnchorCommit should still work because the timestamp
+      // information from the anchor is copied over even though the anchor commit itself isn't
+      // included in the state.
+      const loadedAtCommitBeforeAnchor = await ModelInstanceDocument.load(
+        ceramic,
+        commitIdBeforeAnchor
+      )
+      expect(loadedAtCommitBeforeAnchor.state.log).toHaveLength(1)
+      expect(loadedAtCommitBeforeAnchor.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // Resyncing outdated handle with the server should pick up the anchor commit
+      expect(doc.state.log).toHaveLength(1)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
+      await doc.sync()
+      expect(doc.state.log).toHaveLength(2)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      jest.restoreAllMocks()
+    }, 30000)
+
+    test('Load at anchor CommitID to inform node of anchor meaning CACAO from update isnt actually expired', async () => {
+      const updateStateIfPinnedSpy = jest.spyOn(ceramic.repository, '_updateStateIfPinned')
+      const pinStateSpy = jest.spyOn(ceramic.repository, '_pin_UNSAFE')
+      // Override repository so nothing gets stored in the state store
+      updateStateIfPinnedSpy.mockImplementation((_) => Promise.resolve())
+      pinStateSpy.mockImplementation((_) => Promise.resolve())
+
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const doc = await ModelInstanceDocument.create(
+        ceramic,
+        CONTENT0,
+        {
+          model: METADATA.model,
+          controller: PARENT_WALLET_ADDRESS,
+        },
+        opts
+      )
+      await doc.replace(CONTENT1, null, { ...opts, anchor: true })
+
+      // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
+      const dispatcher = ceramic.dispatcher
+      const handleAnchorSpy = jest.spyOn(ceramic.repository, '_handleAnchorCommit')
+      const anchorCommitPromise = new Promise<CID>((resolve) => {
+        handleAnchorSpy.mockImplementation(async (_, tip, witnessCar: CAR) => {
+          // Import CAR but do not apply the commit
+          if (doc.tip.equals(tip)) {
+            await dispatcher.importCAR(witnessCar, doc.id)
+            const anchorCommit = witnessCar.roots[0]
+            resolve(anchorCommit)
+          }
+        })
+      })
+
+      const anchorService = ceramic.anchorService
+      await anchorService.anchor()
+
+      const anchorCommitCID = await anchorCommitPromise
+
+      await doc.sync({ sync: SyncOptions.NEVER_SYNC })
+      expect(doc.state.log).toHaveLength(2) // no anchor commit found
+
+      // Expire the CACAO, loading should fail
+      expireCacao()
+      // Make sure the node doesn't have state saved in memory for the stream
+      ceramic.repository._clearCache()
+
+      await expect(ModelInstanceDocument.load(ceramic, doc.id)).rejects.toThrow(/CACAO has expired/)
+      const commitIdBeforeAnchor = doc.commitId
+      await expect(ModelInstanceDocument.load(ceramic, commitIdBeforeAnchor)).rejects.toThrow(
+        /CACAO has expired/
+      )
+
+      // Loading at the anchor commits CommitID should succeed
+      const commitIDAtAnchor = CommitID.make(doc.id, anchorCommitCID)
+      const loadedAtAnchorCommit = await ModelInstanceDocument.load(ceramic, commitIDAtAnchor)
       expect(loadedAtAnchorCommit.state.log).toHaveLength(3)
       expect(loadedAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Now loading the stream should work because the node now knows about the anchor
-      const loaded = await TileDocument.load(ceramic, tile.id)
+      const loaded = await ModelInstanceDocument.load(ceramic, doc.id)
       expect(loaded.state.log).toHaveLength(3)
       expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Loading at the CommitID before the AnchorCommit should still work because the timestamp
       // information from the anchor is copied over even though the anchor commit itself isn't
       // included in the state.
-      const loadedAtCommitBeforeAnchor = await TileDocument.load(ceramic, commitIdBeforeAnchor)
+      const loadedAtCommitBeforeAnchor = await ModelInstanceDocument.load(
+        ceramic,
+        commitIdBeforeAnchor
+      )
       expect(loadedAtCommitBeforeAnchor.state.log).toHaveLength(2)
       expect(loadedAtCommitBeforeAnchor.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       // Resyncing outdated handle with the server should pick up the anchor commit
-      expect(tile.state.log).toHaveLength(2)
-      expect(tile.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
-      await tile.sync()
-      expect(tile.state.log).toHaveLength(3)
-      expect(tile.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(doc.state.log).toHaveLength(2)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
+      await doc.sync()
+      expect(doc.state.log).toHaveLength(3)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       jest.restoreAllMocks()
     }, 30000)
 
     test(
       'Genesis commit applied with valid capability that later expires without being anchored',
       async () => {
-        const doc = await TileDocument.create(
+        const doc = await ModelInstanceDocument.create(
           ceramic,
           CONTENT0,
           {
-            controllers: [PARENT_WALLET_ADDRESS],
+            model: METADATA.model,
+            controller: PARENT_WALLET_ADDRESS,
           },
           opts
         )
@@ -836,7 +955,7 @@ describe('CACAO Integration test', () => {
         // Even though the capability for this update is valid, it builds on a commit that was
         // authored with an expired capability and so we should detect that and error.
         await expect(
-          doc.update(CONTENT1, null, {
+          doc.replace(CONTENT1, null, {
             ...opts,
             asDID: didKeyWithCurrentCapability,
           })
@@ -848,28 +967,27 @@ describe('CACAO Integration test', () => {
         // Cannot repair stream even with SyncOptions.SYNC_ALWAYS if it is the genesis commit that
         // messed up.
         await expect(doc.sync()).rejects.toThrow(/CACAO expired/)
-        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(
-          /CACAO has expired/
-        )
+        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(/CACAO.*expired/)
         expect(doc.content).toEqual(CONTENT0)
       },
       1000 * 60
     )
 
-    test(
+    testIfV3(
       'Update applied with valid capability that later expires without being anchored',
       async () => {
-        const doc = await TileDocument.create(
+        const doc = await ModelInstanceDocument.create(
           ceramic,
           CONTENT0,
           {
-            controllers: [PARENT_WALLET_ADDRESS],
+            model: METADATA.model,
+            controller: PARENT_WALLET_ADDRESS,
           },
           { ...opts, anchor: true }
         )
         await CoreUtils.anchorUpdate(ceramic, doc)
 
-        await doc.update(CONTENT1, null, opts)
+        await doc.replace(CONTENT1, null, opts)
 
         expect(doc.state.log.length).toEqual(3)
 
@@ -885,7 +1003,7 @@ describe('CACAO Integration test', () => {
         // within the capability's expiration window, while the update commit does not and so is
         // now expired
         await expect(
-          doc.update(CONTENT2, null, {
+          doc.replace(CONTENT2, null, {
             ...opts,
             asDID: didKeyWithCurrentCapability,
           })
