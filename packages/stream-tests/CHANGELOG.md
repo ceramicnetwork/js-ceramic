@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@6.5.0...@ceramicnetwork/stream-tests@6.6.0-rc.0) (2024-09-25)
+
+
+### Bug Fixes
+
+* Ensure loading a stream at a CommitID of an anchor can repair a stream with a CACAO error ([#3280](https://github.com/ceramicnetwork/js-ceramic/issues/3280)) ([2e4cf8b](https://github.com/ceramicnetwork/js-ceramic/commit/2e4cf8b3dde66b02acc8e58236c063e806a88fa0))
+
+
+
+
+
 # [6.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@6.5.0-rc.0...@ceramicnetwork/stream-tests@6.5.0) (2024-09-23)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests
