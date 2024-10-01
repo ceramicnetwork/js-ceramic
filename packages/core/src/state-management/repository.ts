@@ -681,9 +681,6 @@ export class Repository {
       return
     }
     if (process.env.CERAMIC_DISABLE_ANCHORING === 'true') {
-      this.logger.warn(
-        `Anchor requested for stream ${state$.id} but anchoring is disabled by environment variable`
-      )
       return
     }
 
