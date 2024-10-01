@@ -556,7 +556,9 @@ export class Repository {
   async applyCommit(streamId: StreamID, commit: any, opts: UpdateOpts): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
 
-    this.anchorService.assertCASAccessible()
+    if (process.env.CERAMIC_DISABLE_ANCHORING !== 'true') {
+      this.anchorService.assertCASAccessible()
+    }
 
     const state$ = await this.load(streamId)
     this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
@@ -676,6 +678,12 @@ export class Repository {
       throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
+      return
+    }
+    if (process.env.CERAMIC_DISABLE_ANCHORING === 'true') {
+      this.logger.warn(
+        `Anchor requested for stream ${state$.id} but anchoring is disabled by environment variable`
+      )
       return
     }
 
@@ -923,8 +931,9 @@ export class Repository {
     genesis: any,
     opts: CreateOpts = {}
   ): Promise<RunningState> {
-    this.anchorService.assertCASAccessible()
-
+    if (process.env.CERAMIC_DISABLE_ANCHORING !== 'true') {
+      this.anchorService.assertCASAccessible()
+    }
     // TODO: WS1-1494 validate genesis commit before storing
     const genesisCid = await this.dispatcher.storeInitEvent(genesis, type)
     const streamId = new StreamID(type, genesisCid)
