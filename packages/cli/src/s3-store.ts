@@ -31,6 +31,9 @@ function definiteSearchParams<T extends Partial<StoreSearchParams>>(obj: T): Dee
  */
 const MAX_LOAD_RPS = 4000
 
+const LOAD_S3_QUEUE_ADD = 'load_s3_queue_add'
+const LOAD_S3_QUEUE_SIZE = 'load_s3_queue_size'
+
 export class S3KVFactory implements IKVFactory {
   readonly #networkName: string
   readonly #bucketName: string
@@ -187,7 +190,7 @@ class S3KVStore implements IKVStore {
 
   get(key: string): Promise<any> {
     Metrics.count(LOAD_S3_QUEUE_ADD, 1)
-    Metrics.observe(LOAD_S3_SIZE, this.#loadingLimit.size)
+    Metrics.observe(LOAD_S3_QUEUE_SIZE, this.#loadingLimit.size)
     return this.#loadingLimit.add(async () => {
       const value = await this.level.get(key)
       return JSON.parse(value)
