@@ -54,8 +54,8 @@ export class NamedTaskQueue {
    */
   run<A>(name: string, task: () => Promise<A>): Promise<A> {
     const queue = this.queue(name)
-    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, {'name': name})
-    Metrics.count(NAMED_TASK_QUEUE_RUN, 1, {'name': name})
+    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, { name: name })
+    Metrics.count(NAMED_TASK_QUEUE_RUN, 1, { name: name })
     return queue.run(task).finally(() => {
       this.remove(name)
     })
@@ -69,8 +69,8 @@ export class NamedTaskQueue {
    */
   add(name: string, task: () => Promise<void>): void {
     const queue = this.queue(name)
-    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, {'name': name})
-    Metrics.count(NAMED_TASK_QUEUE_ADD, 1, {'name': name})
+    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, { name: name })
+    Metrics.count(NAMED_TASK_QUEUE_ADD, 1, { name: name })
     queue.add(
       () => task(),
       () => this.remove(name)
