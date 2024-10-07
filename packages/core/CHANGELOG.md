@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.6.0...@ceramicnetwork/core@6.7.0-rc.0) (2024-10-07)
+
+
+### Features
+
+* disable anchoring via env var ([#3281](https://github.com/ceramicnetwork/js-ceramic/issues/3281)) ([8616ca3](https://github.com/ceramicnetwork/js-ceramic/commit/8616ca3d1e9b08bc4b3e03378c3064a6869f9da7))
+
+
+
+
+
 # [6.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.6.0-rc.0...@ceramicnetwork/core@6.6.0) (2024-10-07)
 
 **Note:** Version bump only for package @ceramicnetwork/core
