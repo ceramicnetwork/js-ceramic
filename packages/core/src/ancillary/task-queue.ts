@@ -1,4 +1,8 @@
 import PQueue from 'p-queue'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+
+const TASK_QUEUE_SIZE = 'task_queue_size'
+const TASK_QUEUE_SIZE_PENDING = 'task_queue_size_pending'
 
 export const noop = () => {
   // Do Nothing
@@ -52,6 +56,8 @@ export class TaskQueue implements TaskQueueLike {
    * Size of the queue. Counts both deferred and currently running tasks.
    */
   get size(): number {
+    Metrics.observe(TASK_QUEUE_SIZE, this.#pq.size)
+    Metrics.observe(TASK_QUEUE_SIZE_PENDING, this.#pq.pending)
     return this.#pq.size + this.#pq.pending
   }
 

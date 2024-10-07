@@ -13,11 +13,14 @@ import type { Worker, Job } from '@ceramicnetwork/job-queue'
 import { CID } from 'multiformats/cid'
 import { pathString } from '@ceramicnetwork/anchor-utils'
 import PQueue from 'p-queue'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 // NOTE: In V' history sync will need to be reworked (ex. use CAR files, use recon)
 
 // Up to 1024 streams could be present in an anchor
 const IPFS_LOAD_CONCURRENCY = 16
+
+const REBUILD_ANCHOR_QUEUE_SIZE = 'rebuild_anchor_queue_size'
 
 const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
@@ -151,6 +154,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
 
     const queue = new PQueue({ concurrency: IPFS_LOAD_CONCURRENCY })
     await queue.addAll(tasks)
+    Metrics.observe(REBUILD_ANCHOR_QUEUE_SIZE, queue.size)
 
     this.logger.debug(
       `Rebuild anchor job completed for models ${jobData.models}, root ${jobData.root}, and txHash ${jobData.txHash}`

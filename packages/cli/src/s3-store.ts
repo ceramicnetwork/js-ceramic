@@ -13,6 +13,7 @@ import PQueue from 'p-queue'
 import AWSSDK from 'aws-sdk'
 import { Mutex } from 'await-semaphore'
 import type { DeepNonNullable } from 'ts-essentials'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 /**
  * **Remove** `undefined` fields from an S3 Level search params.
@@ -185,6 +186,8 @@ class S3KVStore implements IKVStore {
   }
 
   get(key: string): Promise<any> {
+    Metrics.count(LOAD_S3_QUEUE_ADD, 1)
+    Metrics.observe(LOAD_S3_SIZE, this.#loadingLimit.size)
     return this.#loadingLimit.add(async () => {
       const value = await this.level.get(key)
       return JSON.parse(value)

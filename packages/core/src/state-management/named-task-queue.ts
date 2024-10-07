@@ -1,4 +1,9 @@
 import { noop, TaskQueue } from '../ancillary/task-queue.js'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+
+const NAMED_TASK_QUEUE_SIZE = 'named_task_queue_size'
+const NAMED_TASK_QUEUE_RUN = 'named_task_queue_run'
+const NAMED_TASK_QUEUE_ADD = 'named_task_queue_add'
 
 /**
  * Set of named PQueues.
@@ -49,6 +54,8 @@ export class NamedTaskQueue {
    */
   run<A>(name: string, task: () => Promise<A>): Promise<A> {
     const queue = this.queue(name)
+    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, {'name': name})
+    Metrics.count(NAMED_TASK_QUEUE_RUN, 1, {'name': name})
     return queue.run(task).finally(() => {
       this.remove(name)
     })
@@ -62,6 +69,8 @@ export class NamedTaskQueue {
    */
   add(name: string, task: () => Promise<void>): void {
     const queue = this.queue(name)
+    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, {'name': name})
+    Metrics.count(NAMED_TASK_QUEUE_ADD, 1, {'name': name})
     queue.add(
       () => task(),
       () => this.remove(name)
