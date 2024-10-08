@@ -133,3 +133,4 @@ $ npm run publish:hotfix                  # create and publish the release
 The main step here is `npm run publish:hotfix`, which creates a full release on NPM by bumping the patch version (e.g. `2.1.9` => `2.1.10`). It also creates a git commit with updated package versions as well as their corresponding git tags on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
 After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
+
