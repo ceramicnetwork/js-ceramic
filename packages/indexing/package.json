@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/indexing",
-  "version": "5.4.0",
+  "version": "5.5.0-rc.0",
   "description": "Ceramic indexing and querying logic",
   "keywords": [
     "ceramic",

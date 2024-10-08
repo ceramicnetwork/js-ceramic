@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@6.7.0-rc.0...@ceramicnetwork/cli@6.8.0-rc.0) (2024-10-08)
+
+
+### Features
+
+* add metrics to track queue sizes and add operations - #AES-361 ([#3282](https://github.com/ceramicnetwork/js-ceramic/issues/3282)) ([60a7a9e](https://github.com/ceramicnetwork/js-ceramic/commit/60a7a9e83c73f1fe7d7d3b0ed88afbf5a3c89f1d)), closes [#AES-361](https://github.com/ceramicnetwork/js-ceramic/issues/AES-361)
+
+
+
+
+
 # [6.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@6.6.0...@ceramicnetwork/cli@6.7.0-rc.0) (2024-10-07)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
