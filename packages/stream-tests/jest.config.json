@@ -8,5 +8,6 @@
   },
   "transform": {
     "^.+\\.tsx?$": "babel-jest"
-  }
+  },
+  "reporters": ["default", "<rootDir>/custom-reporter.js"]
 }
