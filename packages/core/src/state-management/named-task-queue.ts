@@ -5,7 +5,7 @@ const NAMED_TASK_QUEUE_SIZE = 'named_task_queue_size'
 const NAMED_TASK_QUEUE_RUN = 'named_task_queue_run'
 const NAMED_TASK_QUEUE_ADD = 'named_task_queue_add'
 const NAMED_TASK_QUEUE_LARGE_SIZE = 'named_task_queue_large_size'
-const LARGE_QUEUE_THRESHOLD = 50
+const LARGE_QUEUE_THRESHOLD = process.env.LARGE_QUEUE_THRESHOLD || 50
 
 /**
  * Set of named PQueues.
