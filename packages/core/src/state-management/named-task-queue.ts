@@ -56,11 +56,11 @@ export class NamedTaskQueue {
    */
   run<A>(name: string, task: () => Promise<A>): Promise<A> {
     const queue = this.queue(name)
-    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, {'method': 'run'})
+    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, { method: 'run' })
     Metrics.count(NAMED_TASK_QUEUE_RUN, 1)
     // only log the names of queues over a threshold size
     if (queue.size > LARGE_QUEUE_THRESHOLD) {
-        Metrics.observe(NAMED_TASK_QUEUE_LARGE_SIZE, queue.size, {'name': name, 'method': 'run'})
+      Metrics.observe(NAMED_TASK_QUEUE_LARGE_SIZE, queue.size, { name: name, method: 'run' })
     }
     return queue.run(task).finally(() => {
       this.remove(name)
@@ -75,10 +75,10 @@ export class NamedTaskQueue {
    */
   add(name: string, task: () => Promise<void>): void {
     const queue = this.queue(name)
-    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, {'method': 'add'})
+    Metrics.observe(NAMED_TASK_QUEUE_SIZE, queue.size, { method: 'add' })
     Metrics.count(NAMED_TASK_QUEUE_ADD, 1, { name: name })
     if (queue.size > LARGE_QUEUE_THRESHOLD) {
-        Metrics.observe(NAMED_TASK_QUEUE_LARGE_SIZE, queue.size, {'name': name, 'method': 'add'})
+      Metrics.observe(NAMED_TASK_QUEUE_LARGE_SIZE, queue.size, { name: name, method: 'add' })
     }
 
     queue.add(
