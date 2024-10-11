@@ -90,7 +90,8 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
-    disablePeerDataSync: opts.ipfs.disablePeerDataSync,
+    disablePeerDataSync:
+      opts.ipfs.disablePeerDataSync || process.env.CERAMIC_DISABLE_PEER_DATA_SYNC == 'true',
     metrics: opts.metrics,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
