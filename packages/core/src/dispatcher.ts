@@ -497,7 +497,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || !this.enableSync) {
+    if (!this.enableSync) {
       return empty().subscribe()
     }
 
