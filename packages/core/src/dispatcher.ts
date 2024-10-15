@@ -140,7 +140,7 @@ export class Dispatcher {
     const rustCeramic = EnvironmentUtils.useRustCeramic()
     this.enableSync = rustCeramic ? false : enableSync
 
-    if (!rustCeramic) {
+    if (this.enableSync) {
       const pubsub = new Pubsub(
         _ipfs,
         topic,
@@ -178,10 +178,9 @@ export class Dispatcher {
   }
 
   async init() {
-    if (EnvironmentUtils.useRustCeramic()) {
-      return
+    if (this.enableSync) {
+      this.messageBus.subscribe(this.handleMessage.bind(this))
     }
-    this.messageBus.subscribe(this.handleMessage.bind(this))
   }
 
   get shutdownSignal(): ShutdownSignal {
@@ -498,7 +497,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || EnvironmentUtils.useRustCeramic()) {
+    if (!this.enableSync) {
       return empty().subscribe()
     }
 
@@ -621,7 +620,7 @@ export class Dispatcher {
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    if (!EnvironmentUtils.useRustCeramic()) {
+    if (this.enableSync) {
       this.messageBus.unsubscribe()
     }
     await this.tasks.onIdle()

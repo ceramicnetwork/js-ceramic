@@ -8,6 +8,15 @@ import { LogSyncer } from '../stream-loading/log-syncer.js'
 import { StateManipulator } from '../stream-loading/state-manipulator.js'
 import { AnchorValidator } from '../anchor/anchor-service.js'
 import { HandlersMap } from '../handlers-map.js'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { Observable, empty } from 'rxjs'
+import type { CID } from 'multiformats/cid'
+
+const noopPubsubQuerier = {
+  queryNetwork(streamId: StreamID): Observable<CID> {
+    return empty()
+  },
+}
 
 export function makeStreamLoaderAndUpdater(
   logger: DiagnosticsLogger,
@@ -17,7 +26,12 @@ export function makeStreamLoaderAndUpdater(
   streamHandlers: HandlersMap
 ): [StreamLoader, StreamUpdater] {
   const anchorTimestampExtractor = new AnchorTimestampExtractor(logger, dispatcher, anchorValidator)
-  const tipFetcher = new TipFetcher(dispatcher.messageBus)
+  if (!dispatcher.messageBus) {
+    logger.warn("No pubsub querier detected, won't be able to load tips from the network")
+  }
+  const tipFetcher = new TipFetcher(
+    dispatcher.messageBus ? dispatcher.messageBus : noopPubsubQuerier
+  )
   const logSyncer = new LogSyncer(dispatcher)
   const stateManipulator = new StateManipulator(logger, streamHandlers, logSyncer, api)
   const streamLoader = new StreamLoader(
