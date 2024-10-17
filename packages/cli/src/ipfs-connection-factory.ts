@@ -6,7 +6,7 @@ import * as http from 'http'
 import * as https from 'https'
 import * as ipfs from '@ceramicnetwork/ipfs-daemon'
 
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
+const IPFS_GET_TIMEOUT = 10000 // 10 seconds
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
