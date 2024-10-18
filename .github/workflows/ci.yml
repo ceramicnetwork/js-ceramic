@@ -91,10 +91,10 @@ jobs:
           # Schedule post-deployment tests
           make DEPLOY_ENV="$DEPLOY_ENV" TEST_SELECTOR="correctness/fast" schedule-tests
 
-          # If deploying to QA, also deploy to Dev and run post-deployment tests.
-          if [[ "$DEPLOY_ENV" == "qa" ]]; then
-            make DEPLOY_ENV="dev" DEPLOY_TAG=${{ env.SHA }} schedule-k8s-deployment
-            make DEPLOY_ENV="dev" TEST_SELECTOR="correctness/fast" schedule-tests
+          # If deploying to Dev, also deploy to QA and run post-deployment tests.
+          if [[ "$DEPLOY_ENV" == "dev" ]]; then
+            make DEPLOY_ENV="qa" DEPLOY_TAG=${{ env.SHA }} schedule-k8s-deployment
+            make DEPLOY_ENV="qa" TEST_SELECTOR="correctness/fast" schedule-tests
           fi
       -
         name: Set commit status "success"
