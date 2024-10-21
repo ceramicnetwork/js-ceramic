@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@6.8.0...@ceramicnetwork/cli@6.9.0-rc.0) (2024-10-21)
+
+
+### Features
+
+* Flag to fully disable pubsub and all cross-node syncing ([#3286](https://github.com/ceramicnetwork/js-ceramic/issues/3286)) ([b8b44e1](https://github.com/ceramicnetwork/js-ceramic/commit/b8b44e15043f14ba7df43b42bc17e07583f49184))
+
+
+
+
+
 # [6.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@6.8.0-rc.0...@ceramicnetwork/cli@6.8.0) (2024-10-21)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

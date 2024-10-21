@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.8.0...@ceramicnetwork/core@6.9.0-rc.0) (2024-10-21)
+
+
+### Bug Fixes
+
+* do not log names of all queues, cardinality is too high ([#3283](https://github.com/ceramicnetwork/js-ceramic/issues/3283)) ([bcc6585](https://github.com/ceramicnetwork/js-ceramic/commit/bcc6585d7c47d07a29fb7db593b160e9efa3f4b4))
+
+
+### Features
+
+* Flag to fully disable pubsub and all cross-node syncing ([#3286](https://github.com/ceramicnetwork/js-ceramic/issues/3286)) ([b8b44e1](https://github.com/ceramicnetwork/js-ceramic/commit/b8b44e15043f14ba7df43b42bc17e07583f49184))
+
+
+
+
+
 # [6.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@6.8.0-rc.0...@ceramicnetwork/core@6.8.0) (2024-10-21)
 
 **Note:** Version bump only for package @ceramicnetwork/core
