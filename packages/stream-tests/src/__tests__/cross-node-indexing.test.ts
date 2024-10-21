@@ -221,6 +221,10 @@ describe.each(envs)(
         const count = await countResults(ceramic2, { model: model.id, first: 100 })
         return count > 1
       })
+      await TestUtils.waitForConditionOrTimeout(async () => {
+        const doc1OnNode2 = await ceramic2.loadStream(doc1.id)
+        return doc1OnNode2.content.myData == CONTENT1.myData
+      })
 
       await expect(TestUtils.isPinned(ceramic2.admin, doc1.id)).toBeTruthy()
       await expect(TestUtils.isPinned(ceramic2.admin, doc2.id)).toBeTruthy()
