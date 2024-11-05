@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@6.9.0...@ceramicnetwork/stream-tests@6.10.0-rc.0) (2024-11-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [6.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@6.9.0-rc.0...@ceramicnetwork/stream-tests@6.9.0) (2024-11-05)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

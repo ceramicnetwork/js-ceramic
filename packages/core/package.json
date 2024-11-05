@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "6.9.0",
+  "version": "6.10.0-rc.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "engines": {
     "node": ">=20.8"
@@ -48,7 +48,7 @@
     "@ceramicnetwork/anchor-utils": "^5.4.0",
     "@ceramicnetwork/codecs": "^5.4.0",
     "@ceramicnetwork/common": "^6.4.0",
-    "@ceramicnetwork/indexing": "^5.6.0",
+    "@ceramicnetwork/indexing": "^5.7.0-rc.0",
     "@ceramicnetwork/ipfs-topology": "^6.4.0",
     "@ceramicnetwork/job-queue": "^5.4.0",
     "@ceramicnetwork/node-metrics": "^1.0.5",
