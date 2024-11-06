@@ -115,6 +115,8 @@ async function binary(
     // nodes that should not be in the same network will never discover each other
     '--local-network-id',
     networkId.toString(),
+    '--event-validation',
+    false,
   ].concat(testExtras)
 
   const proc = spawn(binary_path, parameters, {
