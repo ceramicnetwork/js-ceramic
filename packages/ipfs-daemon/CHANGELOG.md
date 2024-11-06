@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.4.0...@ceramicnetwork/ipfs-daemon@6.5.0-rc.0) (2024-11-06)
+
+
+### Bug Fixes
+
+* Disable event-validation in C1 in unit tests ([#3291](https://github.com/ceramicnetwork/js-ceramic/issues/3291)) ([bfbcd01](https://github.com/ceramicnetwork/js-ceramic/commit/bfbcd018a567f0ac3e3f53576d2831b2be6004be))
+
+
+
+
+
 # [6.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@6.4.0-rc.0...@ceramicnetwork/ipfs-daemon@6.4.0) (2024-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
