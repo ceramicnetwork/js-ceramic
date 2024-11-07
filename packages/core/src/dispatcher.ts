@@ -36,7 +36,7 @@ import { IReconApi } from './recon.js'
 import { NodeMetrics } from '@ceramicnetwork/node-metrics'
 
 const IPFS_GET_RETRIES = 3
-const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_SYNC_TIMEOUT =  2000 // 2 seconds per retry, 3 retries = 6 seconds total timeout
 const DEFAULT_IPFS_GET_LOCAL_TIMEOUT = 1000 // 1 second to get data from local ipfs store
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec

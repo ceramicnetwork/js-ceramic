@@ -67,7 +67,7 @@ import { LevelKVFactory } from './store/level-kv-factory.js'
 const METRICS_CALLER_NAME = 'js-ceramic'
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
-const DEFAULT_MULTIQUERY_TIMEOUT_MS = 30 * 1000
+const DEFAULT_MULTIQUERY_TIMEOUT_MS = 3 * 1000
 const DEFAULT_MIN_ANCHOR_LOOP_DURATION_MS = 60 * 1000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
