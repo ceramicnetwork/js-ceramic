@@ -44,9 +44,9 @@
   },
   "dependencies": {
     "@ceramicnetwork/streamid": "^5.6.0",
-    "@didtools/cacao": "^3.0.0",
+    "@didtools/cacao": "^3.0.1",
     "@didtools/key-webauthn": "^2.0.2",
-    "@didtools/pkh-ethereum": "^0.2.0",
+    "@didtools/pkh-ethereum": "^0.6.0",
     "@didtools/pkh-solana": "^0.2.0",
     "@didtools/pkh-stacks": "^0.2.0",
     "@didtools/pkh-tezos": "^0.3.0",
