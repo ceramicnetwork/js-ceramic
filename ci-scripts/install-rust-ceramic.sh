@@ -3,7 +3,7 @@
 REPO=ceramicnetwork/rust-ceramic/releases
 ARCH=x86_64
 OS=unknown-linux-gnu
-OS_VERSION=ubuntu-22
+OS_VERSION=ubuntu-22.04
 TARGET=$ARCH-$OS
 
 if [ -z ${1+x} ] || [ "$1" == "latest" ]; then
