@@ -3,6 +3,7 @@
 REPO=ceramicnetwork/rust-ceramic/releases
 ARCH=x86_64
 OS=unknown-linux-gnu
+OS_VERSION=ubuntu-22.04
 TARGET=$ARCH-$OS
 
 if [ -z ${1+x} ] || [ "$1" == "latest" ]; then
@@ -17,7 +18,7 @@ else
   VERSION="v"$1
 fi
 NAME=ceramic-one
-TAR_NAME=${NAME}_$TARGET.tar.gz
+TAR_NAME=${NAME}_${TARGET}-${OS_VERSION}.tar.gz
 DEB_NAME=${NAME}.deb
 OUTPUT_FILE=$NAME.tar.gz
 DOWNLOAD_URL=https://github.com/$REPO/download/$VERSION/$TAR_NAME
