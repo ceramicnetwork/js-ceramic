@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@5.4.0...@ceramicnetwork/anchor-utils@5.4.1-rc.0) (2024-12-24)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
 # [5.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@5.4.0-rc.0...@ceramicnetwork/anchor-utils@5.4.0) (2024-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-utils

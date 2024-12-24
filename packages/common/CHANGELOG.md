@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@6.4.0...@ceramicnetwork/common@6.4.1-rc.0) (2024-12-24)
+
+
+### Bug Fixes
+
+* Update package version for ethereum did:pkh verification ([#3292](https://github.com/ceramicnetwork/js-ceramic/issues/3292)) ([d1b0706](https://github.com/ceramicnetwork/js-ceramic/commit/d1b0706ba4f29faef83a8d5d151a2226dda8ac5f))
+
+
+
+
+
 # [6.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@6.4.0-rc.0...@ceramicnetwork/common@6.4.0) (2024-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/common
