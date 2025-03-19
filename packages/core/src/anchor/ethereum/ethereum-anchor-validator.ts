@@ -38,7 +38,7 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
     chainId: 100,
     networkId: 100,
     type: 'Test',
-    endpoint: 'https://rpc.ankr.com/gnosis',
+    endpoint: 'https://gnosis-mainnet.public.blastapi.io',
   },
   'eip155:11155111': {
     network: 'sepolia',
