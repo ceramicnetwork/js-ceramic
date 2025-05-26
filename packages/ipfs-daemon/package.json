@@ -48,7 +48,7 @@
     "get-port": "^7.0.0",
     "go-ipfs": "^0.18.1",
     "ipfs-http-client": "^60.0.0",
-    "ipfsd-ctl": "^13.0.0",
+    "ipfsd-ctl": "^15.0.2",
     "kubo-rpc-client": "^3.0.0",
     "merge-options": "^3.0.4",
     "tmp-promise": "^3.0.3"
