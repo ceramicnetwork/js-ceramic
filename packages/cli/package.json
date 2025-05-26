@@ -73,7 +73,7 @@
     "morgan": "^1.10.0",
     "p-queue": "^8.0.1",
     "picocolors": "^1.0.0",
-    "pkh-did-resolver": "^1.2.0",
+    "pkh-did-resolver": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "s3leveldown": "^2.2.2",
     "stream-to-array": "^2.3.0",

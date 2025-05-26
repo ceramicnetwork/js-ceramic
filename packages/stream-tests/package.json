@@ -46,7 +46,7 @@
     "key-did-provider-ed25519": "^4.0.0",
     "key-did-resolver": "^4.0.0",
     "merge-options": "^3.0.4",
-    "pkh-did-resolver": "^1.2.0",
+    "pkh-did-resolver": "^2.0.0",
     "tmp-promise": "^3.0.3",
     "uint8arrays": "^5.0.1"
   },
