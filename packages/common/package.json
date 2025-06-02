@@ -53,7 +53,7 @@
     "@ipld/dag-cbor": "^9.1.0",
     "@stablelib/random": "^1.0.1",
     "caip": "~1.1.0",
-    "flat": "^5.0.2",
+    "flat": "^6.0.1",
     "it-first": "^3.0.4",
     "jet-logger": "1.2.2",
     "lodash.clonedeep": "^4.5.0",
