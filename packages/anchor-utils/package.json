@@ -38,7 +38,7 @@
   "devDependencies": {
     "@ceramicnetwork/streamid": "^5.6.0",
     "@ethersproject/providers": "^5.5.1",
-    "@stablelib/sha256": "^1.0.1"
+    "@stablelib/sha256": "^2.0.1"
   },
   "publishConfig": {
     "access": "public"
