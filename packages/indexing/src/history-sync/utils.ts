@@ -25,7 +25,7 @@ export class MerkleTreeLoader {
   }
 
   /**
-   * retreives the path to the leaf and the cid found at the provided index
+   * retrieves the path to the leaf and the cid found at the provided index
    * @param index index of the leaf
    * @returns promise for the cid stored in the leaf
    */

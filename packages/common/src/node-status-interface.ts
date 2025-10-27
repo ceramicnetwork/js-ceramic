@@ -101,7 +101,7 @@ export interface ActiveSyncStatus {
   startedAt: Date
 }
 export interface ContinuousSyncStatus {
-  // The first block recevied form the chain on node startup
+  // The first block received form the chain on node startup
   startBlock: number
   // The latest block received from the chain
   latestBlock: number
