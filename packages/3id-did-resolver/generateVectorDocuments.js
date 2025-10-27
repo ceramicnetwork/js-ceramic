@@ -2,7 +2,7 @@
  * This is the script that was used to generate the test vectors currently
  * used by the 3id-did-resolver tests. This is just a simple javascript
  * file here in case the tests vectors need to be recreated in the future.
- * To run this script make sure you have all the dependencies instralled
+ * To run this script make sure you have all the dependencies installed
  * and run it using $ node generateVectorDocuments.js
  *
  * The result of this script, which is a commit log for a 3IDv0 and a 3IDv1,

@@ -14,7 +14,7 @@ function timestamp(timestamp: Date = new Date()): string {
  * It takes time to make a heapdump. We log when the heapdumping starts and finishes in `${folder}/heapdump-progress` file.
  *
  * @param folder Folder that contains a heapdump.
- * @param logger Used to annouce the heapdump events: when it is started and finished.
+ * @param logger Used to announce the heapdump events: when it is started and finished.
  */
 export function handleHeapdumpSignal(folder: URL, logger: DiagnosticsLogger): void {
   process.on('SIGUSR2', () => {
