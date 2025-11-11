@@ -36,7 +36,7 @@ Full protocol documentation can be found on the [Ceramic documentation site →]
 
 ### Upgrading
 
-[Upgrade a ceramic node to latest version](docs-dev/UPGRADING.md)
+[Upgrade a ceramic node to the latest version](docs-dev/UPGRADING.md)
 
 ## Troubleshooting
 
