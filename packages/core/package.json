@@ -70,7 +70,7 @@
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@scarf/scarf": "^1.1.1",
-    "@stablelib/random": "^1.0.1",
+    "@stablelib/random": "^2.0.1",
     "@stablelib/sha256": "^1.0.1",
     "@stablelib/uuid": "^1.0.1",
     "ajv": "^8.8.2",
