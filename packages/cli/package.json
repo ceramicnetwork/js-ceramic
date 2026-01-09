@@ -85,7 +85,7 @@
     "@ceramicnetwork/stream-model": "^5.4.1-rc.0",
     "@ceramicnetwork/stream-model-instance": "^5.4.1-rc.0",
     "@ceramicnetwork/stream-tile-handler": "^6.4.1-rc.0",
-    "@stablelib/sha256": "^1.0.1",
+    "@stablelib/sha256": "^2.0.1",
     "@types/express": "^4.17.21",
     "@types/levelup": "^5.1.0",
     "@types/node": "^18.0.3",
